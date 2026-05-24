@@ -1,0 +1,250 @@
+"use client";
+
+import { Heart, Plus, Minus, BarChart3, RotateCw } from "lucide-react";
+import Link from "next/link";
+import { memo, useState } from "react";
+import { useCartStore } from "@/store/cart-store";
+import { useWishlistStore } from "@/store/wishlist-store";
+import { useComparisonStore } from "@/store/comparison-store";
+import { SafeProductImage } from "@/components/ui/safe-image";
+import ProductView360 from "@/components/ui/home/product-view-360";
+import { toast } from "sonner";
+import type { Product } from "@/data/products";
+
+
+// ── Per-category accent colours ──────────────────────────────
+const categoryGlowClass: Record<string, string> = {
+  Groceries: "product-card-groceries",
+  Fruits:    "product-card-fruits",
+  Snacks:    "product-card-snacks",
+  Health:    "product-card-health",
+  Dairy:     "product-card-dairy",
+  Beverages: "product-card-beverages",
+};
+
+// ── Stock indicator config ────────────────────────────────────
+const stockConfig = {
+  in_stock:     { dot: "bg-[#0c831f]",  label: "In Stock",   pulse: true  },
+  low_stock:    { dot: "bg-[#f59e0b]",  label: "Few left",   pulse: true  },
+  out_of_stock: { dot: "bg-[#ff4f8b]",  label: "Sold out",   pulse: false },
+} as const;
+
+interface ProductCardProps {
+  product: Product;
+}
+
+function ProductCard({ product }: ProductCardProps) {
+  const [animateHeart, setAnimateHeart] = useState(false);
+  const [show360, setShow360] = useState(false);
+  const addToCart       = useCartStore((s) => s.addToCart);
+  const increaseQty     = useCartStore((s) => s.increaseQuantity);
+  const decreaseQty     = useCartStore((s) => s.decreaseQuantity);
+  const cartItem        = useCartStore((s) => s.cart.find((i) => i.id === product.id));
+  const wishlist        = useWishlistStore((s) => s.wishlist);
+  const addToWishlist   = useWishlistStore((s) => s.addToWishlist);
+  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
+
+  const quantity   = cartItem?.quantity ?? 0;
+  const discount   = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
+  const glowClass  = categoryGlowClass[product.category] ?? "";
+  const stock      = stockConfig[product.stock];
+  const isOOS      = product.stock === "out_of_stock";
+  const isWishlisted = wishlist.some((item) => item.id === product.id);
+  const isCompared = useComparisonStore((s) => s.isInComparison)(product.id);
+  const addToComparison = useComparisonStore((s) => s.addToComparison);
+  const removeFromComparison = useComparisonStore((s) => s.removeFromComparison);
+  const seoAlt = `${product.name} — ${product.category} — ₹${product.price} — FMCG Commerce grocery delivery`;
+
+  return (
+    <Link href={`/product/${product.id}`} aria-label={`View ${product.name} — ₹${product.price} — ${product.category}`}>
+      <div
+        className={`product-card ${glowClass} group bg-white rounded-xl border border-[#e8e8e8] overflow-hidden cursor-pointer`}
+        itemScope
+        itemType="https://schema.org/Product"
+      >
+        <meta itemProp="name" content={product.name} />
+        <meta itemProp="category" content={product.category} />
+        <meta itemProp="price" content={String(product.price)} />
+        <meta itemProp="priceCurrency" content="INR" />
+        <meta itemProp="brand" content="FMCG Commerce" />
+        <link itemProp="url" href={`https://fmcg-commerce.vercel.app/product/${product.id}`} />
+        <meta itemProp="image" content={product.image} />
+
+        {/* ── Image ── */}
+        <div className="relative bg-[#f2f2f2] aspect-square overflow-hidden">
+           <SafeProductImage
+              src={product.image}
+              alt={seoAlt}
+              fill
+              sizes="(max-width: 640px) 150px, (max-width: 768px) 170px, 185px"
+              className="transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+            />
+
+          {/* Discount badge */}
+          {discount > 0 && (
+            <span className="absolute top-2 left-2 text-[10px] font-black text-white bg-[#ff4f8b] px-1.5 py-0.5 rounded z-10">
+              {discount}% OFF
+            </span>
+          )}
+
+          {/* Out-of-stock overlay */}
+          {isOOS && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+              <span className="text-[10px] font-black text-[#ff4f8b] bg-white px-2 py-0.5 rounded-full border border-[#ff4f8b]/30">
+                SOLD OUT
+              </span>
+            </div>
+          )}
+
+          {/* 360° View */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              setShow360(true);
+            }}
+            className="absolute bottom-2 left-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
+            aria-label="View 360° product"
+          >
+            <RotateCw className="w-3.5 h-3.5 text-[#666] hover:text-[#ff4f8b]" />
+          </button>
+
+          {/* Compare */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isCompared) {
+                addToComparison({
+                  id: product.id,
+                  name: product.name,
+                  image: product.image,
+                  price: product.price,
+                  oldPrice: product.oldPrice,
+                  rating: product.rating ?? 0,
+                  category: product.category,
+                  stock: product.stock,
+                });
+              } else {
+                removeFromComparison(product.id);
+                toast("Removed from comparison");
+              }
+            }}
+            className="absolute bottom-2 right-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
+            aria-label={isCompared ? "Remove from comparison" : "Add to comparison"}
+          >
+            <BarChart3 className={`w-3.5 h-3.5 ${isCompared ? "text-[#0c831f]" : "text-[#999] hover:text-[#0c831f]"}`} />
+          </button>
+
+          {/* Wishlist */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isWishlisted) {
+                addToWishlist({ id: product.id, name: product.name, image: product.image, price: product.price });
+                toast.success("Added to wishlist ❤️");
+                setAnimateHeart(true);
+                window.setTimeout(() => setAnimateHeart(false), 240);
+              } else {
+                removeFromWishlist(product.id);
+                toast("Removed from wishlist 💔");
+              }
+            }}
+            className={`wish-button absolute top-2 right-2 min-w-[44px] min-h-[44px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95 ${isWishlisted ? "active" : ""}`}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <Heart className={`heart-icon w-3.5 h-3.5 ${isWishlisted ? "text-[#ff4f8b]" : "text-[#666] hover:text-[#ff4f8b]"} ${animateHeart ? "heart-pop" : ""}`} />
+          </button>
+        </div>
+
+        {/* ── Info ── */}
+        <div className="p-2.5 sm:p-3">
+
+          {/* Delivery + stock row */}
+          <div className="flex items-center justify-between gap-1 mb-1.5">
+            <span className="text-[10px] font-bold text-[#0c831f] bg-[#e8f5e9] px-1.5 py-0.5 rounded">
+              10 mins
+            </span>
+            <span className="flex items-center gap-1">
+              <span className={`w-1.5 h-1.5 rounded-full ${stock.dot} ${stock.pulse ? "stock-pulse" : ""}`} />
+              <span className="text-[9px] font-semibold text-[#666]">{stock.label}</span>
+            </span>
+          </div>
+
+          <h2 className="text-xs sm:text-sm font-semibold text-[#1a1a1a] leading-tight line-clamp-2 min-h-[2.5rem]">
+            {product.name}
+          </h2>
+
+          <p className="text-[10px] text-[#999] mt-0.5">{product.category}</p>
+
+          {/* Price + Add button */}
+          <div className="flex items-center justify-between mt-2 gap-1">
+            <div>
+              <p className="text-sm sm:text-base font-black text-[#1a1a1a]" itemProp="price">
+                ₹{product.price}
+                <meta itemProp="priceCurrency" content="INR" />
+              </p>
+              <p className="text-[10px] text-[#999] line-through" aria-label={`Original price: ₹${product.oldPrice}`}>
+                ₹{product.oldPrice}
+              </p>
+            </div>
+
+            {isOOS ? (
+              <span className="text-[10px] font-bold text-[#ff4f8b] flex-shrink-0">Notify me</span>
+            ) : quantity === 0 ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                  toast.success("Added to cart 🛒");
+                }}
+                className="add-btn flex items-center gap-1 min-h-[44px] h-8 px-3 rounded-lg border-2 border-[#ff4f8b] text-[#ff4f8b] font-black text-xs flex-shrink-0"
+              >
+                <Plus className="w-3 h-3" />
+                ADD
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 min-h-[44px] h-8 rounded-lg border-2 border-[#ff4f8b] overflow-hidden flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); decreaseQty(product.id); }}
+                  className="min-w-[44px] w-7 h-full flex items-center justify-center text-[#ff4f8b] hover:bg-[#fff0f6] transition-colors"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <span className="w-5 text-center text-xs font-black text-[#ff4f8b]">{quantity}</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); increaseQty(product.id); }}
+                  className="min-w-[44px] w-7 h-full flex items-center justify-center text-[#ff4f8b] hover:bg-[#fff0f6] transition-colors"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Availability — hidden from visual, read by structured data parsers */}
+      <meta
+        itemProp="availability"
+        content={`https://schema.org/${isOOS ? "OutOfStock" : "InStock"}`}
+      />
+
+      {/* 360° Product View Modal */}
+      <ProductView360
+        isOpen={show360}
+        onClose={() => setShow360(false)}
+        product={{ id: product.id, name: product.name, image: product.image, category: product.category }}
+      />
+    </Link>
+  );
+}
+
+export default memo(ProductCard);

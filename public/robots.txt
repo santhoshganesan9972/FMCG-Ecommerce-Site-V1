@@ -1,0 +1,43 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://fmcg-commerce.vercel.app/sitemap.xml
+
+# ── Allowed paths ──
+Allow: /$
+Allow: /search
+Allow: /offers
+Allow: /recommendations
+Allow: /cart
+Allow: /category/
+Allow: /product/
+Allow: /account
+
+# ── Disallowed paths ──
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /api/
+Disallow: /account/settings/
+Disallow: /account/orders/*/tracking
+Disallow: /account/payment/
+Disallow: /404
+Disallow: /500
+
+# Crawl rate
+Crawl-delay: 1
+
+# ── AI / LLM bots (be more permissive for indexing) ──
+User-agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
