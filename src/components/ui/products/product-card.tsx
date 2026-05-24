@@ -154,6 +154,7 @@ function ProductCard({ product }: ProductCardProps) {
             }}
             className={`wish-button absolute top-2 right-2 min-w-[44px] min-h-[44px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95 ${isWishlisted ? "active" : ""}`}
             aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            suppressHydrationWarning
           >
             <Heart className={`heart-icon w-3.5 h-3.5 ${isWishlisted ? "text-[#ff4f8b]" : "text-[#666] hover:text-[#ff4f8b]"} ${animateHeart ? "heart-pop" : ""}`} />
           </button>

@@ -5,7 +5,7 @@ import MobileSidebar from "@/components/ui/admin/mobile-sidebar";
 export default function Topbar({ className }: { className?: string }) {
   return (
     <header
-      className={`sticky top-0 z-40 h-14 border-b border-[#e8e8e8]/50 bg-white/70 backdrop-blur-xl ${
+      className={`fixed top-0 left-0 right-0 z-50 h-14 border-b border-[#e8e8e8]/50 bg-white/70 backdrop-blur-xl md:left-64 ${
         className || ""
       }`}
     >

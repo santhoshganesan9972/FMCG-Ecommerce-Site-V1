@@ -17,9 +17,10 @@ export default function DashboardLayout({
 
       <div className="min-w-0 flex-1 md:ml-64 flex flex-col">
         {/* Fixed/sticky header */}
-        <div>
-          <Topbar className="md:left-64 md:right-0" />
-        </div>
+        <Topbar />
+
+        {/* Spacer for fixed header */}
+        <div className="h-14 shrink-0" />
 
         <main className="flex-1 min-h-0 overflow-y-auto px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5">
           <div className="mx-auto w-full max-w-[1200px]">

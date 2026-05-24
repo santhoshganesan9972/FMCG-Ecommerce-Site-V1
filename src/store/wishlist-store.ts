@@ -10,6 +10,7 @@ export interface WishlistItem {
 
 interface WishlistStore {
   wishlist: WishlistItem[];
+  _hasHydrated: boolean;
 
   addToWishlist: (
     item: WishlistItem
@@ -20,18 +21,16 @@ interface WishlistStore {
   ) => void;
 
   moveToCart: (id: number) => WishlistItem | undefined;
+
+  setHasHydrated: (value: boolean) => void;
 }
 
 export const useWishlistStore =
   create<WishlistStore>()(
     persist(
       (set, get) => ({
-        
-        wishlist: [
-          { id: 3, name: "Fortune Sunflower Oil", image: "/placeholder.svg?text=Oil", price: 195 },
-          { id: 8, name: "Britannia Milk Bread", image: "/placeholder.svg?text=Bread", price: 35 },
-          { id: 15, name: "Lays Chips", image: "/placeholder.svg?text=Chips", price: 30 },
-        ],
+        wishlist: [],
+        _hasHydrated: false,
 
         addToWishlist: (item) =>
           set((state) => ({
@@ -55,7 +54,20 @@ export const useWishlistStore =
           }
           return undefined;
         },
+
+        setHasHydrated: (value) => set({ _hasHydrated: value }),
       }),
-      { name: "wishlist-storage" }
+      {
+        name: "wishlist-storage",
+        onRehydrateStorage: () => {
+          return (state, error) => {
+            if (error) {
+              console.error("wishlist rehydration error", error);
+            } else if (state) {
+              state.setHasHydrated(true);
+            }
+          };
+        },
+      }
     )
   );
