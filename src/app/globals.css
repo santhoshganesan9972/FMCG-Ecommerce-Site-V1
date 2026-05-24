@@ -605,3 +605,106 @@ tr.table-row-hover:hover {
 .animate-modal-in {
   animation: modalIn 0.2s ease-out;
 }
+
+/* ── Subtle Background Animations ── */
+.bg-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+  will-change: transform;
+}
+
+.bg-orb-pink {
+  background: radial-gradient(circle, rgba(255, 79, 139, 0.8) 0%, rgba(255, 79, 139, 0) 70%);
+}
+
+.bg-orb-green {
+  background: radial-gradient(circle, rgba(12, 131, 31, 0.6) 0%, rgba(12, 131, 31, 0) 70%);
+}
+
+.bg-orb-purple {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0) 70%);
+}
+
+@keyframes float-orb-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(20px, -10px) scale(1.02);
+  }
+}
+
+@keyframes float-orb-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-40px, 30px) scale(1.08);
+  }
+  66% {
+    transform: translate(20px, -30px) scale(0.92);
+  }
+}
+
+@keyframes float-orb-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate(-30px, -20px) scale(1.05) rotate(180deg);
+  }
+}
+
+@keyframes float-orb-4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  20% {
+    transform: translate(40px, -40px) scale(1.1);
+  }
+  40% {
+    transform: translate(-30px, 20px) scale(0.95);
+  }
+  60% {
+    transform: translate(20px, 40px) scale(1.05);
+  }
+  80% {
+    transform: translate(-40px, -20px) scale(0.98);
+  }
+}
+
+.animate-float-1 {
+  animation: float-orb-1 25s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-orb-2 32s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: float-orb-3 28s ease-in-out infinite;
+}
+
+.animate-float-4 {
+  animation: float-orb-4 38s ease-in-out infinite;
+}

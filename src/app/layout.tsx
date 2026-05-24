@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import LayoutClient from "./layout-client";
 import SkipLink from "@/components/ui/a11y/skip-link";
+import AnimatedBackground from "@/components/ui/animated-background";
 
 export const metadata: Metadata = {
   title: "FMCG Commerce — Ultra-fast Grocery Delivery",
@@ -65,18 +66,19 @@ export default function RootLayout({
         />
       </head>
       <html lang="en" className="h-full antialiased">
-        <body className="min-h-full flex flex-col bg-[#f2f2f2]">
-          <SkipLink />
-          <LayoutClient>
-            <ErrorBoundary>
-              <main id="main-content" tabIndex={-1}>
-                {children}
-              </main>
-            </ErrorBoundary>
-          </LayoutClient>
-          <Toaster position="bottom-right" />
-        </body>
-      </html>
+         <body className="min-h-full flex flex-col bg-[#f2f2f2] relative">
+           <AnimatedBackground />
+           <SkipLink />
+           <LayoutClient>
+             <ErrorBoundary>
+               <main id="main-content" tabIndex={-1} className="relative z-10">
+                 {children}
+               </main>
+             </ErrorBoundary>
+           </LayoutClient>
+           <Toaster position="bottom-right" className="z-50" />
+         </body>
+       </html>
     </>
   );
 }
