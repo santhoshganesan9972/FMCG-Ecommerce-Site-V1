@@ -105,18 +105,18 @@ export default function NearbyTrends() {
                          <span className="text-sm font-black text-[#1a1a1a]">₹{product.price}</span>
                          <span className="text-[9px] text-[#999] line-through ml-1">₹{product.oldPrice}</span>
                        </div>
-                       <button
-                         type="button"
-                         onClick={(e) => {
-                           e.preventDefault();
-                           e.stopPropagation();
-                           addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
-                           toast.success("Added to cart 🛒");
-                         }}
-                         className="text-[10px] font-bold text-white bg-[#ff4f8b] rounded-lg px-2.5 py-1 hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
-                       >
-                         ADD
-                       </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                            toast.success("Added to cart 🛒");
+                          }}
+                          className="min-h-[44px] h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                        >
+                          ADD
+                        </button>
                      </div>
                   </div>
                 </div>

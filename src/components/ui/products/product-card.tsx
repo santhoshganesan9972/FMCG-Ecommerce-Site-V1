@@ -216,9 +216,9 @@ function ProductCard({ product }: ProductCardProps) {
                   e.preventDefault();
                   toast("Price alert feature coming soon!");
                 }}
-                className="flex items-center gap-1 min-h-[44px] h-8 px-3 rounded-lg bg-[#fff0f6] text-[#ff4f8b] font-bold text-xs flex-shrink-0 border border-[#ff4f8b]/30"
+                className="flex items-center gap-1 min-h-[44px] h-7 px-2.5 rounded-md bg-[#fafafa] text-[#ff4f8b] font-semibold text-[10px] flex-shrink-0 border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors"
               >
-                NOTIFY ME
+                NOTIFY
               </button>
             ) : quantity === 0 ? (
               <button
@@ -228,13 +228,12 @@ function ProductCard({ product }: ProductCardProps) {
                   addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
                   toast.success("Added to cart 🛒");
                 }}
-                className="add-btn flex items-center gap-1 min-h-[44px] h-8 px-3 rounded-lg bg-[#ff4f8b] text-white font-black text-xs flex-shrink-0 shadow-sm hover:bg-[#e63872] active:scale-95 transition-all"
+                className="add-btn min-h-[44px] h-7 px-2.5 rounded-md bg-[#ff4f8b] text-white font-bold text-[11px] flex-shrink-0 shadow-sm hover:bg-[#e63872] active:scale-95 transition-all"
               >
-                <Plus className="w-3 h-3" />
                 ADD
               </button>
             ) : (
-              <div className="flex items-center gap-1 min-h-[44px] h-8 rounded-lg bg-[#ff4f8b] overflow-hidden flex-shrink-0 shadow-sm">
+              <div className="flex items-center min-h-[44px] h-7 rounded-md bg-[#ff4f8b] overflow-hidden flex-shrink-0 shadow-sm">
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); decreaseQty(product.id); }}
@@ -243,7 +242,7 @@ function ProductCard({ product }: ProductCardProps) {
                 >
                   <Minus className="w-3 h-3" />
                 </button>
-                <span className="w-5 text-center text-xs font-black text-white">{quantity}</span>
+                <span className="w-6 text-center text-sm font-bold text-white">{quantity}</span>
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); increaseQty(product.id); }}

@@ -102,11 +102,11 @@ export default function RecentlyViewed() {
                             e.stopPropagation();
                             toast("Price alert feature coming soon!");
                           }}
-                          className="text-[10px] font-bold bg-[#fff0f6] text-[#ff4f8b] rounded-lg px-2.5 py-1 border border-[#ff4f8b]/30"
+                          className="text-[10px] font-semibold bg-[#fafafa] text-[#ff4f8b] rounded-md px-2 py-0.5 border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors"
                         >
                           NOTIFY
                         </button>
-                      ) : (
+                       ) : (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -115,7 +115,7 @@ export default function RecentlyViewed() {
                             addToCart({ id: product!.id, name: product!.name, price: product!.price, image: product!.image, quantity: 1 });
                             toast.success("Added to cart 🛒");
                           }}
-                          className="text-[10px] font-bold text-white bg-[#ff4f8b] rounded-lg px-2.5 py-1 hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                          className="min-h-[44px] h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
                         >
                           ADD
                         </button>

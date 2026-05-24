@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { products } from "@/data/products";
 
 interface CartItem {
   id: number;
@@ -22,13 +23,19 @@ interface CartStore {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartStore>((set) => ({
+export const useCartStore = create<CartStore>((set, get) => ({
   
   cart: [],
 
-  addToCart: (product) =>
-    set((state) => {
+  addToCart: (product) => {
+    const productInfo = products.find((p) => p.id === product.id);
+    
+    if (productInfo && productInfo.stock === "out_of_stock") {
+      console.warn(`Cannot add OOS product: ${product.name} (ID: ${product.id})`);
+      return;
+    }
 
+    set((state) => {
       const existing = state.cart.find(
         (item) => item.id === product.id
       );
@@ -49,7 +56,8 @@ export const useCartStore = create<CartStore>((set) => ({
       return {
         cart: [...state.cart, product],
       };
-    }),
+    });
+  },
 
   removeFromCart: (id) =>
     set((state) => ({
@@ -58,7 +66,14 @@ export const useCartStore = create<CartStore>((set) => ({
       ),
     })),
 
-  increaseQuantity: (id) =>
+  increaseQuantity: (id) => {
+    const productInfo = products.find((p) => p.id === id);
+    
+    if (productInfo && productInfo.stock === "out_of_stock") {
+      console.warn(`Cannot increase quantity for OOS product (ID: ${id})`);
+      return;
+    }
+
     set((state) => ({
       cart: state.cart.map((item) =>
         item.id === id
@@ -68,7 +83,8 @@ export const useCartStore = create<CartStore>((set) => ({
             }
           : item
       ),
-    })),
+    }));
+  },
 
   decreaseQuantity: (id) =>
     set((state) => ({
