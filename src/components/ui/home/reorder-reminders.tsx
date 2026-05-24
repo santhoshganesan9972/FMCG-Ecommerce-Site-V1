@@ -8,6 +8,7 @@ import { products } from "@/data/products";
 import { useCartStore } from "@/store/cart-store";
 import { SafeProductImage } from "@/components/ui/safe-image";
 import { toast } from "sonner";
+import type { StockStatus } from "@/data/products";
 
 export default function ReorderReminders() {
   const orders = useOrderStore((s) => s.orders);
@@ -18,7 +19,7 @@ export default function ReorderReminders() {
   const reorderItems = useMemo(() => {
     const delivered = orders.filter((o) => o.status === "Delivered");
     const seen = new Set<number>();
-    const items: { id: number; name: string; image: string; price: number; quantity: number }[] = [];
+    const items: { id: number; name: string; image: string; price: number; quantity: number; stock: StockStatus }[] = [];
 
     for (const order of delivered) {
       for (const item of order.items) {
@@ -31,6 +32,7 @@ export default function ReorderReminders() {
             image: item.image,
             price: item.price,
             quantity: item.quantity,
+            stock: prod.stock,
           });
         }
       }
@@ -39,9 +41,11 @@ export default function ReorderReminders() {
     return items.slice(0, 10);
   }, [orders]);
 
+  const inStockItems = reorderItems.filter((item) => item.stock !== "out_of_stock");
+
   function reorderAll() {
     let count = 0;
-    for (const item of reorderItems) {
+    for (const item of inStockItems) {
       const existing = cart.find((c) => c.id === item.id);
       if (!existing || existing.quantity === 0) {
         addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, quantity: item.quantity });
@@ -51,7 +55,7 @@ export default function ReorderReminders() {
     if (count > 0) {
       toast.success(`Added ${count} item${count > 1 ? "s" : ""} to cart 🔄`);
     } else {
-      toast("Items already in cart");
+      toast("Items already in cart or unavailable");
     }
   }
 
@@ -71,15 +75,17 @@ export default function ReorderReminders() {
           <h2 className="text-base sm:text-lg font-black text-[#1a1a1a]">Buy Again</h2>
           <span className="text-[10px] font-semibold text-[#999]">From past orders</span>
         </div>
-        <button
-          type="button"
-          onClick={reorderAll}
-          className="flex items-center gap-1 text-xs font-bold text-[#0c831f] hover:text-[#ff4f8b] transition-colors"
-          aria-label="Reorder all items"
-        >
-          <RotateCcw className="w-3 h-3" />
-          Reorder All
-        </button>
+        {inStockItems.length > 0 && (
+          <button
+            type="button"
+            onClick={reorderAll}
+            className="flex items-center gap-1 text-xs font-bold text-[#0c831f] hover:text-[#ff4f8b] transition-colors"
+            aria-label="Reorder all available items"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Reorder All
+          </button>
+        )}
       </div>
 
       <div className="relative">
@@ -87,50 +93,80 @@ export default function ReorderReminders() {
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto hide-scrollbar snap-x snap-mandatory touch-pan-x pb-1"
         >
-          {reorderItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex-shrink-0 w-[130px] sm:w-[150px] snap-start"
-            >
-              <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden">
-                <Link href={`/product/${item.id}`} className="block">
-                  <div className="relative aspect-square bg-[#f2f2f2]">
-                    <SafeProductImage
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      sizes="130px"
-                      className="object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute top-1 left-1 bg-[#0c831f]/90 text-white text-[9px] font-bold px-1 py-0.5 rounded">
-                      x{item.quantity}
+          {reorderItems.map((item) => {
+            const isOOS = item.stock === "out_of_stock";
+            return (
+              <div
+                key={item.id}
+                className={`flex-shrink-0 w-[130px] sm:w-[150px] snap-start ${isOOS ? "opacity-60" : ""}`}
+              >
+                <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden">
+                  <Link href={`/product/${item.id}`} className="block">
+                    <div className={`relative aspect-square bg-[#f2f2f2] ${isOOS ? "grayscale" : ""}`}>
+                      <SafeProductImage
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="130px"
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      {!isOOS && (
+                        <div className="absolute top-1 left-1 bg-[#0c831f]/90 text-white text-[9px] font-bold px-1 py-0.5 rounded">
+                          x{item.quantity}
+                        </div>
+                      )}
+                      {isOOS && (
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
+                          <span className="text-[9px] font-black text-white bg-[#ff4f8b] px-2 py-0.5 rounded shadow-lg">
+                            SOLD OUT
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Link>
-                <div className="p-2">
-                  <Link href={`/product/${item.id}`}>
-                    <p className="text-xs font-semibold text-[#1a1a1a] leading-tight line-clamp-2 min-h-[2rem]">
-                      {item.name}
-                    </p>
                   </Link>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-sm font-black text-[#1a1a1a]">₹{item.price}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, quantity: item.quantity });
-                        toast.success("Added to cart 🛒");
-                      }}
-                      className="text-[10px] font-bold text-[#ff4f8b] border border-[#ff4f8b] rounded-lg px-2 py-1 hover:bg-[#ff4f8b] hover:text-white transition-colors"
-                    >
-                      ADD
-                    </button>
+                  <div className="p-2">
+                    <Link href={`/product/${item.id}`}>
+                      <p className={`text-xs font-semibold leading-tight line-clamp-2 min-h-[2rem] ${isOOS ? "text-[#666]" : "text-[#1a1a1a]"}`}>
+                        {item.name}
+                      </p>
+                    </Link>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex-1">
+                        <span className={`text-sm font-black ${isOOS ? "text-[#999] line-through" : "text-[#1a1a1a]"}`}>₹{item.price}</span>
+                      </div>
+                      {isOOS ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toast("Price alert feature coming soon!");
+                          }}
+                          className="text-[10px] font-bold bg-[#fff0f6] text-[#ff4f8b] rounded-lg px-2.5 py-1 border border-[#ff4f8b]/30"
+                        >
+                          NOTIFY
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addToCart({ id: item.id, name: item.name, price: item.price, image: item.image, quantity: item.quantity });
+                            toast.success("Added to cart 🛒");
+                          }}
+                          className="text-[10px] font-bold text-white bg-[#ff4f8b] rounded-lg px-2.5 py-1 hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                        >
+                          ADD
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

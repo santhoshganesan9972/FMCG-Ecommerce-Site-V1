@@ -1,8 +1,9 @@
 "use client";
 
-import { ShoppingCart, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Bell } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { toast } from "sonner";
+import type { StockStatus } from "@/data/products";
 
 interface StickyAddToCartProps {
   product: {
@@ -10,6 +11,7 @@ interface StickyAddToCartProps {
     name: string;
     price: number;
     image: string;
+    stock?: StockStatus;
   };
 }
 
@@ -17,6 +19,29 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
   const { cart, addToCart, increaseQuantity, decreaseQuantity } = useCartStore();
   const cartItem = cart.find((item) => item.id === product.id);
   const quantity = cartItem?.quantity ?? 0;
+  const isOutOfStock = product.stock === "out_of_stock";
+
+  if (isOutOfStock) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#e8e8e8] shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:hidden animate-slide-up">
+        <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#999]">{product.name}</p>
+            <p className="text-lg font-black text-[#999] line-through">₹{product.price}</p>
+          </div>
+          <button
+            onClick={() => {
+              toast("Price alert feature coming soon!");
+            }}
+            className="flex items-center gap-2 h-12 px-6 rounded-xl bg-[#fff0f6] text-[#ff4f8b] text-sm font-black"
+          >
+            <Bell className="w-5 h-5" />
+            Notify Me
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#e8e8e8] shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:hidden animate-slide-up">
@@ -45,16 +70,16 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
             <ShoppingCart className="w-5 h-5" />
             Add
           </button>
-        ) : (
-          <div className="flex items-center rounded-xl border-2 border-[#ff4f8b] overflow-hidden h-12">
+         ) : (
+          <div className="flex items-center rounded-xl bg-[#ff4f8b] overflow-hidden h-12 shadow-sm">
             <button
               onClick={() => decreaseQuantity(product.id)}
-              className="w-12 h-full flex items-center justify-center text-[#ff4f8b] hover:bg-[#fff0f6] active:bg-[#fff0f6] transition-colors"
+              className="w-12 h-full flex items-center justify-center text-white hover:bg-[#e63872] active:bg-[#e63872] transition-colors"
               aria-label="Decrease quantity"
             >
               <Minus className="w-5 h-5" />
             </button>
-            <span className="w-12 text-center text-base font-black text-[#ff4f8b]">
+            <span className="w-12 text-center text-base font-black text-white">
               {quantity}
             </span>
             <button
@@ -62,7 +87,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
                 increaseQuantity(product.id);
                 toast.success("Added to cart 🛒");
               }}
-              className="w-12 h-full flex items-center justify-center bg-[#ff4f8b] text-white hover:bg-[#e63872] active:bg-[#e63872] transition-colors"
+              className="w-12 h-full flex items-center justify-center text-white hover:bg-[#e63872] active:bg-[#e63872] transition-colors"
               aria-label="Increase quantity"
             >
               <Plus className="w-5 h-5" />

@@ -284,16 +284,6 @@ export default function CameraScanner({ onScan, onClose }: CameraScannerProps) {
           Point your camera at a barcode or QR code to search for the product
         </p>
       </div>
-
-      <style jsx>{`
-        @keyframes scanLine {
-          0%, 100% { top: 10%; }
-          50% { top: 90%; }
-        }
-        :global(.animate-scan-line) {
-          animation: scanLine 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

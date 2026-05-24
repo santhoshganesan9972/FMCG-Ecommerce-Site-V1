@@ -24,6 +24,8 @@ export default function RecentlyViewed() {
 
   if (viewedProducts.length === 0) return null;
 
+  const isOutOfStock = (stock: string) => stock === "out_of_stock";
+
   function scroll(dir: number) {
     const el = scrollRef.current;
     if (!el) return;
@@ -55,47 +57,75 @@ export default function RecentlyViewed() {
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto hide-scrollbar snap-x snap-mandatory touch-pan-x pb-1"
         >
-          {viewedProducts.map((product) => (
-            <div
-              key={product!.id}
-              className="flex-shrink-0 w-[130px] sm:w-[150px] snap-start"
-            >
-              <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden">
-                <Link href={`/product/${product!.id}`} className="block">
-                  <div className="relative aspect-square bg-[#f2f2f2]">
-                    <SafeProductImage
-                      src={product!.image}
-                      alt={product!.name}
-                      fill
-                      sizes="130px"
-                      className="object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                </Link>
-                <div className="p-2">
-                  <Link href={`/product/${product!.id}`}>
-                    <p className="text-xs font-semibold text-[#1a1a1a] leading-tight line-clamp-2 min-h-[2rem]">
-                      {product!.name}
-                    </p>
+          {viewedProducts.map((product) => {
+            const oos = isOutOfStock(product!.stock);
+            return (
+              <div
+                key={product!.id}
+                className={`flex-shrink-0 w-[130px] sm:w-[150px] snap-start ${oos ? "opacity-60" : ""}`}
+              >
+                <div className="bg-white rounded-xl border border-[#e8e8e8] overflow-hidden">
+                  <Link href={`/product/${product!.id}`} className="block">
+                    <div className={`relative aspect-square bg-[#f2f2f2] ${oos ? "grayscale" : ""}`}>
+                      <SafeProductImage
+                        src={product!.image}
+                        alt={product!.name}
+                        fill
+                        sizes="130px"
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      {oos && (
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
+                          <span className="text-[9px] font-black text-white bg-[#ff4f8b] px-2 py-0.5 rounded shadow-lg">
+                            SOLD OUT
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </Link>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-sm font-black text-[#1a1a1a]">₹{product!.price}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        addToCart({ id: product!.id, name: product!.name, price: product!.price, image: product!.image, quantity: 1 });
-                        toast.success("Added to cart 🛒");
-                      }}
-                      className="text-[10px] font-bold text-[#ff4f8b] border border-[#ff4f8b] rounded-lg px-2 py-1 hover:bg-[#ff4f8b] hover:text-white transition-colors"
-                    >
-                      ADD
-                    </button>
+                  <div className="p-2">
+                    <Link href={`/product/${product!.id}`}>
+                      <p className={`text-xs font-semibold leading-tight line-clamp-2 min-h-[2rem] ${oos ? "text-[#666]" : "text-[#1a1a1a]"}`}>
+                        {product!.name}
+                      </p>
+                    </Link>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex-1">
+                        <span className={`text-sm font-black ${oos ? "text-[#999] line-through" : "text-[#1a1a1a]"}`}>₹{product!.price}</span>
+                      </div>
+                      {oos ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toast("Price alert feature coming soon!");
+                          }}
+                          className="text-[10px] font-bold bg-[#fff0f6] text-[#ff4f8b] rounded-lg px-2.5 py-1 border border-[#ff4f8b]/30"
+                        >
+                          NOTIFY
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            addToCart({ id: product!.id, name: product!.name, price: product!.price, image: product!.image, quantity: 1 });
+                            toast.success("Added to cart 🛒");
+                          }}
+                          className="text-[10px] font-bold text-white bg-[#ff4f8b] rounded-lg px-2.5 py-1 hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                        >
+                          ADD
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

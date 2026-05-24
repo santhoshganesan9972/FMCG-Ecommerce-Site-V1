@@ -192,20 +192,10 @@ export default function QuickViewModal({ product, open, onClose }: QuickViewModa
             className="mt-3 flex items-center justify-center gap-1 h-10 rounded-xl border border-[#e8e8e8] text-xs font-semibold text-[#666] hover:bg-[#fafafa] transition-colors"
           >
             View full details
-            <ChevronRight className="w-3 h-3" />
+             <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.95) translateY(10px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        :global(.animate-modal-in) {
-          animation: modalIn 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

@@ -473,40 +473,13 @@ export default function SearchPage() {
         onClear={() => { setActiveFilters({ ...defaultFilterState }); }}
       />
 
-      {/* Barcode Scanner Modal */}
+       {/* Barcode Scanner Modal */}
       {showScanner && (
         <CameraScanner
           onScan={handleBarcodeScan}
           onClose={() => setShowScanner(false)}
         />
       )}
-
-      <style jsx>{`
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        :global(.animate-slide-up) {
-          animation: slide-up 0.25s ease-out;
-        }
-        :global(.animate-slide-down) {
-          animation: slide-down 0.2s ease-out;
-        }
-      `}</style>
     </main>
     </PullToRefresh>
     </ErrorBoundary>

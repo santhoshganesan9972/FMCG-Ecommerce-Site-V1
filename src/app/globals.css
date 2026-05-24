@@ -561,3 +561,47 @@ tr.table-row-hover:hover {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+/* ── Slide animations (previously styled-jsx) ── */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+/* ── Scan line animation for barcode scanner ── */
+@keyframes scanLine {
+  0%, 100% { top: 10%; }
+  50% { top: 90%; }
+}
+.animate-scan-line {
+  animation: scanLine 2s ease-in-out infinite;
+}
+
+/* ── Modal in animation ── */
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-modal-in {
+  animation: modalIn 0.2s ease-out;
+}

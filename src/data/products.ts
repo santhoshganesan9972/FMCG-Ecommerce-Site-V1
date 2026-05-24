@@ -46,7 +46,7 @@ export const products: readonly Product[] = [
   { id: 3,  name: "Premium Almonds",               category: "Snacks",     price: 799,  oldPrice: 999,  rating: 4.9, stock: "in_stock",       image: "https://images.unsplash.com/photo-1508747703725-719777637510" },
   { id: 21, name: "Baked Multigrain Chips",        category: "Snacks",     price: 99,   oldPrice: 120,  rating: 4.3, stock: "in_stock",       image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b" },
   { id: 22, name: "Dark Chocolate Bar (70%)",      category: "Snacks",     price: 149,  oldPrice: 179,  rating: 4.7, stock: "low_stock",      image: "https://images.unsplash.com/photo-1481391319762-47dff72954d9" },
-  { id: 23, name: "Roasted Cashews (200 g)",       category: "Snacks",     price: 349,  oldPrice: 429,  rating: 4.8, stock: "in_stock",       image: "https://images.unsplash.com/photo-1607113256158-56a934936ef0" },
+  { id: 23, name: "Roasted Cashews (200 g)",       category: "Snacks",     price: 349,  oldPrice: 429,  rating: 4.8, stock: "in_stock",       image: "https://images.unsplash.com/photo-1508747703725-719777637510" },
   { id: 24, name: "Popcorn — Butter & Salt",       category: "Snacks",     price: 79,   oldPrice: 99,   rating: 4.2, stock: "in_stock",       image: "https://images.unsplash.com/photo-1585647347483-22b66260dfff" },
   { id: 25, name: "Trail Mix (Nuts & Berries)",    category: "Snacks",     price: 249,  oldPrice: 299,  rating: 4.6, stock: "out_of_stock",   image: "https://images.unsplash.com/photo-1599599810769-bcde5a160d32" },
 

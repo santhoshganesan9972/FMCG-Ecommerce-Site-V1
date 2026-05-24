@@ -100,22 +100,24 @@ export default function NearbyTrends() {
                       </p>
                     </Link>
                     <p className="text-[9px] text-[#999] mt-0.5">{product.category}</p>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <div>
-                        <span className="text-sm font-black text-[#1a1a1a]">₹{product.price}</span>
-                        <span className="text-[9px] text-[#999] line-through ml-1">₹{product.oldPrice}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
-                          toast.success("Added to cart 🛒");
-                        }}
-                        className="text-[10px] font-bold text-[#ff4f8b] border border-[#ff4f8b] rounded-lg px-2 py-1 hover:bg-[#ff4f8b] hover:text-white transition-colors"
-                      >
-                        ADD
-                      </button>
-                    </div>
+                     <div className="flex items-center justify-between mt-1.5">
+                       <div className="flex-1">
+                         <span className="text-sm font-black text-[#1a1a1a]">₹{product.price}</span>
+                         <span className="text-[9px] text-[#999] line-through ml-1">₹{product.oldPrice}</span>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                           toast.success("Added to cart 🛒");
+                         }}
+                         className="text-[10px] font-bold text-white bg-[#ff4f8b] rounded-lg px-2.5 py-1 hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                       >
+                         ADD
+                       </button>
+                     </div>
                   </div>
                 </div>
               </div>

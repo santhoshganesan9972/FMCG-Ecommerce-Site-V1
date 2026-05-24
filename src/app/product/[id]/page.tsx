@@ -221,7 +221,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {/* Add to cart + wishlist */}
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <ProductDetailActions product={product} />
+                    <ProductDetailActions product={{ id: product.id, name: product.name, price: product.price, image: product.image, stock: product.stock }} />
                   </div>
                   <ProductDetailWishlist product={product} />
                 </div>
@@ -299,7 +299,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
-      <StickyAddToCart product={{ id: product.id, name: product.name, price: product.price, image: product.image }} />
+       <StickyAddToCart product={{ id: product.id, name: product.name, price: product.price, image: product.image, stock: product.stock }} />
     </main>
   );
 }

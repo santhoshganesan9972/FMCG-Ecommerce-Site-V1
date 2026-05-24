@@ -1,10 +1,11 @@
 "use client";
 
-import { ShoppingCart, Search, MapPin, ChevronDown } from "lucide-react";
+import { ShoppingCart, Search } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import dynamic from "next/dynamic";
 import NotificationPanel from "./notification-panel";
 import Link from "next/link";
+import LocationPicker from "./location-picker";
 
 const AuthModal = dynamic(() => import("./auth/auth-modal"), { ssr: false });
 
@@ -36,16 +37,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* LOCATION — hidden on small mobile */}
-        <button className="hidden md:flex items-center gap-1.5 flex-shrink-0 border-r border-[#e8e8e8] pr-4">
-          <MapPin className="w-4 h-4 text-[#0c831f]" />
-          <div className="text-left">
-            <p className="text-[10px] text-[#666] leading-none">Deliver to</p>
-            <p className="text-xs font-bold text-[#1a1a1a] flex items-center gap-0.5 leading-none mt-0.5">
-              Home <ChevronDown className="w-3 h-3" />
-            </p>
-          </div>
-        </button>
+        {/* LOCATION PICKER */}
+        <LocationPicker />
 
         {/* SEARCH BAR — grows to fill space */}
         <Link href="/search" className="flex-1 min-w-0">

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Bell, Search, Zap } from "lucide-react";
 import MobileSidebar from "@/components/ui/admin/mobile-sidebar";
