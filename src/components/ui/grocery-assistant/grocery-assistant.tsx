@@ -30,6 +30,7 @@ const SCROLL_IMPULSE_FACTOR = 0.35;
 const SCROLL_DECAY = 0.92;
 
 export default function GroceryAssistant() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
   const [mood, setMood] = useState<Mood>("idle");
@@ -115,6 +116,11 @@ export default function GroceryAssistant() {
       setTimeout(() => setShowHeart(false), 2000);
     }
   }, [setTemporaryMood]);
+
+  // Mount guard — prevents hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Reduced motion detection
   useEffect(() => {
@@ -329,6 +335,7 @@ export default function GroceryAssistant() {
     return () => clearInterval(idleSpeechInterval);
   }, [mood, isHovered, randomSpeech]);
 
+  if (!isMounted) return null;
   if (!isVisible) return null;
 
   const getEyeStyle = () => {

@@ -64,6 +64,12 @@ import {
   Activity,
   Cpu,
   GitBranch,
+  QrCode,
+  ClipboardList,
+  Megaphone,
+  Bike,
+  Smartphone,
+  Terminal,
 } from "lucide-react";
 
 const menuItems = [
@@ -262,6 +268,121 @@ const menuItems = [
     href: "/admin/monitoring",
     caption: "API, servers, database, queues & alerts",
   },
+  // ── NEW ADMIN SECTIONS ──
+  {
+    icon: FileText,
+    label: "Product Management",
+    href: "/admin/products",
+    caption: "Catalog, variants, SEO & bulk upload",
+  },
+  {
+    icon: BarChart3,
+    label: "Reports & Analytics",
+    href: "/admin/reports",
+    caption: "Revenue, customers, vendors & orders",
+  },
+  {
+    icon: MapPin,
+    label: "Delivery Zones",
+    href: "/admin/delivery-zones",
+    caption: "Radius, fees & zone management",
+  },
+  {
+    icon: Building2,
+    label: "Warehouses",
+    href: "/admin/warehouses",
+    caption: "Hubs, cold storage & depots",
+  },
+  {
+    icon: Search,
+    label: "Search Management",
+    href: "/admin/search",
+    caption: "Keywords, synonyms & trending",
+  },
+  {
+    icon: Shield,
+    label: "Fraud & Risk",
+    href: "/admin/fraud-risk",
+    caption: "Scores, flags & blacklist",
+  },
+  {
+    icon: Image,
+    label: "Media Library",
+    href: "/admin/media",
+    caption: "Images, videos & documents",
+  },
+  {
+    icon: Smartphone,
+    label: "Device Management",
+    href: "/admin/devices",
+    caption: "Active sessions & devices",
+  },
+  {
+    icon: Store,
+    label: "Pickup Stores",
+    href: "/admin/pickup-stores",
+    caption: "Store locations & timing",
+  },
+  {
+    icon: Lock,
+    label: "Data Privacy",
+    href: "/admin/data-privacy",
+    caption: "Consent, export & deletion",
+  },
+  {
+    icon: FileSpreadsheet,
+    label: "Templates",
+    href: "/admin/templates",
+    caption: "Email, SMS & WhatsApp templates",
+  },
+  {
+    icon: QrCode,
+    label: "Barcode Management",
+    href: "/admin/barcodes",
+    caption: "Scan, map & generate barcodes",
+  },
+  {
+    icon: ClipboardList,
+    label: "Purchase Orders",
+    href: "/admin/purchase-orders",
+    caption: "Supplier orders & approvals",
+  },
+  {
+    icon: ArrowLeftRight,
+    label: "Stock Transfers",
+    href: "/admin/stock-transfers",
+    caption: "Transfer requests & history",
+  },
+  {
+    icon: ShoppingCart,
+    label: "Abandoned Carts",
+    href: "/admin/abandoned-carts",
+    caption: "Recovery campaigns & reminders",
+  },
+  {
+    icon: BrainCircuit,
+    label: "Business Intelligence",
+    href: "/admin/bi",
+    caption: "Insights, predictions & analytics",
+  },
+  {
+    icon: Activity,
+    label: "Queue & Jobs",
+    href: "/admin/queue-jobs",
+    caption: "Notification, order & report queues",
+  },
+  {
+    icon: Megaphone,
+    label: "Campaigns",
+    href: "/admin/campaigns",
+    caption: "Push, email & banner campaigns",
+  },
+  {
+    icon: Bike,
+    label: "Delivery Partners",
+    href: "/admin/delivery-partners",
+    caption: "Riders, shifts & earnings",
+  },
   {
     icon: Settings,
     label: "Settings",
@@ -301,6 +422,9 @@ const menuItems = [
     ],
     developerSubmenu: [
       { icon: GitBranch, label: "Git Integration", href: "/admin/developer/git" },
+      { icon: Terminal, label: "Logs", href: "/admin/developer/logs" },
+      { icon: Globe, label: "Environment Variables", href: "/admin/developer/env" },
+      { icon: Activity, label: "Health Checks", href: "/admin/developer/health" },
     ],
   },
 ];
