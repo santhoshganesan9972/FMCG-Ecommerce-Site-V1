@@ -8,14 +8,14 @@ import { toast } from "sonner";
 
 export default function AuthGate() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(true);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const { login } = useAuthStore();
+
   // Don't show the gate on admin routes — the admin panel has its own auth context.
   if (pathname?.startsWith("/admin")) {
     return null;
   }
-
-  const [open, setOpen] = useState(true);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const { login } = useAuthStore();
 
   const handleContinue = () => {
     if (phoneNumber.length === 10) {

@@ -5,6 +5,7 @@ import ErrorBoundary from "@/components/ui/error-boundary";
 import LayoutClient from "./layout-client";
 import SkipLink from "@/components/ui/a11y/skip-link";
 import AnimatedBackground from "@/components/ui/animated-background";
+import GroceryAssistant from "@/components/ui/grocery-assistant/grocery-assistant";
 
 export const metadata: Metadata = {
   title: "FMCG Commerce — Ultra-fast Grocery Delivery",
@@ -76,6 +77,7 @@ export default function RootLayout({
                </main>
              </ErrorBoundary>
            </LayoutClient>
+           <GroceryAssistant />
            <Toaster position="bottom-right" className="z-50" />
          </body>
        </html>
