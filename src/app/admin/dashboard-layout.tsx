@@ -5,24 +5,39 @@ import SidebarEnterprise from "@/components/ui/admin/sidebar-enterprise";
 import Topbar from "./topbar";
 import AdminFooter from "@/components/ui/admin/footer";
 
+const STORAGE_KEY = "admin_sidebar_collapsed";
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Lazy initializer — SSR-safe: server returns false, client hydrates with false,
+  // then instantly reads localStorage to avoid any flash.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(STORAGE_KEY) === "true";
+    }
+    return false;
+  });
+
+  // Persist sidebar state on change
+  const handleToggle = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+    localStorage.setItem(STORAGE_KEY, String(collapsed));
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f2f2f2] text-[#1a1a1a]">
       {/* Enterprise Sidebar (fixed) */}
       <SidebarEnterprise
         collapsed={sidebarCollapsed}
-        onToggle={setSidebarCollapsed}
+        onToggle={handleToggle}
       />
 
       <div
-        className={`min-w-0 flex-1 flex flex-col transition-all duration-200 ${
-          sidebarCollapsed ? "" : "md:ml-64"
+        className={`min-w-0 flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? "md:ml-16" : "md:ml-64"
         }`}
       >
         {/* Fixed/sticky header */}

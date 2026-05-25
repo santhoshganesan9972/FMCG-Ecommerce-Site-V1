@@ -85,31 +85,87 @@ export default function MobileSidebar() {
               return (
                 <div key={item.label}>
                   {hasSubmenu ? (
-                    <button
-                      onClick={() => toggleSection(item.label)}
-                      className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all duration-150 ${
-                        isActive
-                          ? "bg-[#e8f5e9] text-[#0c831f]"
-                          : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
-                      }`}
-                    >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <span className="block text-sm font-bold leading-tight">
-                          {item.label}
-                        </span>
-                        {item.caption && (
-                          <span className="block truncate text-[10px] font-medium opacity-70">
-                            {item.caption}
-                          </span>
-                        )}
+                    <>
+                      {/* ── Split row: Link (navigate) + Button (toggle) ── */}
+                      <div className="flex items-center">
+                        <Link
+                          href={item.href}
+                          onClick={close}
+                          className={`flex flex-1 items-center gap-2.5 rounded-l-xl px-3 py-2.5 transition-all duration-150 ${
+                            isActive
+                              ? "bg-[#e8f5e9] text-[#0c831f]"
+                              : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <span className="block text-sm font-bold leading-tight">
+                              {item.label}
+                            </span>
+                            {item.caption && (
+                              <span className="block truncate text-[10px] font-medium opacity-70">
+                                {item.caption}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleSection(item.label);
+                          }}
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-r-xl transition-all duration-150 ${
+                            isActive
+                              ? "bg-[#e8f5e9] text-[#0c831f]"
+                              : "text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
+                          }`}
+                          aria-label={isExpanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                          type="button"
+                        >
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform duration-300 ease-in-out ${
+                              isExpanded ? "rotate-0" : "-rotate-90"
+                            }`}
+                          />
+                        </button>
                       </div>
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 ${
-                          isExpanded ? "rotate-0" : "-rotate-90"
+
+                      {/* ── Submenu with smooth animation ── */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                         }`}
-                      />
-                    </button>
+                      >
+                        <div className="ml-3 mt-0.5 border-l-2 border-[#e8e8e8] pl-3 space-y-0.5">
+                          {item.submenu!.map((sub) => {
+                            const isSubActive =
+                              pathname === sub.href || pathname.startsWith(sub.href + "/");
+                            return (
+                              <Link
+                                key={sub.href}
+                                href={sub.href}
+                                onClick={close}
+                                className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150 ${
+                                  isSubActive
+                                    ? "bg-[#e8f5e9] text-[#0c831f] font-bold"
+                                    : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
+                                }`}
+                              >
+                                <sub.icon
+                                  className={`h-3.5 w-3.5 flex-shrink-0 transition-colors ${
+                                    isSubActive
+                                      ? "text-[#0c831f]"
+                                      : "text-[#999] group-hover:text-[#666]"
+                                  }`}
+                                />
+                                <span>{sub.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
                   ) : (
                     <Link
                       href={item.href}
@@ -132,45 +188,7 @@ export default function MobileSidebar() {
                         )}
                       </div>
                     </Link>
-                  )}
-
-                  {/* Submenu with smooth animation */}
-                  {hasSubmenu && (
-                    <div
-                      className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                        isExpanded ? "max-h-96 opacity-100 mt-0.5" : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="ml-3 border-l-2 border-[#e8e8e8] pl-3 space-y-0.5">
-                        {item.submenu!.map((sub) => {
-                          const isSubActive =
-                            pathname === sub.href || pathname.startsWith(sub.href + "/");
-                          return (
-                            <Link
-                              key={sub.href}
-                              href={sub.href}
-                              onClick={close}
-                              className={`group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150 ${
-                                isSubActive
-                                  ? "bg-[#e8f5e9] text-[#0c831f] font-bold"
-                                  : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
-                              }`}
-                            >
-                              <sub.icon
-                                className={`h-3.5 w-3.5 flex-shrink-0 transition-colors ${
-                                  isSubActive
-                                    ? "text-[#0c831f]"
-                                    : "text-[#999] group-hover:text-[#666]"
-                                }`}
-                              />
-                              <span>{sub.label}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  )}                </div>
               );
             })}
           </nav>

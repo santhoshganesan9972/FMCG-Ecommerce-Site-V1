@@ -1,55 +1,60 @@
 "use client";
 
 import Link from "next/link";
+import { menuItems } from "@/data/admin/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
-  Zap, Headphones, BookOpen, ShieldCheck, LayoutDashboard,
-  List, Boxes, Store, MapPin, Users, Wallet, Tag, Bell,
-  Award, RotateCcw, Settings,  BarChart3, ChevronUp,
-  CreditCard, FileText, User, Activity, TrendingUp, ShoppingCart
+  LayoutDashboard,
+  ChevronUp,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Activity,
+  Zap,
+  Headphones,
+  BookOpen,
+  ShieldCheck,
 } from "lucide-react";
 
-const footerGroups = [
-  {
-    title: "Operations",
-    links: [
-      { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-      { label: "Orders", href: "/admin/orders", icon: List },
-      { label: "Inventory", href: "/admin/inventory", icon: Boxes },
-      { label: "Categories", href: "/admin/categories", icon: Store },
-      { label: "Delivery", href: "/admin/delivery", icon: MapPin },
-    ],
-  },
-  {
-    title: "Financial",
-    links: [
-      { label: "Payments", href: "/admin/finance/payments", icon: CreditCard },
-      { label: "Transactions", href: "/admin/finance/transactions", icon: FileText },
-      { label: "Refunds", href: "/admin/finance/refunds", icon: RotateCcw },
-      { label: "Wallet", href: "/admin/finance/wallet", icon: Wallet },
-      { label: "GST Reports", href: "/admin/finance/reports/gst", icon: BarChart3 },
-    ],
-  },
-  {
-    title: "Marketing & Support",
-    links: [
-      { label: "Promotions", href: "/admin/promotions", icon: Tag },
-      { label: "Notifications", href: "/admin/notifications", icon: Bell },
-      { label: "Loyalty", href: "/admin/loyalty", icon: Award },
-      { label: "Support Center", href: "/admin/support", icon: Headphones },
-      { label: "Returns", href: "/admin/returns", icon: RotateCcw },
-    ],
-  },
-  {
-    title: "System",
-    links: [
-      { label: "Users", href: "/admin/users", icon: Users },
-      { label: "Customers", href: "/admin/customers", icon: User },
-      { label: "Vendors", href: "/admin/vendors", icon: Store },
-      { label: "Settings", href: "/admin/settings", icon: Settings },
-      { label: "Activity Log", href: "/admin/dashboard", icon: Activity },
-    ],
-  },
+// ── Footer Group Configuration ─────────────────────────────
+// Maps sidebar sections to footer columns (labels must match menuItems labels)
+
+interface FooterLink {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+interface FooterGroup {
+  title: string;
+  links: FooterLink[];
+}
+
+const footerGroupConfig: { title: string; labels: string[] }[] = [
+  { title: "Management", labels: ["Products", "Inventory", "Orders"] },
+  { title: "Commerce", labels: ["Customers", "Promotions", "Vendors"] },
+  { title: "Operations", labels: ["Reports", "Delivery"] },
+  { title: "System", labels: ["Settings"] },
 ];
+
+// Build footer link data from the sidebar navigation (single source of truth)
+function buildFooterGroups(): FooterGroup[] {
+  return footerGroupConfig.map((group) => ({
+    title: group.title,
+    links: group.labels.flatMap((label) => {
+      const item = menuItems.find((m) => m.label === label);
+      if (!item) return [];
+      if (item.submenu) {
+        return item.submenu.map((sub) => ({
+          label: sub.label,
+          href: sub.href,
+          icon: sub.icon,
+        }));
+      }
+      return [{ label: item.label, href: item.href, icon: item.icon }];
+    }),
+  }));
+}
 
 const systemStats = [
   { label: "Orders Today", value: "847", icon: ShoppingCart, color: "text-[#ff4f8b]", bg: "bg-[#fff0f6]" },
@@ -59,6 +64,8 @@ const systemStats = [
 ];
 
 export default function AdminFooter() {
+  const footerGroups = buildFooterGroups();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -96,8 +103,19 @@ export default function AdminFooter() {
         </div>
       </div>
 
+      {/* ── Dashboard Quick Link ── */}
+      <div className="mx-auto w-full max-w-[1200px] px-4 pt-6">
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#ff4f8b] hover:text-[#e04373] transition-colors"
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          Dashboard Overview
+        </Link>
+      </div>
+
       {/* ── Link Columns ── */}
-      <div className="mx-auto w-full max-w-[1200px] px-4 py-8">
+      <div className="mx-auto w-full max-w-[1200px] px-4 py-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {footerGroups.map((group) => (
             <div key={group.title}>
@@ -106,7 +124,7 @@ export default function AdminFooter() {
               </h3>
               <ul className="space-y-2">
                 {group.links.map((link) => (
-                  <li key={link.label}>
+                  <li key={link.href}>
                     <Link
                       href={link.href}
                       className="flex items-center gap-2 text-xs font-bold text-[#666] hover:text-[#ff4f8b] transition-colors group"
@@ -128,7 +146,6 @@ export default function AdminFooter() {
       {/* ── Bottom Bar ── */}
       <div className="mx-auto w-full max-w-[1200px] px-4 py-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* Left: Brand + Status */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-[#ff4f8b] flex items-center justify-center">
@@ -145,7 +162,6 @@ export default function AdminFooter() {
             </div>
           </div>
 
-          {/* Right: Quick Actions */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link href="/" className="flex items-center gap-1.5 text-xs font-bold text-[#0c831f] hover:text-[#ff4f8b] transition-colors border-r border-[#e8e8e8] pr-4">
               <Zap className="w-3.5 h-3.5" />
