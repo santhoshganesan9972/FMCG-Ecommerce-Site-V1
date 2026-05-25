@@ -1,97 +1,66 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export interface Notification {
   id: string;
-  type: "order" | "offer" | "reminder" | "system" | "referral" | "price_drop";
   title: string;
-  message: string;
+  description?: string;
+  message?: string;
+  type: string;
   read: boolean;
-  createdAt: number;
+  timestamp: string;
+  createdAt?: string | number;
   actionUrl?: string;
 }
 
-interface NotificationStore {
+interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
-  addNotification: (n: Omit<Notification, "id" | "read" | "createdAt">) => void;
+  addNotification: (notification: Omit<Notification, "id" | "read" | "timestamp">) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  clearNotifications: () => void;
   clearAll: () => void;
-  removeNotification: (id: string) => void;
 }
 
-export const useNotificationStore = create<NotificationStore>()(
-  persist(
-    (set, get) => ({
+export const useNotificationStore = create<NotificationState>((set) => ({
+  notifications: [],
+  unreadCount: 0,
+
+  addNotification: (notification) =>
+    set((state) => ({
       notifications: [
         {
-          id: "notif_1",
-          type: "order",
-          title: "Order Delivered",
-          message: "Your order #12345 has been delivered successfully!",
+          ...notification,
+          id: `notif-${Date.now()}`,
           read: false,
-          createdAt: Date.now() - 3600000,
-          actionUrl: "/account/orders",
+          timestamp: new Date().toISOString(),
+          createdAt: Date.now(),
         },
-        {
-          id: "notif_2",
-          type: "offer",
-          title: "Flash Sale Live!",
-          message: "Extra 20% off on all snacks & beverages. Limited time!",
-          read: false,
-          createdAt: Date.now() - 7200000,
-          actionUrl: "/offers",
-        },
-        {
-          id: "notif_3",
-          type: "reminder",
-          title: "Reorder Reminder",
-          message: "Your favorite items from last order are back in stock!",
-          read: true,
-          createdAt: Date.now() - 86400000,
-          actionUrl: "/cart",
-        },
+        ...state.notifications,
       ],
+      unreadCount: state.unreadCount + 1,
+    })),
 
-      get unreadCount() {
-        return get().notifications.filter((n) => !n.read).length;
-      },
-
-      addNotification: (n) =>
-        set((state) => ({
-          notifications: [
-            {
-              ...n,
-              id: `notif_${Date.now()}`,
-              read: false,
-              createdAt: Date.now(),
-            },
-            ...state.notifications,
-          ],
-        })),
-
-      markAsRead: (id) =>
-        set((state) => ({
-          notifications: state.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-          ),
-        })),
-
-      markAllAsRead: () =>
-        set((state) => ({
-          notifications: state.notifications.map((n) => ({ ...n, read: true })),
-        })),
-
-      clearAll: () => set({ notifications: [] }),
-
-      removeNotification: (id) =>
-        set((state) => ({
-          notifications: state.notifications.filter((n) => n.id !== id),
-        })),
+  markAsRead: (id) =>
+    set((state) => {
+      const updated = state.notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      );
+      return {
+        notifications: updated,
+        unreadCount: updated.filter((n) => !n.read).length,
+      };
     }),
-    { name: "notification-storage" }
-  )
-);
+
+  markAllAsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map((n) => ({ ...n, read: true })),
+      unreadCount: 0,
+    })),
+
+  clearNotifications: () => set({ notifications: [], unreadCount: 0 }),
+
+  clearAll: () => set({ notifications: [], unreadCount: 0 }),
+}));

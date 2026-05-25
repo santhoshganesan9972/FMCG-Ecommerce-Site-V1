@@ -106,7 +106,7 @@ export default function NotificationPanel() {
                             )}
                           </div>
                           <p className="text-xs text-[#666] mt-0.5 line-clamp-2">{notification.message}</p>
-                          <p className="text-[10px] text-[#999] mt-1">{getTimeAgo(notification.createdAt)}</p>
+                          <p className="text-[10px] text-[#999] mt-1">{getTimeAgo(typeof notification.createdAt === 'number' ? notification.createdAt : Date.now())}</p>
                         </div>
                       </Link>
                     );

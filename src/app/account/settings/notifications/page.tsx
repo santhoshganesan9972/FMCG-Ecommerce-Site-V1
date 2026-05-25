@@ -39,10 +39,10 @@ export default function NotificationSettingsPage() {
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-[#e8e8e8]" : "bg-[#ff4f8b]"}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-[#1a1a1a]">{n.title}</p>
-                    <p className="text-[10px] text-[#666] truncate">{n.message}</p>
+                    <p className="text-[10px] text-[#666] truncate">{n.description}</p>
                   </div>
                   <span className="text-[9px] text-[#999] flex-shrink-0">
-                    {new Date(n.createdAt).toLocaleDateString("en-IN")}
+                    {new Date(n.timestamp).toLocaleDateString("en-IN")}
                   </span>
                 </div>
               ))}
