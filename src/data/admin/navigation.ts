@@ -39,6 +39,7 @@ import {
   Layers,
   RefreshCw,
   Activity,
+  User,
   type LucideIcon,
 } from "lucide-react";
 
@@ -176,6 +177,18 @@ export const menuItems: MenuItem[] = [
       { icon: Truck, label: "Fleet Dashboard", href: "/admin/delivery/fleet" },
       { icon: Navigation, label: "Route Optimization", href: "/admin/delivery/route-optimization" },
     ],
+  },
+  {
+    icon: Bell,
+    label: "Notifications",
+    href: "/admin/notifications",
+    caption: "Alerts & updates",
+  },
+  {
+    icon: User,
+    label: "Profile",
+    href: "/admin/profile",
+    caption: "Account & security",
   },
   {
     icon: Settings,

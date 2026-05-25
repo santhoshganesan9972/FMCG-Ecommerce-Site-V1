@@ -32,7 +32,6 @@ import {
   BellRing,
   Mail as MailIcon,
   MessageSquare,
-  Settings,
   AlertTriangle,
   Fingerprint,
 } from "lucide-react";

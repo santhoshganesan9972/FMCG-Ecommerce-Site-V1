@@ -52,7 +52,7 @@ export const AdminNotificationSchema = z.object({
     })
     .optional()
     .nullable(),
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
   createdAt: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)),
   updatedAt: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)),
 });

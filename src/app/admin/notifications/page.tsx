@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import DashboardLayout from "../dashboard-layout";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
-import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
+import type { AdminNotification } from "@/types/admin-notifications";
 import {
   Bell,
   BellRing,
@@ -23,9 +23,6 @@ import {
   ShieldAlert,
   CreditCard,
   ArrowUp,
-  Filter,
-  X,
-  Loader2,
   Inbox,
 } from "lucide-react";
 
@@ -139,7 +136,7 @@ function NotificationItem({
   onArchive,
   onDelete,
 }: {
-  notification: any;
+  notification: AdminNotification;
   isSelected: boolean;
   isExpanded: boolean;
   onToggleSelect: () => void;
