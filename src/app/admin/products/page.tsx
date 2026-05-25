@@ -1,303 +1,380 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import DashboardLayout from "../dashboard-layout";
 import { mockAdminProducts, mockBulkUploadHistory } from "@/data/admin/products";
-import { Search, Plus, Upload, Download, Filter, FileText, Image, Hash, History, BarChart3, Copy, Archive, Trash2, ChevronDown, ChevronRight, Edit3, Eye } from "lucide-react";
+import {
+  ReusablePageHeader,
+  ReusableSearchBar,
+  ReusableFilterPanel,
+  ReusableExportButton,
+  ReusableBulkActionToolbar,
+  ReusableStatusBadge,
+  ReusableDrawer,
+  ReusableConfirmationDialog,
+  ReusableAnalyticsCard,
+  ReusableFormSection,
+} from "@/components/reusable/reusable-components";
+import ReusableTable from "@/components/reusable/reusable-table";
+import {
+  Plus,
+  Upload,
+  Download,
+  Copy,
+  Archive,
+  Edit3,
+  Eye,
+  BarChart3,
+  Package,
+  DollarSign,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 
-type Tab = "products" | "add" | "variants" | "media" | "seo" | "history" | "bulk";
+const productColumns = [
+  {
+    key: "name",
+    header: "Product",
+    sortable: true,
+    render: (p: any) => (
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-[#f0f0f0] flex items-center justify-center overflow-hidden">
+          {p.media?.[0]?.url ? (
+            <img src={p.media[0].url} alt={p.name} className="h-full w-full object-cover" />
+          ) : (
+            <Package className="w-5 h-5 text-[#ccc]" />
+          )}
+        </div>
+        <div>
+          <p className="font-semibold text-[#1a1a1a]">{p.name}</p>
+          <p className="text-xs text-[#999] font-mono">{p.sku}</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "category",
+    header: "Category",
+    sortable: true,
+    render: (p: any) => (
+      <span className="inline-flex rounded-full bg-[#e8f5e9] px-2.5 py-0.5 text-xs font-semibold text-[#0c831f]">
+        {p.category}
+      </span>
+    ),
+  },
+  {
+    key: "price",
+    header: "Price",
+    sortable: true,
+    align: "right" as const,
+    render: (p: any) => (
+      <div className="text-right">
+        <p className="font-semibold text-[#1a1a1a]">₹{p.price}</p>
+        <p className="text-xs text-[#999] line-through">₹{p.mrp}</p>
+      </div>
+    ),
+  },
+  {
+    key: "stock",
+    header: "Stock",
+    sortable: true,
+    align: "right" as const,
+    render: (p: any) => (
+      <span
+        className={`font-semibold ${
+          p.stock === 0
+            ? "text-red-500"
+            : p.stock <= p.lowStockThreshold
+            ? "text-amber-500"
+            : "text-[#0c831f]"
+        }`}
+      >
+        {p.stock}
+      </span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    hideOnMobile: true,
+    render: (p: any) => <ReusableStatusBadge status={p.status} />,
+  },
+  {
+    key: "actions",
+    header: "",
+    width: "120px",
+    align: "right" as const,
+    render: (p: any) => (
+      <div className="flex items-center justify-end gap-1">
+        <button
+          onClick={(e) => { e.stopPropagation(); toast.info(`Viewing ${p.name}`); }}
+          className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#0c831f] transition-colors"
+          title="View"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); toast.info(`Editing ${p.name}`); }}
+          className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#0c831f] transition-colors"
+          title="Edit"
+        >
+          <Edit3 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); toast.success(`Cloned ${p.name}`); }}
+          className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#ff4f8b] transition-colors"
+          title="Clone"
+        >
+          <Copy className="w-4 h-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); toast.info(`${p.name} archived`); }}
+          className="rounded-lg p-1.5 text-[#666] hover:bg-[#fff0f6] hover:text-red-500 transition-colors"
+          title="Archive"
+        >
+          <Archive className="w-4 h-4" />
+        </button>
+      </div>
+    ),
+  },
+];
+
+const filterGroups = [
+  {
+    label: "Category",
+    key: "category",
+    type: "select" as const,
+    options: [
+      { label: "Groceries", value: "Groceries" },
+      { label: "Fruits", value: "Fruits" },
+      { label: "Dairy", value: "Dairy" },
+      { label: "Beverages", value: "Beverages" },
+      { label: "Snacks", value: "Snacks" },
+      { label: "Health", value: "Health" },
+    ],
+  },
+  {
+    label: "Status",
+    key: "status",
+    type: "select" as const,
+    options: [
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+      { label: "Draft", value: "draft" },
+      { label: "Archived", value: "archived" },
+    ],
+  },
+  {
+    label: "Stock Status",
+    key: "stockStatus",
+    type: "select" as const,
+    options: [
+      { label: "In Stock", value: "in_stock" },
+      { label: "Low Stock", value: "low_stock" },
+      { label: "Out of Stock", value: "out_of_stock" },
+    ],
+  },
+  {
+    label: "Brand",
+    key: "brand",
+    type: "text" as const,
+    placeholder: "Enter brand name",
+  },
+  {
+    label: "Min Price",
+    key: "minPrice",
+    type: "number" as const,
+    placeholder: "₹0",
+  },
+  {
+    label: "Max Price",
+    key: "maxPrice",
+    type: "number" as const,
+    placeholder: "₹10,000",
+  },
+];
 
 export default function ProductsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("products");
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: "products", label: "Product List", icon: <FileText className="w-4 h-4" /> },
-    { key: "add", label: "Add Product", icon: <Plus className="w-4 h-4" /> },
-    { key: "variants", label: "Variants", icon: <Copy className="w-4 h-4" /> },
-    { key: "media", label: "Media", icon: <Image className="w-4 h-4" /> },
-    { key: "seo", label: "SEO Fields", icon: <Hash className="w-4 h-4" /> },
-    { key: "history", label: "History", icon: <History className="w-4 h-4" /> },
-    { key: "bulk", label: "Bulk Upload", icon: <Upload className="w-4 h-4" /> },
-  ];
+  const filteredProducts = useMemo(() => {
+    let result = [...mockAdminProducts];
+
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.barcode.toLowerCase().includes(q)
+      );
+    }
+
+    if (filters.category) {
+      result = result.filter((p) => p.category === filters.category);
+    }
+    if (filters.status) {
+      result = result.filter((p) => p.status === filters.status);
+    }
+    if (filters.stockStatus) {
+      if (filters.stockStatus === "in_stock") result = result.filter((p) => p.stock > p.lowStockThreshold);
+      else if (filters.stockStatus === "low_stock") result = result.filter((p) => p.stock > 0 && p.stock <= p.lowStockThreshold);
+      else if (filters.stockStatus === "out_of_stock") result = result.filter((p) => p.stock === 0);
+    }
+    if (filters.brand) {
+      result = result.filter((p) => p.brand.toLowerCase().includes(filters.brand.toLowerCase()));
+    }
+    if (filters.minPrice) result = result.filter((p) => p.price >= Number(filters.minPrice));
+    if (filters.maxPrice) result = result.filter((p) => p.price <= Number(filters.maxPrice));
+
+    // Sort
+    result.sort((a, b) => {
+      const aVal = (a as any)[sortKey];
+      const bVal = (b as any)[sortKey];
+      if (typeof aVal === "string") {
+        return sortOrder === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+    });
+
+    return result;
+  }, [search, filters, sortKey, sortOrder]);
+
+  const activeFilterCount = useMemo(
+    () => Object.values(filters).filter((v) => v !== "").length,
+    [filters]
+  );
+
+  const handleSort = useCallback((key: string, order: "asc" | "desc") => {
+    setSortKey(key);
+    setSortOrder(order);
+  }, []);
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5">
-        <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Product Management</p>
-              <h1 className="mt-2 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Product Catalog</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666]">Manage your entire product catalog — create, edit, clone, archive products, and bulk upload via CSV.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => { setActiveTab("add"); toast.info("Opening add product form"); }} className="flex items-center gap-2 rounded-lg bg-[#0c831f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0a6a18]"><Plus className="w-4 h-4" />Add Product</button>
-              <button onClick={() => { setActiveTab("bulk"); toast.info("Opening bulk upload"); }} className="flex items-center gap-2 rounded-lg border border-[#e8e8e8] bg-white px-4 py-2 text-sm font-semibold text-[#1a1a1a] hover:bg-[#f8f9fa]"><Upload className="w-4 h-4" />Import</button>
-              <button className="flex items-center gap-2 rounded-lg border border-[#e8e8e8] bg-white px-4 py-2 text-sm font-semibold text-[#1a1a1a] hover:bg-[#f8f9fa]"><Download className="w-4 h-4" />Export</button>
-            </div>
-          </div>
+      <div className="space-y-5">
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <ReusableAnalyticsCard
+            title="Total Products"
+            value={mockAdminProducts.length}
+            change="+24 this month"
+            trend="up"
+            icon={<Package className="w-4 h-4" />}
+          />
+          <ReusableAnalyticsCard
+            title="Active Products"
+            value={mockAdminProducts.filter((p) => p.status === "active").length}
+            change="68% of total"
+            trend="up"
+            icon={<BarChart3 className="w-4 h-4" />}
+          />
+          <ReusableAnalyticsCard
+            title="Low Stock Items"
+            value={mockAdminProducts.filter((p) => p.stock > 0 && p.stock <= p.lowStockThreshold).length}
+            change="Needs reorder"
+            trend="down"
+            icon={<AlertTriangle className="w-4 h-4" />}
+          />
+          <ReusableAnalyticsCard
+            title="Out of Stock"
+            value={mockAdminProducts.filter((p) => p.stock === 0).length}
+            change="Requires attention"
+            trend="down"
+            icon={<AlertTriangle className="w-4 h-4" />}
+          />
+        </div>
 
-          <div className="mt-5 flex flex-wrap gap-1.5 border-b border-[#e8e8e8] pb-2">
-            {tabs.map((t) => (
-              <button key={t.key} onClick={() => setActiveTab(t.key)} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${activeTab === t.key ? "bg-[#0c831f] text-white shadow-sm" : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"}`}>{t.icon}{t.label}</button>
-            ))}
-          </div>
-        </section>
+        <ReusablePageHeader
+          title="Product Catalog"
+          subtitle="Manage your entire product catalog — create, edit, clone, archive products, and bulk upload via CSV."
+          breadcrumb="PRODUCT MANAGEMENT"
+          actions={
+            <>
+              <ReusableExportButton onExport={(fmt) => toast.success(`Exporting as ${fmt.toUpperCase()}`)} />
+              <button
+                onClick={() => router.push("/admin/products/new")}
+                className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Product
+              </button>
+            </>
+          }
+        />
 
-        {activeTab === "products" && (
-          <>
-            <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999]" />
-                  <input type="text" placeholder="Search products by name, SKU, or barcode..." className="w-full rounded-xl border border-[#e8e8e8] py-2.5 pl-10 pr-4 text-sm text-[#1a1a1a] placeholder:text-[#999] focus:border-[#0c831f] focus:outline-none" />
-                </div>
-                <button className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] px-4 py-2.5 text-sm font-semibold text-[#666] hover:bg-[#f8f9fa]"><Filter className="w-4 h-4" />Filter</button>
-              </div>
-            </section>
+        {/* Search & Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <ReusableSearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search products by name, SKU, or barcode..."
+            className="flex-1 min-w-[250px]"
+          />
+          <ReusableFilterPanel
+            groups={filterGroups}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+            activeCount={activeFilterCount}
+          />
+        </div>
 
-            <section className="rounded-2xl border border-[#e8e8e8] bg-white shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#e8e8e8] bg-[#f9fafb]">
-                      {["Product", "SKU", "Category", "Price", "MRP", "Stock", "Status", "Actions"].map((h) => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-[#666]">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockAdminProducts.map((p) => (
-                      <tr key={p.id} className="border-b border-[#e8e8e8] hover:bg-[#f9fafb] transition-colors">
-                        <td className="px-4 py-3">
-                          <div>
-                            <p className="font-bold text-[#1a1a1a]">{p.name}</p>
-                            <p className="text-xs text-[#999]">{p.sku}</p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-[#666] font-mono text-xs">{p.sku}</td>
-                        <td className="px-4 py-3"><span className="rounded-full bg-[#e8f5e9] px-2.5 py-0.5 text-xs font-semibold text-[#0c831f]">{p.category}</span></td>
-                        <td className="px-4 py-3 font-semibold text-[#1a1a1a]">₹{p.price}</td>
-                        <td className="px-4 py-3 text-[#999] line-through">₹{p.mrp}</td>
-                        <td className="px-4 py-3">
-                          <span className={`font-semibold ${p.stock === 0 ? "text-red-500" : p.stock < p.lowStockThreshold ? "text-amber-500" : "text-[#0c831f]"}`}>{p.stock}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${p.status === "active" ? "bg-[#e8f5e9] text-[#0c831f]" : "bg-[#fef2f2] text-red-600"}`}>{p.status}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
-                            <button onClick={() => toast.info("Viewing product details")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#0c831f]"><Eye className="w-4 h-4" /></button>
-                            <button onClick={() => toast.info("Editing product")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#0c831f]"><Edit3 className="w-4 h-4" /></button>
-                            <button onClick={() => toast.info("Product cloned")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-[#ff4f8b]"><Copy className="w-4 h-4" /></button>
-                            <button onClick={() => toast.info("Product archived")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0] hover:text-red-500"><Archive className="w-4 h-4" /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex items-center justify-between border-t border-[#e8e8e8] px-4 py-3 bg-[#f9fafb]">
-                <p className="text-xs text-[#666]">Showing 3 of 1,240 products</p>
-                <div className="flex gap-1">
-                  {[1, 2, 3].map((p) => (
-                    <button key={p} className={`rounded-lg px-3 py-1 text-xs font-semibold ${p === 1 ? "bg-[#0c831f] text-white" : "text-[#666] hover:bg-[#f0f0f0]"}`}>{p}</button>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </>
-        )}
+        {/* Bulk Actions */}
+        <ReusableBulkActionToolbar
+          selectedCount={selectedIds.length}
+          onClear={() => setSelectedIds([])}
+          actions={[
+            {
+              label: "Archive",
+              icon: <Archive className="w-3.5 h-3.5" />,
+              onClick: () => toast.success(`${selectedIds.length} products archived`),
+            },
+            {
+              label: "Update Price",
+              icon: <DollarSign className="w-3.5 h-3.5" />,
+              onClick: () => toast.info(`Updating prices for ${selectedIds.length} products`),
+            },
+            {
+              label: "Delete",
+              icon: <Archive className="w-3.5 h-3.5" />,
+              onClick: () => setShowDeleteDialog(true),
+              variant: "danger" as const,
+            },
+          ]}
+        />
 
-        {activeTab === "add" && (
-          <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-black text-[#1a1a1a] mb-4">Add New Product</h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                { label: "Product Name", placeholder: "Enter product name" },
-                { label: "SKU", placeholder: "Auto-generated or custom" },
-                { label: "Category", type: "select", options: ["Groceries", "Fruits", "Snacks", "Health", "Dairy", "Beverages"] },
-                { label: "Brand", placeholder: "Brand name" },
-                { label: "Price (₹)", type: "number", placeholder: "0" },
-                { label: "MRP (₹)", type: "number", placeholder: "0" },
-                { label: "Tax Rate (%)", type: "number", placeholder: "5" },
-                { label: "Stock Quantity", type: "number", placeholder: "0" },
-              ].map((f) => (
-                <div key={f.label}>
-                  <label className="mb-1.5 block text-xs font-bold text-[#666]">{f.label}</label>
-                  {f.type === "select" ? (
-                    <select className="w-full rounded-xl border border-[#e8e8e8] px-4 py-2.5 text-sm text-[#1a1a1a] focus:border-[#0c831f] focus:outline-none">
-                      {f.options?.map((o) => <option key={o}>{o}</option>)}
-                    </select>
-                  ) : (
-                    <input type={f.type || "text"} placeholder={f.placeholder} className="w-full rounded-xl border border-[#e8e8e8] px-4 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#999] focus:border-[#0c831f] focus:outline-none" />
-                  )}
-                </div>
-              ))}
-              <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-xs font-bold text-[#666]">Description</label>
-                <textarea rows={3} placeholder="Product description" className="w-full rounded-xl border border-[#e8e8e8] px-4 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#999] focus:border-[#0c831f] focus:outline-none" />
-              </div>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => toast.success("Product created!")} className="rounded-xl bg-[#0c831f] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">Save Product</button>
-              <button onClick={() => toast.info("Changes discarded")} className="rounded-xl border border-[#e8e8e8] px-6 py-2.5 text-sm font-semibold text-[#666] hover:bg-[#f8f9fa]">Cancel</button>
-            </div>
-          </section>
-        )}
-
-        {activeTab === "variants" && (
-          <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-[#1a1a1a]">Product Variants</h2>
-              <button onClick={() => toast.info("Adding variant")} className="flex items-center gap-2 rounded-lg border border-[#e8e8e8] px-4 py-2 text-sm font-semibold text-[#666] hover:bg-[#f8f9fa]"><Plus className="w-4 h-4" />Add Variant</button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#e8e8e8] bg-[#f9fafb]">
-                    {["Product", "Variant", "SKU", "Price", "Stock", "Default", "Actions"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-[#666]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockAdminProducts.flatMap((p) => p.variants.map((v) => (
-                    <tr key={v.id} className="border-b border-[#e8e8e8] hover:bg-[#f9fafb]">
-                      <td className="px-4 py-3 font-semibold text-[#1a1a1a]">{p.name}</td>
-                      <td className="px-4 py-3 text-[#666]">{v.name}</td>
-                      <td className="px-4 py-3 text-xs font-mono text-[#666]">{v.sku}</td>
-                      <td className="px-4 py-3 font-semibold">₹{v.price}</td>
-                      <td className="px-4 py-3">{v.stock}</td>
-                      <td className="px-4 py-3">{v.isDefault ? <span className="rounded-full bg-[#e8f5e9] px-2 py-0.5 text-xs font-semibold text-[#0c831f]">Default</span> : <span className="text-[#999]">—</span>}</td>
-                      <td className="px-4 py-3"><button onClick={() => toast.info("Editing variant")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0]"><Edit3 className="w-4 h-4" /></button></td>
-                    </tr>
-                  )))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {activeTab === "media" && (
-          <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-black text-[#1a1a1a]">Product Media</h2>
-              <button onClick={() => toast.info("Upload media dialog opened")} className="flex items-center gap-2 rounded-lg bg-[#0c831f] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a6a18]"><Upload className="w-4 h-4" />Upload Media</button>
-            </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {mockAdminProducts.flatMap((p) => p.media.map((m) => (
-                <div key={m.id} className="group relative rounded-xl border border-[#e8e8e8] overflow-hidden">
-                  <div className="aspect-square bg-[#f6f7f6] flex items-center justify-center">
-                    <Image className="w-8 h-8 text-[#ccc]" />
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => toast.info("Viewing media")} className="rounded-lg bg-white p-1.5"><Eye className="w-4 h-4 text-[#1a1a1a]" /></button>
-                    <button onClick={() => toast.info("Media deleted")} className="rounded-lg bg-white p-1.5"><Trash2 className="w-4 h-4 text-red-500" /></button>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                    <p className="text-xs text-white font-semibold truncate">{m.alt}</p>
-                    {m.isPrimary && <span className="text-[10px] text-[#ff4f8b] font-bold">Primary</span>}
-                  </div>
-                </div>
-              )))}
-            </div>
-          </section>
-        )}
-
-        {activeTab === "seo" && (
-          <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-black text-[#1a1a1a] mb-4">SEO Fields</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#e8e8e8] bg-[#f9fafb]">
-                    {["Product", "Meta Title", "Slug", "Keywords", "Actions"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-[#666]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockAdminProducts.map((p) => (
-                    <tr key={p.seo.productId} className="border-b border-[#e8e8e8] hover:bg-[#f9fafb]">
-                      <td className="px-4 py-3 font-semibold text-[#1a1a1a]">{p.name}</td>
-                      <td className="px-4 py-3 max-w-[200px] truncate text-xs text-[#666]">{p.seo.metaTitle}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#666]">{p.seo.slug}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {p.seo.metaKeywords.slice(0, 2).map((kw) => (
-                            <span key={kw} className="rounded-full bg-[#f0f0f0] px-2 py-0.5 text-[10px] text-[#666]">{kw}</span>
-                          ))}
-                          <span className="text-[10px] text-[#999]">+{p.seo.metaKeywords.length - 2}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3"><button onClick={() => toast.info("Editing SEO")} className="rounded-lg p-1.5 text-[#666] hover:bg-[#f0f0f0]"><Edit3 className="w-4 h-4" /></button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {activeTab === "history" && (
-          <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-black text-[#1a1a1a] mb-4">Product History</h2>
-            <div className="space-y-3">
-              {mockAdminProducts.flatMap((p) => p.history.map((h) => (
-                <div key={h.id} className="flex items-start gap-3 rounded-xl border border-[#e8e8e8] p-4">
-                  <div className={`rounded-full p-2 ${h.action === "created" ? "bg-[#e8f5e9]" : h.action === "price_changed" ? "bg-[#fffbeb]" : h.action === "stock_updated" ? "bg-[#eff7ff]" : h.action === "status_changed" ? "bg-[#fef2f2]" : "bg-[#f6f7f6]"}`}>
-                    {h.action === "created" ? <Plus className="w-4 h-4 text-[#0c831f]" /> : h.action === "price_changed" ? <BarChart3 className="w-4 h-4 text-[#d97706]" /> : h.action === "stock_updated" ? <Copy className="w-4 h-4 text-[#0369a1]" /> : <History className="w-4 h-4 text-[#ff4f8b]" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-[#1a1a1a]">{h.action.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}</p>
-                    {h.field && <p className="text-sm text-[#666] mt-0.5">{h.field}: <span className="text-[#999] line-through">{h.oldValue}</span> → <span className="text-[#0c831f]">{h.newValue}</span></p>}
-                    <p className="text-xs text-[#999] mt-1">{h.performedBy} · {h.timestamp}</p>
-                  </div>
-                </div>
-              )))}
-            </div>
-          </section>
-        )}
-
-        {activeTab === "bulk" && (
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-black text-[#1a1a1a] mb-4">Bulk Upload</h2>
-              <div className="rounded-2xl border-2 border-dashed border-[#e8e8e8] p-8 text-center hover:border-[#0c831f] transition-colors">
-                <Upload className="mx-auto w-10 h-10 text-[#ccc]" />
-                <p className="mt-3 font-semibold text-[#1a1a1a]">Drop CSV or Excel file here</p>
-                <p className="mt-1 text-sm text-[#666]">or click to browse (max 10MB)</p>
-                <button onClick={() => toast.info("Upload dialog opened")} className="mt-4 rounded-xl bg-[#0c831f] px-6 py-2 text-sm font-bold text-white hover:bg-[#0a6a18]">Browse Files</button>
-              </div>
-              <div className="mt-4 rounded-xl bg-[#f6f7f6] p-4">
-                <p className="text-xs font-bold text-[#666] mb-2">Supported formats:</p>
-                <div className="flex flex-wrap gap-2">
-                  {[".CSV", ".XLSX", ".XLS"].map((fmt) => (
-                    <span key={fmt} className="rounded-lg bg-white px-3 py-1 text-xs font-semibold text-[#666] border border-[#e8e8e8]">{fmt}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="text-lg font-black text-[#1a1a1a] mb-4">Upload History</h2>
-              <div className="space-y-3">
-                {mockBulkUploadHistory.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between rounded-xl border border-[#e8e8e8] p-3">
-                    <div>
-                      <p className="font-semibold text-sm text-[#1a1a1a]">{b.fileName}</p>
-                      <p className="text-xs text-[#666]">{b.success} success, {b.failed} failed · {b.uploadedAt}</p>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${b.status === "completed" ? "bg-[#e8f5e9] text-[#0c831f]" : "bg-[#fffbeb] text-[#d97706]"}`}>{b.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Product Table */}
+        <ReusableTable
+          data={filteredProducts}
+          columns={productColumns}
+          keyExtractor={(p: any) => p.id}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onSort={handleSort}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+          emptyMessage="No products found matching your filters"
+        />
       </div>
+
+      <ReusableConfirmationDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={() => { toast.success(`${selectedIds.length} products deleted`); setShowDeleteDialog(false); setSelectedIds([]); }}
+        title="Delete Products"
+        message={`Are you sure you want to delete ${selectedIds.length} products? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+      />
     </DashboardLayout>
   );
 }

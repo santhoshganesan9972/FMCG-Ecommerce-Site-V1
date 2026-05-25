@@ -72,6 +72,15 @@ export default function CustomerEditPage() {
   const { id } = useParams();
   const customerId = typeof id === "string" ? parseInt(id, 10) : NaN;
   const customer = mockCustomers.find((c) => c.id === customerId);
+  
+  // Hoisted useState declarations with safe defaults
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    name: customer?.name || "",
+    email: customer?.email || "",
+    phone: customer?.phone || "",
+    status: customer?.status || "active",
+  });
 
   if (!customer) {
     return (
@@ -89,14 +98,6 @@ export default function CustomerEditPage() {
       </DashboardLayout>
     );
   }
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: customer.name,
-    email: customer.email,
-    phone: customer.phone,
-    status: customer.status,
-  });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

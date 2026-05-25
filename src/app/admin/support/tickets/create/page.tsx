@@ -371,7 +371,7 @@ export default function CreateTicketPage() {
                   <AlertCircle className="h-5 w-5 flex-shrink-0 text-[#d97706]" />
                   <div>
                     <p className="text-xs font-bold text-[#1a1a1a]">Priority Guidelines</p>
-                    <p className="text-xs text-[#666] mt-0.5">Use "Urgent" only for critical business-impacting issues.</p>
+                    <p className="text-xs text-[#666] mt-0.5">Use &ldquo;Urgent&rdquo; only for critical business-impacting issues.</p>
                   </div>
                 </div>
 

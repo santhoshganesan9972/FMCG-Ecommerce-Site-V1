@@ -10,6 +10,8 @@ export const PRODUCT_CATEGORIES = [
   "Beverages",
 ] as const satisfies readonly string[];
 
+import { resolveProductImage } from "@/lib/image-utils";
+
 /** Valid product category string type. */
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
@@ -80,50 +82,46 @@ export const products: readonly Product[] = [
  * If the original image fails to load, uses a working fallback
  */
 export function getProductWithVisibleImage(product: Product): Product {
-  const { resolveProductImage } = require("@/lib/image-utils");
-  return {
-    ...product,
-    image: resolveProductImage(product.image),
-  };
-}
+   return {
+     ...product,
+     image: resolveProductImage(product.image),
+   };
+ }
 
 /**
  * Get all products with guaranteed visible images
  * Ensures every product has an accessible image URL
  */
 export function getProductsWithVisibleImages(): (Product & { originalImage?: string })[] {
-  const { resolveProductImage } = require("@/lib/image-utils");
-  return products.map((product) => ({
-    ...product,
-    originalImage: product.image,
-    image: resolveProductImage(product.image),
-  }));
-}
+   return products.map((product) => ({
+     ...product,
+     originalImage: product.image,
+     image: resolveProductImage(product.image),
+   }));
+ }
 
 /**
  * Find product by ID and return with guaranteed visible image
  */
 export function getProductById(id: number): (Product & { originalImage?: string }) | undefined {
-  const { resolveProductImage } = require("@/lib/image-utils");
-  const product = products.find((p) => p.id === id);
-  if (!product) return undefined;
-  return {
-    ...product,
-    originalImage: product.image,
-    image: resolveProductImage(product.image),
-  };
-}
+   const product = products.find((p) => p.id === id);
+   if (!product) return undefined;
+   return {
+     ...product,
+     originalImage: product.image,
+     image: resolveProductImage(product.image),
+   };
+ }
 
 /**
  * Get products by category with visible images
  */
 export function getProductsByCategory(category: ProductCategory): (Product & { originalImage?: string })[] {
-  const { resolveProductImage } = require("@/lib/image-utils");
-  return products
-    .filter((p) => p.category === category)
-    .map((product) => ({
-      ...product,
-      originalImage: product.image,
-      image: resolveProductImage(product.image),
-    }));
-}
+   return products
+     .filter((p) => p.category === category)
+     .map((product) => ({
+       ...product,
+       originalImage: product.image,
+       image: resolveProductImage(product.image),
+     }));
+ }

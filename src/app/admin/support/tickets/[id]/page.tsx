@@ -2,7 +2,7 @@
 
 import DashboardLayout from "../../../dashboard-layout";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   UserCheck,
@@ -84,15 +84,15 @@ const priorityConfig: Record<string, { label: string; bg: string; text: string }
 };
 
 export default function TicketDetailPage({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState<"chat" | "history">("chat");
-  const [newMessage, setNewMessage] = useState("");
-  const [showActions, setShowActions] = useState(false);
-  const [assignedAgent, setAssignedAgent] = useState(ticket.agent);
-  const [ticketStatus, setTicketStatus] = useState<"open" | "in-progress" | "escalated" | "resolved" | "closed">(ticket.status);
-  const [chatFiles, setChatFiles] = useState<UploadedFile[]>([]);
-  const [messages, setMessages] = useState(chatMessages);
-  const [, forceUpdate] = useState(0);
-  const attachmentsRef = useRef<Record<number, UploadedFile[]>>(chatAttachments);
+   const [activeTab, setActiveTab] = useState<"chat" | "history">("chat");
+   const [newMessage, setNewMessage] = useState("");
+   const [showActions, setShowActions] = useState(false);
+   const [assignedAgent, setAssignedAgent] = useState(ticket.agent);
+   const [ticketStatus, setTicketStatus] = useState<"open" | "in-progress" | "escalated" | "resolved" | "closed">(ticket.status);
+   const [chatFiles, setChatFiles] = useState<UploadedFile[]>([]);
+   const [messages, setMessages] = useState(chatMessages);
+   const [attachments, setAttachments] = useState<Record<number, UploadedFile[]>>(chatAttachments);
+   const [, forceUpdate] = useState(0);
 
   const status = statusConfig[ticketStatus];
   const priority = priorityConfig[ticket.priority];
@@ -265,76 +265,76 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
               {activeTab === "chat" && (
                 <div className="flex flex-col h-[450px]">
                   <div className="flex-1 overflow-y-auto p-5 space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#ccc transparent' }}>
-                    {messages.map((msg) => {
-                      const attachments = attachmentsRef.current[msg.id];
-                      return (
-                        <div key={msg.id} className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[80%] ${msg.from === "agent" ? "order-1" : ""}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10px] font-bold ${msg.from === "agent" ? "text-[#0c831f]" : "text-[#2563eb]"}`}>
-                                {msg.name}
-                              </span>
-                              <span className="text-[10px] text-[#999]">{msg.time}</span>
-                            </div>
-                            <div
-                              className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                                msg.from === "agent"
-                                  ? "bg-[#0c831f] text-white rounded-tr-sm"
-                                  : "bg-[#f3f4f6] text-[#1a1a1a] rounded-tl-sm"
-                              }`}
-                            >
-                              {msg.message}
-                            </div>
-                            {/* File Attachments in Message */}
-                            {attachments && attachments.length > 0 && (
-                              <div className="mt-2 space-y-1.5">
-                                {attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className={`flex cursor-pointer items-center gap-2 rounded-xl border transition-all hover:shadow-sm ${
-                                      msg.from === "agent"
-                                        ? "border-white/20 bg-white/10 text-white"
-                                        : "border-[#e8e8e8] bg-white text-[#1a1a1a]"
-                                    }`}
-                                  >
-                                    {att.preview ? (
-                                      <div className="flex items-start gap-2 p-2 w-full">
-                                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-white/20">
-                                          <img src={att.preview} alt={att.file.name} className="h-full w-full object-cover" />
-                                        </div>
-                                        <div className="flex-1 min-w-0 py-1">
-                                          <p className={`truncate text-xs font-semibold ${msg.from === "agent" ? "text-white/90" : "text-[#1a1a1a]"}`}>
-                                            {att.file.name}
-                                          </p>
-                                          <p className={`text-[10px] ${msg.from === "agent" ? "text-white/60" : "text-[#999]"}`}>{att.size}</p>
-                                          <div className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${msg.from === "agent" ? "text-white/80" : "text-[#2563eb]"}`}>
-                                            <Download className="h-3 w-3" />
-                                            Preview
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center gap-2 p-2 w-full">
-                                        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${msg.from === "agent" ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
-                                          <FileText className={`h-5 w-5 ${msg.from === "agent" ? "text-white/80" : "text-[#666]"}`} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <p className={`truncate text-xs font-semibold ${msg.from === "agent" ? "text-white/90" : "text-[#1a1a1a]"}`}>
-                                            {att.file.name}
-                                          </p>
-                                          <p className={`text-[10px] ${msg.from === "agent" ? "text-white/60" : "text-[#999]"}`}>{att.size}</p>
-                                        </div>
-                                        <Download className={`h-4 w-4 flex-shrink-0 ${msg.from === "agent" ? "text-white/60" : "text-[#666]"}`} />
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                     {messages.map((msg) => {
+                       const msgAttachments = attachments[msg.id];
+                       return (
+                         <div key={msg.id} className={`flex ${msg.from === "agent" ? "justify-end" : "justify-start"}`}>
+                           <div className={`max-w-[80%] ${msg.from === "agent" ? "order-1" : ""}`}>
+                             <div className="flex items-center gap-2 mb-1">
+                               <span className={`text-[10px] font-bold ${msg.from === "agent" ? "text-[#0c831f]" : "text-[#2563eb]"}`}>
+                                 {msg.name}
+                               </span>
+                               <span className="text-[10px] text-[#999]">{msg.time}</span>
+                             </div>
+                             <div
+                               className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                                 msg.from === "agent"
+                                   ? "bg-[#0c831f] text-white rounded-tr-sm"
+                                   : "bg-[#f3f4f6] text-[#1a1a1a] rounded-tl-sm"
+                               }`}
+                             >
+                               {msg.message}
+                             </div>
+                             {/* File Attachments in Message */}
+                             {msgAttachments && msgAttachments.length > 0 && (
+                               <div className="mt-2 space-y-1.5">
+                                 {msgAttachments.map((att) => (
+                                   <div
+                                     key={att.id}
+                                     className={`flex cursor-pointer items-center gap-2 rounded-xl border transition-all hover:shadow-sm ${
+                                       msg.from === "agent"
+                                         ? "border-white/20 bg-white/10 text-white"
+                                         : "border-[#e8e8e8] bg-white text-[#1a1a1a]"
+                                     }`}
+                                   >
+                                     {att.preview ? (
+                                       <div className="flex items-start gap-2 p-2 w-full">
+                                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-white/20">
+                                           <img src={att.preview} alt={att.file.name} className="h-full w-full object-cover" />
+                                         </div>
+                                         <div className="flex-1 min-w-0 py-1">
+                                           <p className={`truncate text-xs font-semibold ${msg.from === "agent" ? "text-white/90" : "text-[#1a1a1a]"}`}>
+                                             {att.file.name}
+                                           </p>
+                                           <p className={`text-[10px] ${msg.from === "agent" ? "text-white/60" : "text-[#999]"}`}>{att.size}</p>
+                                           <div className={`mt-1 flex items-center gap-1 text-[10px] font-semibold ${msg.from === "agent" ? "text-white/80" : "text-[#2563eb]"}`}>
+                                             <Download className="h-3 w-3" />
+                                             Preview
+                                           </div>
+                                         </div>
+                                       </div>
+                                     ) : (
+                                       <div className="flex items-center gap-2 p-2 w-full">
+                                         <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${msg.from === "agent" ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                                           <FileText className={`h-5 w-5 ${msg.from === "agent" ? "text-white/80" : "text-[#666]"}`} />
+                                         </div>
+                                         <div className="flex-1 min-w-0">
+                                           <p className={`truncate text-xs font-semibold ${msg.from === "agent" ? "text-white/90" : "text-[#1a1a1a]"}`}>
+                                             {att.file.name}
+                                           </p>
+                                           <p className={`text-[10px] ${msg.from === "agent" ? "text-white/60" : "text-[#999]"}`}>{att.size}</p>
+                                         </div>
+                                         <Download className={`h-4 w-4 flex-shrink-0 ${msg.from === "agent" ? "text-white/60" : "text-[#666]"}`} />
+                                       </div>
+                                     )}
+                                   </div>
+                                 ))}
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                       );
+                     })}
                   </div>
 
                   {/* Chat Input */}
@@ -387,43 +387,43 @@ export default function TicketDetailPage({ params }: { params: { id: string } })
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
                           className="w-full rounded-lg border border-[#e8e8e8] py-2.5 px-4 pr-12 text-sm focus:border-[#0c831f] focus:outline-none"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && (newMessage.trim() || chatFiles.length > 0)) {
-                              const newMsg = {
-                                id: messages.length + 1,
-                                from: "agent" as const,
-                                name: "Amit Singh",
-                                message: newMessage.trim() || "Sent attachment(s)",
-                                time: "Just now",
-                              };
-                              const updatedAttachments = { ...attachmentsRef.current, [newMsg.id]: [...chatFiles] };
-                              attachmentsRef.current = updatedAttachments;
-                              setMessages([...messages, newMsg]);
-                              setNewMessage("");
-                              setChatFiles([]);
-                              forceUpdate(n => n + 1);
-                            }
-                          }}
+                           onKeyDown={(e) => {
+                             if (e.key === "Enter" && (newMessage.trim() || chatFiles.length > 0)) {
+                               const newMsg = {
+                                 id: messages.length + 1,
+                                 from: "agent" as const,
+                                 name: "Amit Singh",
+                                 message: newMessage.trim() || "Sent attachment(s)",
+                                 time: "Just now",
+                               };
+                               const updatedAttachments = { ...attachments, [newMsg.id]: [...chatFiles] };
+                               setAttachments(updatedAttachments);
+                               setMessages([...messages, newMsg]);
+                               setNewMessage("");
+                               setChatFiles([]);
+                               forceUpdate(n => n + 1);
+                             }
+                           }}
                         />
                         <button
                           disabled={!newMessage.trim() && chatFiles.length === 0}
-                          onClick={() => {
-                            if (newMessage.trim() || chatFiles.length > 0) {
-                              const newMsg = {
-                                id: messages.length + 1,
-                                from: "agent" as const,
-                                name: "Amit Singh",
-                                message: newMessage.trim() || "Sent attachment(s)",
-                                time: "Just now",
-                              };
-                              const updatedAttachments = { ...attachmentsRef.current, [newMsg.id]: [...chatFiles] };
-                              attachmentsRef.current = updatedAttachments;
-                              setMessages([...messages, newMsg]);
-                              setNewMessage("");
-                              setChatFiles([]);
-                              forceUpdate(n => n + 1);
-                            }
-                          }}
+                           onClick={() => {
+                             if (newMessage.trim() || chatFiles.length > 0) {
+                               const newMsg = {
+                                 id: messages.length + 1,
+                                 from: "agent" as const,
+                                 name: "Amit Singh",
+                                 message: newMessage.trim() || "Sent attachment(s)",
+                                 time: "Just now",
+                               };
+                               const updatedAttachments = { ...attachments, [newMsg.id]: [...chatFiles] };
+                               setAttachments(updatedAttachments);
+                               setMessages([...messages, newMsg]);
+                               setNewMessage("");
+                               setChatFiles([]);
+                               forceUpdate(n => n + 1);
+                             }
+                           }}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg bg-[#0c831f] text-white hover:bg-[#0a6a18] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                           <Send className="h-3.5 w-3.5" />

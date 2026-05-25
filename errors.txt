@@ -1,0 +1,150 @@
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\cms\privacy-policy\page.tsx
+   86:37  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  195:75  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\cms\terms\page.tsx
+  211:75  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\customers\[id]\edit\page.tsx
+  93:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  94:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\delivery\[id]\edit\page.tsx
+  82:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  83:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\delivery\[id]\page.tsx
+  309:57  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  313:57  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\loyalty\rules\page.tsx
+   48:49  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  139:47  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  320:45  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  370:44  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  386:49  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\loyalty\tiers\page.tsx
+   88:50  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+   98:29  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\notifications\templates\page.tsx
+  116:73  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  116:87  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\promotions\campaigns\edit\page.tsx
+  46:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\support\tickets\[id]\page.tsx
+  268:35  error    Error: Cannot access refs during render
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\support\tickets\create\page.tsx
+  374:67  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                              react/no-unescaped-entities
+  374:74  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                              react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\admin\vendors\[id]\edit\page.tsx
+  105:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\app\search\page.tsx
+  83:21  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  83:58  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  94:38  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\animated-background.tsx
+  10:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\chart-container.tsx
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\checkout\auto-coupons.tsx
+  53:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\grocery-assistant\grocery-assistant.tsx
+  104:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\home\home-client.tsx
+  132:15  error  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\home\product-view-360.tsx
+  32:5   error    Error: Cannot access variable before it is declared
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\home\product-view-360.tsx:38:3
+  38:38  error    Compilation Skipped: Existing memoization could not be preserved
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\mobile\camera-scanner.tsx
+   67:11  error    Error: Cannot access variable before it is declared
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\mobile\camera-scanner.tsx:89:3
+  124:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\mobile\offline-indicator.tsx
+  15:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\mobile\offline-indicator.tsx:15:7
+  24:20  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\products\product-detail-actions.tsx
+  39:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  39:72  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\search\advanced-filters.tsx
+  95:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  97:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\components\ui\search\search-suggestions-enhanced.tsx
+  109:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\.kilo\worktrees\nosy-fog\src\data\products.ts
+   83:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   95:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  107:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  121:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+File: C:\Users\acer\fmcg-commerce\src\app\admin\cms\privacy-policy\page.tsx
+   86:37  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  195:75  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\cms\terms\page.tsx
+  211:75  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\customers\[id]\edit\page.tsx
+  93:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  94:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\src\app\admin\delivery\[id]\edit\page.tsx
+  82:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+  83:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\src\app\admin\delivery\[id]\page.tsx
+  309:57  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  313:57  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\loyalty\rules\page.tsx
+   48:49  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  139:47  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  320:45  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  370:44  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  386:49  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\loyalty\tiers\page.tsx
+   88:50  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+   98:29  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\src\app\admin\notifications\templates\page.tsx
+  116:73  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  116:87  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\promotions\campaigns\edit\page.tsx
+  46:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\src\app\admin\support\tickets\[id]\page.tsx
+  268:35  error    Error: Cannot access refs during render
+File: C:\Users\acer\fmcg-commerce\src\app\admin\support\tickets\create\page.tsx
+  374:67  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                              react/no-unescaped-entities
+  374:74  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                              react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\app\admin\vendors\[id]\edit\page.tsx
+  105:35  error    React Hook "useState" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+File: C:\Users\acer\fmcg-commerce\src\app\search\page.tsx
+  83:21  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  83:58  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  94:38  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\src\components\ui\animated-background.tsx
+  10:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\chart-container.tsx
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\checkout\auto-coupons.tsx
+  53:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\grocery-assistant\grocery-assistant.tsx
+  122:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\grocery-assistant\grocery-assistant.tsx:122:5
+  128:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\home\home-client.tsx
+  132:15  error  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
+File: C:\Users\acer\fmcg-commerce\src\components\ui\home\product-view-360.tsx
+  32:5   error    Error: Cannot access variable before it is declared
+File: C:\Users\acer\fmcg-commerce\src\components\ui\home\product-view-360.tsx:38:3
+  38:38  error    Compilation Skipped: Existing memoization could not be preserved
+File: C:\Users\acer\fmcg-commerce\src\components\ui\mobile\camera-scanner.tsx
+   67:11  error    Error: Cannot access variable before it is declared
+File: C:\Users\acer\fmcg-commerce\src\components\ui\mobile\camera-scanner.tsx:89:3
+  124:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\mobile\offline-indicator.tsx
+  15:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\mobile\offline-indicator.tsx:15:7
+  24:20  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\components\ui\products\product-detail-actions.tsx
+  39:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  39:72  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+File: C:\Users\acer\fmcg-commerce\src\components\ui\search\advanced-filters.tsx
+  95:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  97:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+File: C:\Users\acer\fmcg-commerce\src\components\ui\search\search-suggestions-enhanced.tsx
+  109:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+File: C:\Users\acer\fmcg-commerce\src\data\products.ts
+   83:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   95:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  107:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  121:35  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports

@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
                 Privacy Policy
               </h1>
               <p className="mt-2 max-w-2xl text-sm text-[#666]">
-                Manage your platform's Privacy Policy document. Track version history, review changes, and publish updates in compliance with data protection regulations.
+                 Manage your platform&apos;s Privacy Policy document. Track version history, review changes, and publish updates in compliance with data protection regulations.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export default function PrivacyPolicyPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-[#2563eb] mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-[#2563eb]">What's Changed:</p>
+                       <p className="text-xs font-bold text-[#2563eb]">What&apos;s Changed:</p>
                       <p className="text-xs text-[#666]">{current.changes}</p>
                     </div>
                   </div>

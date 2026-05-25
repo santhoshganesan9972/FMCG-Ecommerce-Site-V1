@@ -61,6 +61,16 @@ export default function DeliveryPartnerEditPage() {
   const { id } = useParams();
   const partnerId = typeof id === "string" ? parseInt(id, 10) : 0;
   const partner = mockDeliveryPartners.find((p) => p.id === partnerId);
+  
+  // Hoisted useState declarations with safe defaults
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    name: partner?.name || "",
+    email: partner?.email || "",
+    phone: partner?.phone || "",
+    vehicle: partner?.vehicle || "",
+    license: partner?.license || "",
+  });
 
   if (!partner) {
     return (
@@ -78,15 +88,6 @@ export default function DeliveryPartnerEditPage() {
       </DashboardLayout>
     );
   }
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: partner.name,
-    email: partner.email,
-    phone: partner.phone,
-    vehicle: partner.vehicle,
-    license: partner.license,
-  });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

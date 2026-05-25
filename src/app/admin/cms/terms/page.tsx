@@ -208,7 +208,7 @@ export default function TermsPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-[#ff4f8b] mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-[#ff4f8b]">What's Changed:</p>
+                       <p className="text-xs font-bold text-[#ff4f8b]">What&apos;s Changed:</p>
                       <p className="text-xs text-[#666]">{current.changes}</p>
                     </div>
                   </div>
