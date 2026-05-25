@@ -1,23 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import DashboardLayout from "../../dashboard-layout";
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
-import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { ArrowRightLeft, Plus, Eye, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowRightLeft, Plus, Eye, Truck, CheckCircle, Clock, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-
-const transfers = [
-  { id: "ST-001", product: "Organic Basmati Rice", sku: "RICE-BAS-001", from: "Mumbai Hub", to: "Pune Cold Storage", qty: 200, status: "completed", initiatedBy: "Rohit Sharma", date: "2026-05-21", eta: "2026-05-21" },
-  { id: "ST-002", product: "Full Cream Milk 1L", sku: "DAIRY-MLK-001", from: "Mumbai Hub", to: "Pune Cold Storage", qty: 500, status: "in_transit", initiatedBy: "Sneha Joshi", date: "2026-05-21", eta: "2026-05-22" },
-  { id: "ST-003", product: "Fresh Red Apples", sku: "FRUIT-APL-001", from: "Pune Cold Storage", to: "Bangalore Cold Room", qty: 100, status: "pending", initiatedBy: "Amit Verma", date: "2026-05-21", eta: "2026-05-23" },
-  { id: "ST-004", product: "Greek Yogurt 400g", sku: "DAIRY-YOG-001", from: "Pune Cold Storage", to: "Mumbai Hub", qty: 80, status: "completed", initiatedBy: "Rohit Sharma", date: "2026-05-20", eta: "2026-05-20" },
-  { id: "ST-005", product: "Salted Butter 100g", sku: "DAIRY-BUT-001", from: "Mumbai Hub", to: "Delhi Central", qty: 300, status: "cancelled", initiatedBy: "Priya Kumar", date: "2026-05-19", eta: "—" },
-  { id: "ST-006", product: "Cold Brew Coffee 250ml", sku: "BEV-COF-001", from: "Bangalore Cold Room", to: "Mumbai Hub", qty: 150, status: "in_transit", initiatedBy: "Rajesh Iyer", date: "2026-05-21", eta: "2026-05-22" },
-];
+import { useStockTransfers, useWarehouses, useInventoryItems } from "@/hooks/use-inventory";
+import StockTransferForm from "@/components/ui/inventory/stock-transfer-form";
+import type { StockTransfer } from "@/types/inventory";
 
 export default function StockTransfersPage() {
   const [search, setSearch] = useState("");
@@ -25,7 +18,36 @@ export default function StockTransfersPage() {
   const [pageSize, setPageSize] = useState(10);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const filtered = transfers.filter(t => !search || t.product.toLowerCase().includes(search.toLowerCase()) || t.id.toLowerCase().includes(search.toLowerCase()));
+  const { transfers, loading, pagination, refresh: refreshTransfers, createTransfer } = useStockTransfers({ page, pageSize, search });
+  const { warehouses } = useWarehouses();
+  const { items } = useInventoryItems();
+
+  const warehouseList = useMemo(
+    () => warehouses.map((w) => ({ name: w.name, id: w.id })),
+    [warehouses],
+  );
+  const productList = useMemo(
+    () => items.map((i) => ({ name: i.productName, sku: i.sku })),
+    [items],
+  );
+
+  const handleCreateTransfer = useCallback(
+    async (data: Parameters<typeof createTransfer>[0]) => {
+      await createTransfer(data);
+      toast.success("Stock transfer initiated");
+    },
+    [createTransfer],
+  );
+
+  const kpis = useMemo(() => {
+    const all = transfers;
+    return {
+      total: all.length,
+      inTransit: all.filter((t) => t.status === "in_transit").length,
+      completed: all.filter((t) => t.status === "completed").length,
+      pending: all.filter((t) => t.status === "pending").length,
+    };
+  }, [transfers]);
 
   return (
     <DashboardLayout>
@@ -37,46 +59,60 @@ export default function StockTransfersPage() {
               <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Stock Transfers</h1>
               <p className="mt-2 text-sm text-[#666]">Transfer stock between warehouses, track in-transit shipments, and manage inter-warehouse logistics.</p>
             </div>
-            <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
-              <Plus className="h-4 w-4" /> New Transfer
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => refreshTransfers()} className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-white px-4 py-2.5 text-sm font-bold text-[#1a1a1a] hover:bg-[#f6f7f6]">
+                <RefreshCw className="h-4 w-4" /> Refresh
+              </button>
+              <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
+                <Plus className="h-4 w-4" /> New Transfer
+              </button>
+            </div>
           </div>
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Total Transfers" value={transfers.length} icon={<ArrowRightLeft className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="In Transit" value={transfers.filter(t => t.status === "in_transit").length} icon={<Truck className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Completed" value={transfers.filter(t => t.status === "completed").length} icon={<CheckCircle className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Pending" value={transfers.filter(t => t.status === "pending").length} icon={<Clock className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
+          <ReusableCard title="Total Transfers" value={kpis.total} icon={<ArrowRightLeft className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="In Transit" value={kpis.inTransit} icon={<Truck className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Completed" value={kpis.completed} icon={<CheckCircle className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Pending" value={kpis.pending} icon={<Clock className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
         </div>
 
         <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search by product or transfer ID..." />
 
         <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
-          keyExtractor={(t) => t.id}
+          data={transfers}
+          isLoading={loading}
+          keyExtractor={(t: StockTransfer) => t.id}
           page={page}
           pageSize={pageSize}
-          total={filtered.length}
+          total={pagination.total}
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
           columns={[
-            { key: "product", header: "Product", sortable: true, render: (t) => (
+            { key: "product", header: "Product", sortable: true, render: (t: StockTransfer) => (
               <div><span className="font-bold text-[#1a1a1a]">{t.product}</span><span className="block text-[10px] text-[#999]">{t.sku}</span></div>
             )},
-            { key: "from", header: "From", width: "130px", hideOnMobile: true, render: (t) => <span className="text-[#666]">{t.from}</span> },
-            { key: "to", header: "To", width: "150px", render: (t) => <span className="text-[#0c831f] font-semibold">{t.to}</span> },
-            { key: "qty", header: "Qty", width: "70px", align: "right", sortable: true },
-            { key: "status", header: "Status", width: "110px", render: (t) => <StatusBadge status={t.status} /> },
+            { key: "fromWarehouse", header: "From", width: "130px", hideOnMobile: true, render: (t: StockTransfer) => <span className="text-[#666]">{t.fromWarehouse}</span> },
+            { key: "toWarehouse", header: "To", width: "150px", render: (t: StockTransfer) => <span className="text-[#0c831f] font-semibold">{t.toWarehouse}</span> },
+            { key: "quantity", header: "Qty", width: "70px", align: "right", sortable: true },
+            { key: "status", header: "Status", width: "110px", render: (t: StockTransfer) => <StatusBadge status={t.status} /> },
             { key: "date", header: "Date", width: "110px", hideOnMobile: true },
-            { key: "eta", header: "ETA", width: "110px", hideOnMobile: true },
+            { key: "eta", header: "ETA", width: "110px", hideOnMobile: true, render: (t: StockTransfer) => <span>{t.eta || "—"}</span> },
           ]}
           actions={[
-            { label: "Track", icon: <Truck className="h-3.5 w-3.5" />, onClick: (t) => toast.info(`Tracking transfer ${t.id}`), variant: "success" },
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t) => toast.info(`Viewing transfer ${t.id}`) },
+            { label: "Track", icon: <Truck className="h-3.5 w-3.5" />, onClick: (t: StockTransfer) => toast.info(`Tracking transfer ${t.id}`), variant: "success" },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t: StockTransfer) => toast.info(`Viewing transfer ${t.id}`) },
           ]}
         />
       </div>
+
+      <StockTransferForm
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateTransfer}
+        warehouses={warehouseList}
+        products={productList}
+      />
     </DashboardLayout>
   );
 }

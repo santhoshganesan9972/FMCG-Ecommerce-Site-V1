@@ -1,15 +1,27 @@
+// ── Product & Catalog Management Service Layer ───────────
+// Architecture: UI → Component → Hook → Service → API Gateway → Backend
+// Currently uses mock data. To connect to real backend:
+// 1. Uncomment the axios.get/post/put/delete calls
+// 2. Set VITE_API_BASE_URL (or NEXT_PUBLIC_API_BASE_URL)
+// 3. Remove mock data import and delay helper
+
 import type {
   Product,
   ProductFilters,
-  ProductCategory,
   ProductStatus,
   BulkUploadRecord,
   Category,
   PaginationState,
+  ProductFormData,
 } from "@/types/products";
-import { mockAdminProducts, mockBulkUploadHistory } from "@/data/admin/products";
+import {
+  mockAdminProducts,
+  mockCategories,
+  mockBulkUploadHistory,
+  mockAuditLogs,
+} from "@/data/admin/products";
 
-// ── Product Service ───────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────
 
 const delay = (ms = 300) => new Promise((res) => setTimeout(res, ms));
 
@@ -20,6 +32,8 @@ function filterByStock(product: Product, stockStatus: string): boolean {
   return true;
 }
 
+// ── Product Service ──────────────────────────────────────
+
 export const productService = {
   async getProducts(
     filters: Partial<ProductFilters> = {},
@@ -27,7 +41,7 @@ export const productService = {
   ): Promise<{ products: Product[]; pagination: PaginationState }> {
     await delay(200);
 
-    let filtered = [...mockAdminProducts] as Product[];
+    let filtered = [...mockAdminProducts];
 
     if (filters.search) {
       const q = filters.search.toLowerCase();
@@ -62,8 +76,8 @@ export const productService = {
     // Sort
     if (filters.sortBy) {
       filtered.sort((a, b) => {
-        const aVal = a[filters.sortBy! as keyof Product] as string | number;
-        const bVal = b[filters.sortBy! as keyof Product] as string | number;
+        const aVal = a[filters.sortBy as keyof Product] as string | number;
+        const bVal = b[filters.sortBy as keyof Product] as string | number;
         const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
         return filters.sortOrder === "desc" ? -cmp : cmp;
       });
@@ -75,34 +89,33 @@ export const productService = {
     const start = (page - 1) * pageSize;
     const paged = filtered.slice(start, start + pageSize);
 
-    return {
-      products: paged,
-      pagination: { page, pageSize, total },
-    };
+    return { products: paged, pagination: { page, pageSize, total } };
   },
 
   async getProductById(id: string): Promise<Product | undefined> {
     await delay(150);
-    return (mockAdminProducts as Product[]).find((p) => p.id === id);
+    return mockAdminProducts.find((p) => p.id === id);
   },
 
-  async createProduct(data: Partial<Product>): Promise<Product> {
+  async createProduct(data: ProductFormData): Promise<Product> {
     await delay(400);
+    const now = new Date().toISOString().split("T")[0];
     const newProduct: Product = {
       id: `PRD-${String(mockAdminProducts.length + 1).padStart(3, "0")}`,
+      ...data,
       name: data.name || "",
       sku: data.sku || "",
       barcode: data.barcode || "",
-      category: (data.category || "Groceries") as ProductCategory,
+      category: data.category || "Groceries",
       brand: data.brand || "",
       price: data.price || 0,
       costPrice: data.costPrice || 0,
       mrp: data.mrp || 0,
-      taxRate: data.taxRate || 5,
+      taxRate: data.taxRate ?? 5,
       unit: data.unit || "piece",
       weight: data.weight || "",
-      stock: data.stock || 0,
-      lowStockThreshold: data.lowStockThreshold || 10,
+      stock: data.stock ?? 0,
+      lowStockThreshold: data.lowStockThreshold ?? 10,
       status: (data.status || "draft") as ProductStatus,
       description: data.description || "",
       shortDescription: data.shortDescription || "",
@@ -111,28 +124,23 @@ export const productService = {
       supplier: data.supplier || "",
       variants: data.variants || [],
       media: data.media || [],
-      seo: data.seo || {
-        productId: "",
-        metaTitle: "",
-        metaDescription: "",
-        metaKeywords: [],
-        slug: "",
-        canonicalUrl: "",
-        ogImage: "",
-      },
+      seo: data.seo || undefined,
       history: [],
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
+      createdAt: now,
+      updatedAt: now,
     };
-    newProduct.seo.productId = newProduct.id;
     return newProduct;
   },
 
   async updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined> {
     await delay(300);
-    const product = (mockAdminProducts as Product[]).find((p) => p.id === id);
+    const product = mockAdminProducts.find((p) => p.id === id);
     if (!product) return undefined;
-    return { ...product, ...data, updatedAt: new Date().toISOString().split("T")[0] };
+    return {
+      ...product,
+      ...data,
+      updatedAt: new Date().toISOString().split("T")[0],
+    };
   },
 
   async deleteProduct(id: string): Promise<boolean> {
@@ -140,24 +148,235 @@ export const productService = {
     return true;
   },
 
+  // ── Pricing ────────────────────────────────────────────
+
+  async getPricingData(
+    search?: string
+  ): Promise<
+    Array<{
+      id: string;
+      name: string;
+      sku: string;
+      price: number;
+      mrp: number;
+      cost: number;
+      margin: number;
+      tax: number;
+    }>
+  > {
+    await delay(200);
+    let products = [...mockAdminProducts];
+    if (search) {
+      const q = search.toLowerCase();
+      products = products.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    return products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      price: p.price,
+      mrp: p.mrp,
+      cost: p.costPrice,
+      margin: p.mrp > 0 ? Math.round(((p.mrp - p.costPrice) / p.mrp) * 100 * 10) / 10 : 0,
+      tax: p.taxRate,
+    }));
+  },
+
+  async updatePricing(
+    id: string,
+    data: { price?: number; mrp?: number; costPrice?: number; taxRate?: number }
+  ): Promise<boolean> {
+    await delay(300);
+    return true;
+  },
+
+  // ── Media ──────────────────────────────────────────────
+
+  async getProductMedia(
+    search?: string
+  ): Promise<
+    Array<{
+      id: string;
+      productId: string;
+      productName: string;
+      type: "image" | "video" | "document";
+      url: string;
+      alt: string;
+      isPrimary: boolean;
+      uploadedAt: string;
+    }>
+  > {
+    await delay(200);
+    const mediaItems: Array<{
+      id: string;
+      productId: string;
+      productName: string;
+      type: "image" | "video" | "document";
+      url: string;
+      alt: string;
+      isPrimary: boolean;
+      uploadedAt: string;
+    }> = [];
+
+    mockAdminProducts.forEach((product) => {
+      if (!search || product.name.toLowerCase().includes(search.toLowerCase())) {
+        product.media.forEach((m) => {
+          mediaItems.push({
+            ...m,
+            productName: product.name,
+          });
+        });
+      }
+    });
+
+    return mediaItems;
+  },
+
+  async uploadMedia(
+    productId: string,
+    files: File[]
+  ): Promise<boolean> {
+    await delay(500);
+    return true;
+  },
+
+  async deleteMedia(mediaId: string): Promise<boolean> {
+    await delay(200);
+    return true;
+  },
+
+  async setPrimaryMedia(mediaId: string): Promise<boolean> {
+    await delay(200);
+    return true;
+  },
+
+  // ── SEO ────────────────────────────────────────────────
+
+  async getProductSEO(
+    search?: string
+  ): Promise<
+    Array<{
+      productId: string;
+      productName: string;
+      sku: string;
+      metaTitle: string;
+      metaDescription: string;
+      metaKeywords: string[];
+      slug: string;
+      canonicalUrl?: string;
+      ogImage: string;
+    }>
+  > {
+    await delay(200);
+    const results: Array<{
+      productId: string;
+      productName: string;
+      sku: string;
+      metaTitle: string;
+      metaDescription: string;
+      metaKeywords: string[];
+      slug: string;
+      canonicalUrl?: string;
+      ogImage: string;
+    }> = [];
+
+    mockAdminProducts.forEach((product) => {
+      if (product.seo && (!search || product.name.toLowerCase().includes(search.toLowerCase()))) {
+        const { productId: _seoProductId, ...seoRest } = product.seo;
+        results.push({
+          productId: product.id,
+          productName: product.name,
+          sku: product.sku,
+          ...seoRest,
+        });
+      }
+    });
+
+    return results;
+  },
+
+  async updateProductSEO(
+    productId: string,
+    seo: {
+      metaTitle?: string;
+      metaDescription?: string;
+      metaKeywords?: string[];
+      slug?: string;
+      canonicalUrl?: string;
+      ogImage?: string;
+    }
+  ): Promise<boolean> {
+    await delay(300);
+    return true;
+  },
+
+  // ── Bulk Upload ────────────────────────────────────────
+
   async getBulkUploadHistory(): Promise<BulkUploadRecord[]> {
     await delay(200);
-    return mockBulkUploadHistory as BulkUploadRecord[];
+    return mockBulkUploadHistory;
+  },
+
+  async uploadBulkFile(file: File): Promise<{ success: boolean; jobId: string }> {
+    await delay(800);
+    return { success: true, jobId: `BULK-${Date.now()}` };
+  },
+
+  async downloadTemplate(): Promise<void> {
+    await delay(100);
+    // In production: trigger file download from backend
+  },
+
+  // ── Audit Logs ─────────────────────────────────────────
+
+  async getAuditLogs(
+    filters?: { search?: string; action?: string; dateFrom?: string; dateTo?: string },
+    pagination?: Partial<PaginationState>
+  ): Promise<{
+    logs: Array<{
+      id: string;
+      action: string;
+      product: string;
+      productId: string;
+      field: string;
+      oldValue: string;
+      newValue: string;
+      performedBy: string;
+      role: string;
+      timestamp: string;
+    }>;
+    pagination: PaginationState;
+  }> {
+    await delay(200);
+    let filtered = [...mockAuditLogs];
+
+    if (filters?.search) {
+      const q = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (l) =>
+          l.product.toLowerCase().includes(q) ||
+          l.action.toLowerCase().includes(q) ||
+          l.performedBy.toLowerCase().includes(q)
+      );
+    }
+    if (filters?.action) {
+      filtered = filtered.filter((l) => l.action.toLowerCase().includes(filters.action!.toLowerCase()));
+    }
+
+    const page = pagination?.page || 1;
+    const pageSize = pagination?.pageSize || 10;
+    const total = filtered.length;
+    const start = (page - 1) * pageSize;
+    const paged = filtered.slice(start, start + pageSize);
+
+    return {
+      logs: paged,
+      pagination: { page, pageSize, total },
+    };
   },
 };
 
-// ── Category Service ──────────────────────────────────────
-
-const mockCategories: Category[] = [
-  { id: "CAT-001", name: "Groceries", slug: "groceries", description: "Daily grocery essentials", parentId: null, image: "", isActive: true, productCount: 145, sortOrder: 1, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-002", name: "Fruits & Vegetables", slug: "fruits-vegetables", description: "Fresh produce", parentId: null, image: "", isActive: true, productCount: 89, sortOrder: 2, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-003", name: "Dairy", slug: "dairy", description: "Milk, cheese, yogurt & more", parentId: null, image: "", isActive: true, productCount: 67, sortOrder: 3, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-004", name: "Beverages", slug: "beverages", description: "Soft drinks, juices, water", parentId: null, image: "", isActive: true, productCount: 112, sortOrder: 4, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-005", name: "Snacks", slug: "snacks", description: "Chips, cookies, namkeen", parentId: null, image: "", isActive: true, productCount: 203, sortOrder: 5, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-006", name: "Personal Care", slug: "personal-care", description: "Skincare, haircare, hygiene", parentId: null, image: "", isActive: true, productCount: 156, sortOrder: 6, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-007", name: "Home Care", slug: "home-care", description: "Cleaning & household supplies", parentId: null, image: "", isActive: true, productCount: 78, sortOrder: 7, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-  { id: "CAT-008", name: "Baby Care", slug: "baby-care", description: "Baby food, diapers & wipes", parentId: null, image: "", isActive: true, productCount: 43, sortOrder: 8, createdAt: "2024-01-01", updatedAt: "2024-05-01" },
-];
+// ── Category Service ────────────────────────────────────
 
 export const categoryService = {
   async getCategories(): Promise<Category[]> {
@@ -165,10 +384,18 @@ export const categoryService = {
     return mockCategories;
   },
 
-  async createCategory(data: Partial<Category>): Promise<Category> {
+  async getCategoryById(id: string): Promise<Category | undefined> {
+    await delay(150);
+    return mockCategories.find((c) => c.id === id);
+  },
+
+  async createCategory(
+    data: Partial<Category>
+  ): Promise<Category> {
     await delay(300);
+    const now = new Date().toISOString().split("T")[0];
     return {
-      id: `CAT-${Date.now()}`,
+      id: `CAT-${String(mockCategories.length + 1).padStart(3, "0")}`,
       name: data.name || "",
       slug: data.slug || "",
       description: data.description || "",
@@ -177,16 +404,23 @@ export const categoryService = {
       isActive: data.isActive ?? true,
       productCount: 0,
       sortOrder: data.sortOrder || 0,
-      createdAt: new Date().toISOString().split("T")[0],
-      updatedAt: new Date().toISOString().split("T")[0],
+      createdAt: now,
+      updatedAt: now,
     };
   },
 
-  async updateCategory(id: string, data: Partial<Category>): Promise<Category | undefined> {
+  async updateCategory(
+    id: string,
+    data: Partial<Category>
+  ): Promise<Category | undefined> {
     await delay(300);
     const cat = mockCategories.find((c) => c.id === id);
     if (!cat) return undefined;
-    return { ...cat, ...data, updatedAt: new Date().toISOString().split("T")[0] };
+    return {
+      ...cat,
+      ...data,
+      updatedAt: new Date().toISOString().split("T")[0],
+    };
   },
 
   async deleteCategory(id: string): Promise<boolean> {
