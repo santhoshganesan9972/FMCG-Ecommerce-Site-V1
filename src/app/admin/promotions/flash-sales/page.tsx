@@ -7,24 +7,16 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { Zap, Plus, Eye, Edit3, Clock } from "lucide-react";
+import { useFlashSales } from "@/hooks/use-promotions";
+import { Zap, Plus, Edit3, Clock } from "lucide-react";
 import { toast } from "sonner";
 
-const flashSales = [
-  { id: "FS-001", name: "Dairy Flash Sale", discount: "30% Off", products: 12, startDate: "2026-06-01 10:00", endDate: "2026-06-02 23:59", status: "scheduled", budget: "₹50,000", used: "₹0" },
-  { id: "FS-002", name: "Summer Drinks Sale", discount: "25% Off", products: 8, startDate: "2026-05-15 12:00", endDate: "2026-05-15 14:00", status: "completed", budget: "₹25,000", used: "₹18,450" },
-  { id: "FS-003", name: "Midnight Snacks", discount: "Flat ₹50", products: 20, startDate: "2026-05-20 00:00", endDate: "2026-05-20 06:00", status: "completed", budget: "₹30,000", used: "₹22,800" },
-  { id: "FS-004", name: "Weekend Special", discount: "25% Off", products: 15, startDate: "2026-05-25 09:00", endDate: "2026-05-25 21:00", status: "live", budget: "₹40,000", used: "₹12,350" },
-  { id: "FS-005", name: "Organic Festival", discount: "35% Off", products: 25, startDate: "2026-06-05 00:00", endDate: "2026-06-07 23:59", status: "scheduled", budget: "₹75,000", used: "₹0" },
-];
-
 export default function FlashSalesPage() {
+  const { flashSales, summary, pagination, loading, error, fetchFlashSales, setPage, setPageSize } = useFlashSales();
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const filtered = flashSales.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = flashSales.filter((f) => !search || f.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <DashboardLayout>
@@ -43,30 +35,38 @@ export default function FlashSalesPage() {
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Live Now" value={flashSales.filter(f => f.status === "live").length} icon={<Zap className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Scheduled" value={flashSales.filter(f => f.status === "scheduled").length} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Completed" value={flashSales.filter(f => f.status === "completed").length} icon={<Clock className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Total Budget" value="₹2.2L" icon={<Zap className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Live Now" value={summary.live} icon={<Zap className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Scheduled" value={summary.scheduled} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Completed" value={summary.completed} icon={<Clock className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Total Budget" value={summary.totalBudget} icon={<Zap className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
         </div>
 
-        <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search flash sales..." />
+        <ReusableSearchBar value={search} onChange={setSearch} placeholder="Search flash sales..." />
+
+        {error && (
+          <div className="rounded-xl bg-[#fef2f2] border border-[#fecaca] p-3 text-sm font-bold text-[#dc2626] flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => fetchFlashSales()} className="text-xs underline">Retry</button>
+          </div>
+        )}
 
         <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
+          data={filtered}
           keyExtractor={(f) => f.id}
-          page={page}
-          pageSize={pageSize}
-          total={filtered.length}
+          isLoading={loading}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          onPageSizeChange={setPageSize}
           columns={[
             { key: "name", header: "Sale Name", sortable: true, render: (f) => (
               <div className="flex items-center gap-2"><Zap className="h-4 w-4 text-[#d97706]" /><span className="font-bold text-[#1a1a1a]">{f.name}</span></div>
             )},
             { key: "discount", header: "Discount", width: "100px" },
-            { key: "products", header: "Products", width: "80px", align: "center" },
-            { key: "startDate", header: "Start", width: "150px", hideOnMobile: true },
-            { key: "endDate", header: "End", width: "150px", hideOnMobile: true },
+            { key: "productCount", header: "Products", width: "80px", align: "center" },
+            { key: "startDate", header: "Start", width: "160px", hideOnMobile: true, render: (f) => <span className="text-xs">{f.startDate}</span> },
+            { key: "endDate", header: "End", width: "160px", hideOnMobile: true, render: (f) => <span className="text-xs">{f.endDate}</span> },
             { key: "status", header: "Status", width: "110px", render: (f) => <StatusBadge status={f.status} /> },
           ]}
           actions={[
@@ -74,6 +74,36 @@ export default function FlashSalesPage() {
           ]}
         />
       </div>
+
+      {/* Create Flash Sale Modal */}
+      <ReusableModal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Flash Sale" subtitle="Set up a time-bound flash sale event" size="md">
+        <div className="space-y-4">
+          {[
+            { label: "Sale Name", placeholder: "Enter sale name" },
+            { label: "Discount Type", type: "select", options: ["percentage", "fixed"] },
+            { label: "Discount Value", type: "number", placeholder: "0" },
+            { label: "Product Count", type: "number", placeholder: "Number of products" },
+            { label: "Start Date", type: "datetime-local" },
+            { label: "End Date", type: "datetime-local" },
+            { label: "Budget (₹)", type: "number", placeholder: "0" },
+          ].map((field) => (
+            <div key={field.label}>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">{field.label}</label>
+              {field.type === "select" ? (
+                <select className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                  {(field.options as string[])?.map((opt) => <option key={opt} value={opt}>{opt.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>)}
+                </select>
+              ) : (
+                <input type={field.type || "text"} placeholder={field.placeholder} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 flex justify-end gap-3 border-t border-[#e8e8e8] pt-4">
+          <button onClick={() => setShowCreateModal(false)} className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]">Cancel</button>
+          <button onClick={() => { toast.success("Flash sale created!"); setShowCreateModal(false); }} className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">Create Flash Sale</button>
+        </div>
+      </ReusableModal>
     </DashboardLayout>
   );
 }

@@ -1,68 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import DashboardLayout from "../../dashboard-layout";
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
-import ReusableModal from "@/components/ui/admin/reusable-modal";
 import { RefreshCw, Eye, CheckCircle, XCircle, Package } from "lucide-react";
 import { toast } from "sonner";
-
-const substitutions = [
-  { id: "SUB-001", orderId: "ORD-001", original: "Fresh Red Apples 500g", substitute: "Red Delicious Apples 500g", reason: "Out of stock", status: "accepted", amount: 199, customer: "Ravi Kumar" },
-  { id: "SUB-002", orderId: "ORD-001", original: "Greek Yogurt 400g", substitute: "Greek Yogurt 300g", reason: "Size unavailable", status: "accepted", amount: 99, customer: "Ravi Kumar" },
-  { id: "SUB-003", orderId: "ORD-005", original: "Salted Butter 100g", substitute: "Unsalted Butter 100g", reason: "Stockout", status: "pending", amount: 59, customer: "Deepak Joshi" },
-  { id: "SUB-004", orderId: "ORD-006", original: "Cold Brew Coffee 250ml", substitute: "Iced Coffee 250ml", reason: "Discontinued", status: "rejected", amount: 179, customer: "Priya Sharma" },
-  { id: "SUB-005", orderId: "ORD-007", original: "Natural Honey 500g", substitute: "Organic Honey 500g", reason: "Out of stock", status: "pending", amount: 349, customer: "Amit Gupta" },
-];
+import { useSubstitutions } from "@/hooks/use-orders";
+import type { Substitution } from "@/types/orders";
 
 export default function SubstitutionsPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const {
+    substitutions, loading, error,
+    search, setSearch, statusFilter, setStatusFilter,
+    pagination, decideSubstitution,
+    setPage, setPageSize, fetchSubstitutions,
+  } = useSubstitutions();
 
-  const filtered = substitutions.filter(s => !search || s.original.toLowerCase().includes(search.toLowerCase()) || s.orderId.toLowerCase().includes(search.toLowerCase()));
+  const statusCounts = useMemo(() => ({
+    total: substitutions.length,
+    accepted: substitutions.filter((s) => s.status === "accepted").length,
+    pending: substitutions.filter((s) => s.status === "pending").length,
+    rejected: substitutions.filter((s) => s.status === "rejected").length,
+  }), [substitutions]);
+
+  const handleDecide = async (sub: Substitution, status: "accepted" | "rejected") => {
+    const success = await decideSubstitution({ substitutionId: sub.id, status, decidedBy: "Super Admin" });
+    if (success) {
+      toast.success(`Substitution ${sub.id} ${status}`);
+    } else {
+      toast.error("Failed to update substitution");
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-          <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Substitutions</h1>
-          <p className="mt-2 text-sm text-[#666]">Manage product substitutions when ordered items are unavailable.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Substitutions</h1>
+              <p className="mt-2 text-sm text-[#666]">Manage product substitutions when ordered items are unavailable.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {statusFilter && (
+                <button onClick={() => setStatusFilter("")} className="text-xs font-bold text-[#999] hover:text-[#666]">
+                  Clear filter
+                </button>
+              )}
+              <button onClick={fetchSubstitutions} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              </button>
+            </div>
+          </div>
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Total Substitutions" value={substitutions.length} icon={<RefreshCw className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Accepted" value={substitutions.filter(s => s.status === "accepted").length} icon={<CheckCircle className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Pending" value={substitutions.filter(s => s.status === "pending").length} icon={<Package className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
-          <ReusableCard title="Rejected" value={substitutions.filter(s => s.status === "rejected").length} icon={<XCircle className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Total Substitutions" value={statusCounts.total} icon={<RefreshCw className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Accepted" value={statusCounts.accepted} icon={<CheckCircle className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Pending" value={statusCounts.pending} icon={<Package className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
+          <ReusableCard title="Rejected" value={statusCounts.rejected} icon={<XCircle className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+        </div>
+
+        {/* Status filter tabs */}
+        <div className="flex flex-wrap gap-2">
+          {["all", "pending", "accepted", "rejected"].map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s === "all" ? "" : s)}
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                (s === "all" && !statusFilter) || statusFilter === s
+                  ? "bg-[#0c831f] text-white"
+                  : "border border-[#e8e8e8] bg-white text-[#666] hover:border-[#0c831f]/30"
+              }`}
+            >
+              {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
         </div>
 
         <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search by product or order ID..." />
 
         <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
-          keyExtractor={(s) => s.id}
-          page={page}
-          pageSize={pageSize}
-          total={filtered.length}
+          data={substitutions}
+          keyExtractor={(s: Substitution) => s.id}
+          isLoading={loading}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          onPageSizeChange={setPageSize}
           columns={[
-            { key: "orderId", header: "Order", width: "100px", render: (s) => <span className="font-bold text-[#0c831f]">{s.orderId}</span> },
-            { key: "original", header: "Original Item", sortable: true, render: (s) => <span className="font-bold text-[#1a1a1a]">{s.original}</span> },
-            { key: "substitute", header: "Substituted With", render: (s) => <span className="text-[#0c831f] font-semibold">{s.substitute}</span> },
-            { key: "reason", header: "Reason", width: "120px", hideOnMobile: true },
-            { key: "status", header: "Status", width: "110px", render: (s) => <StatusBadge status={s.status} /> },
-            { key: "amount", header: "Amount", width: "90px", align: "right", render: (s) => <span className="font-bold">₹{s.amount}</span> },
+            { key: "orderId", header: "Order", width: "100px", render: (s) => <span className="font-bold text-[#0c831f]">{(s as Substitution).orderId}</span> },
+            { key: "original", header: "Original Item", sortable: true, render: (s) => <span className="font-bold text-[#1a1a1a]">{(s as Substitution).original}</span> },
+            { key: "substitute", header: "Substituted With", render: (s) => <span className="text-[#0c831f] font-semibold">{(s as Substitution).substitute}</span> },
+            { key: "reason", header: "Reason", width: "120px", hideOnMobile: true, render: (s) => (s as Substitution).reason || "—" },
+            { key: "status", header: "Status", width: "110px", render: (s) => <StatusBadge status={(s as Substitution).status} /> },
+            { key: "amount", header: "Amount", width: "90px", align: "right", render: (s) => <span className="font-bold">₹{(s as Substitution).amount}</span> },
           ]}
           actions={[
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (s) => toast.info(`Viewing substitution ${s.id}`) },
+            { label: "Accept", icon: <CheckCircle className="h-3.5 w-3.5" />, onClick: (s: Substitution) => handleDecide(s, "accepted"), variant: "success", show: (s: Substitution) => s.status === "pending" },
+            { label: "Reject", icon: <XCircle className="h-3.5 w-3.5" />, onClick: (s: Substitution) => handleDecide(s, "rejected"), variant: "danger", show: (s: Substitution) => s.status === "pending" },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (s: Substitution) => toast.info(`Viewing substitution ${s.id}`) },
           ]}
         />
+
+        {error && (
+          <div className="rounded-xl bg-[#fef2f2] border border-[#fecaca] p-4">
+            <p className="text-sm font-bold text-[#dc2626]">{error}</p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

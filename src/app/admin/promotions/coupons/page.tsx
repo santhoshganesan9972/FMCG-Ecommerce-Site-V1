@@ -7,24 +7,14 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { Gift, Plus, Copy, Edit3, Eye, Zap } from "lucide-react";
+import { CouponGenerator } from "@/components/ui/promotions/admin";
+import { useCoupons } from "@/hooks/use-promotions";
+import { Gift, Plus, Copy, Edit3, Zap } from "lucide-react";
 import { toast } from "sonner";
 
-const coupons = [
-  { id: "CPN-001", code: "NEW100", discount: "₹100 Off", minOrder: 499, uses: 3420, maxUses: 10000, status: "active", expires: "2026-12-31", type: "fixed" },
-  { id: "CPN-002", code: "SUMMER40", discount: "40% Off", minOrder: 999, uses: 1245, maxUses: 5000, status: "active", expires: "2026-06-15", type: "percentage" },
-  { id: "CPN-003", code: "WEEKEND50", discount: "₹50 Off", minOrder: 299, uses: 5800, maxUses: 5000, status: "expired", expires: "2026-05-31", type: "fixed" },
-  { id: "CPN-004", code: "FLASHSALE", discount: "30% Off", minOrder: 0, uses: 0, maxUses: 1000, status: "scheduled", expires: "2026-06-02", type: "percentage" },
-  { id: "CPN-005", code: "B2G1FREE", discount: "Buy 2 Get 1", minOrder: 0, uses: 890, maxUses: 2000, status: "active", expires: "2026-06-01", type: "bogo" },
-];
-
 export default function CouponsPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const { coupons, summary, pagination, loading, error, filters, updateFilters, generateCoupon, setPage, setPageSize } = useCoupons();
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const filtered = coupons.filter(c => !search || c.code.toLowerCase().includes(search.toLowerCase()) || c.id.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <DashboardLayout>
@@ -43,31 +33,38 @@ export default function CouponsPage() {
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Active Coupons" value={coupons.filter(c => c.status === "active").length} icon={<Gift className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Scheduled" value={coupons.filter(c => c.status === "scheduled").length} icon={<Zap className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Total Uses" value={coupons.reduce((s, c) => s + c.uses, 0).toLocaleString()} icon={<Copy className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Expired" value={coupons.filter(c => c.status === "expired").length} icon={<Gift className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Active Coupons" value={summary.active} icon={<Gift className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Scheduled" value={summary.scheduled} icon={<Zap className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Total Uses" value={summary.totalUsed.toLocaleString()} icon={<Copy className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Expired" value={summary.expired} icon={<Gift className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
         </div>
 
-        <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search by coupon code or ID..." />
+        <ReusableSearchBar value={filters.search || ""} onChange={(v) => updateFilters({ search: v })} placeholder="Search by coupon code or ID..." />
+
+        {error && (
+          <div className="rounded-xl bg-[#fef2f2] border border-[#fecaca] p-3 text-sm font-bold text-[#dc2626]">
+            {error}
+          </div>
+        )}
 
         <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
+          data={coupons}
           keyExtractor={(c) => c.id}
-          page={page}
-          pageSize={pageSize}
-          total={filtered.length}
+          isLoading={loading}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          onPageSizeChange={setPageSize}
           columns={[
             { key: "code", header: "Code", sortable: true, render: (c) => (
               <div className="flex items-center gap-2"><span className="rounded-lg bg-[#e8f5e9] px-2.5 py-1 font-mono text-sm font-bold text-[#0c831f]">{c.code}</span></div>
             )},
             { key: "discount", header: "Discount", width: "120px", render: (c) => <span className="font-bold">{c.discount}</span> },
             { key: "minOrder", header: "Min Order", width: "100px", align: "right", render: (c) => c.minOrder ? `₹${c.minOrder}` : "—" },
-            { key: "uses", header: "Uses", width: "90px", align: "right", render: (c) => <span>{c.uses.toLocaleString()} / {c.maxUses.toLocaleString()}</span> },
+            { key: "totalUsed", header: "Uses", width: "140px", align: "right", render: (c) => <span>{c.totalUsed.toLocaleString()} / {c.totalIssued.toLocaleString()}</span> },
             { key: "status", header: "Status", width: "100px", render: (c) => <StatusBadge status={c.status} /> },
-            { key: "expires", header: "Expires", width: "110px", hideOnMobile: true },
+            { key: "endDate", header: "Expires", width: "110px", hideOnMobile: true },
           ]}
           actions={[
             { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (c) => toast.info(`Editing coupon ${c.code}`) },
@@ -75,6 +72,22 @@ export default function CouponsPage() {
           ]}
         />
       </div>
+
+      {/* Generate Coupon Modal */}
+      <ReusableModal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Generate Coupon" subtitle="Create a new discount coupon code" size="md">
+        <CouponGenerator
+          onGenerate={async (data) => {
+            const result = await generateCoupon(data);
+            if (result) {
+              toast.success(`Coupon ${result.code} generated!`);
+              setShowCreateModal(false);
+            } else {
+              toast.error("Failed to generate coupon");
+            }
+          }}
+          onCancel={() => setShowCreateModal(false)}
+        />
+      </ReusableModal>
     </DashboardLayout>
   );
 }

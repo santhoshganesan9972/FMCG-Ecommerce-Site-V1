@@ -79,7 +79,7 @@ export default function SidebarEnterprise({
       className={`fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-[#e8e8e8] bg-white transition-all duration-300 ease-in-out ${
         collapsed
           ? "w-16 items-center shadow-sm"
-          : "hidden w-64 md:flex"
+          : "max-md:hidden w-64"
       }`}
     >
       {/* ── Logo area ── */}
@@ -95,7 +95,7 @@ export default function SidebarEnterprise({
           {/* Logo label — hidden when collapsed */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
-              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
             }`}
           >
             <div className="whitespace-nowrap">
@@ -164,7 +164,7 @@ export default function SidebarEnterprise({
                       {/* Label — hidden when collapsed */}
                       <div
                         className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                          collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                          collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
                         }`}
                       >
                         <div className="min-w-0">
@@ -275,7 +275,7 @@ export default function SidebarEnterprise({
                     {/* Label — hidden when collapsed */}
                     <div
                       className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                        collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                        collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
                       }`}
                     >
                       <div className="min-w-0">
@@ -318,7 +318,7 @@ export default function SidebarEnterprise({
             <div className="h-2 w-2 rounded-full bg-[#0c831f] animate-pulse" />
             <span
               className={`overflow-hidden whitespace-nowrap text-xs font-bold text-[#666] transition-all duration-300 ${
-                collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
               }`}
             >
               System Online
@@ -326,7 +326,7 @@ export default function SidebarEnterprise({
           </div>
           <span
             className={`overflow-hidden whitespace-nowrap text-xs font-bold text-[#0c831f] transition-all duration-300 ${
-              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
             }`}
           >
             99.9%
@@ -342,7 +342,7 @@ export default function SidebarEnterprise({
           </div>
           <div
             className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
             }`}
           >
             <div className="min-w-0">

@@ -40,6 +40,10 @@ import {
   RefreshCw,
   Activity,
   User,
+  ShoppingBag,
+  Receipt,
+  Group,
+  Cart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -150,6 +154,12 @@ export const menuItems: MenuItem[] = [
       { icon: Boxes, label: "Inventory Reports", href: "/admin/reports/inventory" },
       { icon: Store, label: "Vendor Reports", href: "/admin/reports/vendor" },
       { icon: FileSearch, label: "Tax Reports", href: "/admin/reports/tax" },
+      { icon: Users, label: "Customer Reports", href: "/admin/reports/customer" },
+      { icon: Receipt, label: "GST Reports", href: "/admin/reports/gst" },
+      { icon: Group, label: "Cohort Analysis", href: "/admin/reports/cohort" },
+      { icon: ShoppingBag, label: "Revenue Analytics", href: "/admin/reports/revenue-analytics" },
+      { icon: Cart, label: "Abandoned Cart", href: "/admin/reports/abandoned-cart" },
+      { icon: Percent, label: "Promotion ROI", href: "/admin/reports/promotion-roi" },
     ],
   },
   {

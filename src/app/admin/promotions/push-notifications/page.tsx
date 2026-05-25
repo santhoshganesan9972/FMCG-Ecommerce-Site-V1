@@ -7,24 +7,16 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { Bell, Plus, Eye, Send, Clock, CheckCircle, Smartphone } from "lucide-react";
+import { usePushNotifications } from "@/hooks/use-promotions";
+import { Bell, Plus, Eye, Send, Clock, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
-const pushNotifs = [
-  { id: "PN-001", title: "Flash Sale - 40% Off!", audience: "All Users", status: "sent", sent: "22,450", opened: "8,920", clicked: "3,450", scheduledAt: "2026-05-21 10:00", sentAt: "2026-05-21 10:00" },
-  { id: "PN-002", title: "Your Order Is Out for Delivery!", audience: "Today's Orders", status: "sent", sent: "1,234", opened: "1,180", clicked: "980", scheduledAt: "2026-05-21 14:00", sentAt: "2026-05-21 14:00" },
-  { id: "PN-003", title: "Weekend Special: Extra 10% Off", audience: "Active Users", status: "scheduled", sent: "—", opened: "—", clicked: "—", scheduledAt: "2026-05-25 09:00", sentAt: "—" },
-  { id: "PN-004", title: "New Feature: Wallet Payments", audience: "All Users", status: "draft", sent: "—", opened: "—", clicked: "—", scheduledAt: "—", sentAt: "—" },
-  { id: "PN-005", title: "Don't Miss Out! Cart Waiting", audience: "Abandoned Carts", status: "sent", sent: "5,678", opened: "1,245", clicked: "567", scheduledAt: "2026-05-20 18:00", sentAt: "2026-05-20 18:00" },
-];
-
 export default function PushNotificationsPage() {
+  const { notifications, summary, pagination, loading, error, fetchNotifications, setPage, setPageSize } = usePushNotifications();
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [showComposeModal, setShowComposeModal] = useState(false);
 
-  const filtered = pushNotifs.filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = notifications.filter((p) => !search || p.title.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <DashboardLayout>
@@ -43,22 +35,30 @@ export default function PushNotificationsPage() {
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Sent" value={pushNotifs.filter(p => p.status === "sent").length} icon={<Send className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Scheduled" value={pushNotifs.filter(p => p.status === "scheduled").length} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Drafts" value={pushNotifs.filter(p => p.status === "draft").length} icon={<Bell className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Avg Open Rate" value="42.5%" icon={<Smartphone className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Sent" value={summary.sent} icon={<Send className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Scheduled" value={summary.scheduled} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Drafts" value={summary.drafts} icon={<Bell className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Avg Open Rate" value={summary.avgOpenRate} icon={<Smartphone className="h-4 w-4" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
         </div>
 
-        <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search notifications..." />
+        <ReusableSearchBar value={search} onChange={setSearch} placeholder="Search notifications..." />
+
+        {error && (
+          <div className="rounded-xl bg-[#fef2f2] border border-[#fecaca] p-3 text-sm font-bold text-[#dc2626] flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => fetchNotifications()} className="text-xs underline">Retry</button>
+          </div>
+        )}
 
         <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
+          data={filtered}
           keyExtractor={(p) => p.id}
-          page={page}
-          pageSize={pageSize}
-          total={filtered.length}
+          isLoading={loading}
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          onPageSizeChange={setPageSize}
           columns={[
             { key: "title", header: "Notification", sortable: true, render: (p) => (
               <div className="flex items-center gap-2"><Bell className="h-3.5 w-3.5 text-[#0c831f]" /><span className="font-bold text-[#1a1a1a]">{p.title}</span></div>
@@ -74,6 +74,35 @@ export default function PushNotificationsPage() {
           ]}
         />
       </div>
+
+      {/* Compose Notification Modal */}
+      <ReusableModal open={showComposeModal} onClose={() => setShowComposeModal(false)} title="Compose Notification" subtitle="Create a new push notification" size="md">
+        <div className="space-y-4">
+          {[
+            { label: "Title", placeholder: "Notification title" },
+            { label: "Body", type: "textarea", placeholder: "Notification body text" },
+            { label: "Audience", type: "select", options: ["All Users", "Active Users", "New Users", "VIP Members", "Abandoned Carts"] },
+            { label: "Deep Link (optional)", placeholder: "e.g., /promotions/summer-sale" },
+          ].map((field) => (
+            <div key={field.label}>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">{field.label}</label>
+              {field.type === "select" ? (
+                <select className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                  {(field.options as string[])?.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              ) : field.type === "textarea" ? (
+                <textarea rows={3} placeholder={field.placeholder} className="w-full rounded-xl border border-[#e8e8e8] bg-white px-3 py-2 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+              ) : (
+                <input type="text" placeholder={field.placeholder} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 flex justify-end gap-3 border-t border-[#e8e8e8] pt-4">
+          <button onClick={() => setShowComposeModal(false)} className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]">Cancel</button>
+          <button onClick={() => { toast.success("Notification sent!"); setShowComposeModal(false); }} className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">Send Notification</button>
+        </div>
+      </ReusableModal>
     </DashboardLayout>
   );
 }

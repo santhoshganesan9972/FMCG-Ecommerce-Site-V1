@@ -124,3 +124,185 @@ export const mockOrderReports: OrderReportEntry[] = Array.from({ length: 30 }, (
     totalRevenue: Math.round(total * 820),
   };
 });
+
+// ── GST Reports ───────────────────────────────────────────
+
+export interface GSTReportEntry {
+  id: string;
+  period: string;
+  gstin: string;
+  businessName: string;
+  grossSales: number;
+  taxableValue: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalTaxLiability: number;
+  inputCredit: number;
+  netPayable: number;
+  returnType: "GSTR-1" | "GSTR-3B" | "GSTR-9";
+  status: "filed" | "pending" | "overdue" | "processing";
+  dueDate: string;
+  filedDate?: string;
+}
+
+export const mockGSTReports: GSTReportEntry[] = [
+  { id: "GST-001", period: "Apr 2026", gstin: "27AAACR1234H1Z1", businessName: "FMCG Commerce Pvt Ltd", grossSales: 12450000, taxableValue: 11205000, cgst: 560250, sgst: 560250, igst: 0, totalTaxLiability: 1120500, inputCredit: 445000, netPayable: 675500, returnType: "GSTR-3B", status: "filed", dueDate: "2026-05-20", filedDate: "2026-05-18" },
+  { id: "GST-002", period: "Mar 2026", gstin: "27AAACR1234H1Z1", businessName: "FMCG Commerce Pvt Ltd", grossSales: 11890000, taxableValue: 10701000, cgst: 535050, sgst: 535050, igst: 12500, totalTaxLiability: 1082600, inputCredit: 412000, netPayable: 670600, returnType: "GSTR-3B", status: "filed", dueDate: "2026-04-20", filedDate: "2026-04-19" },
+  { id: "GST-003", period: "Feb 2026", gstin: "27AAACR1234H1Z1", businessName: "FMCG Commerce Pvt Ltd", grossSales: 10230000, taxableValue: 9207000, cgst: 460350, sgst: 460350, igst: 8400, totalTaxLiability: 929100, inputCredit: 398000, netPayable: 531100, returnType: "GSTR-3B", status: "filed", dueDate: "2026-03-20", filedDate: "2026-03-18" },
+  { id: "GST-004", period: "Jan 2026", gstin: "27AAACR1234H1Z1", businessName: "FMCG Commerce Pvt Ltd", grossSales: 9870000, taxableValue: 8883000, cgst: 444150, sgst: 444150, igst: 0, totalTaxLiability: 888300, inputCredit: 375000, netPayable: 513300, returnType: "GSTR-3B", status: "filed", dueDate: "2026-02-20", filedDate: "2026-02-17" },
+  { id: "GST-005", period: "FY 2025-26", gstin: "27AAACR1234H1Z1", businessName: "FMCG Commerce Pvt Ltd", grossSales: 124500000, taxableValue: 112050000, cgst: 5602500, sgst: 5602500, igst: 125000, totalTaxLiability: 11330000, inputCredit: 4850000, netPayable: 6480000, returnType: "GSTR-9", status: "pending", dueDate: "2026-12-31" },
+  { id: "GST-006", period: "Apr 2026", gstin: "29AABCF5678G1Z1", businessName: "FMCG Commerce - Bangalore Hub", grossSales: 5230000, taxableValue: 4707000, cgst: 235350, sgst: 235350, igst: 0, totalTaxLiability: 470700, inputCredit: 185000, netPayable: 285700, returnType: "GSTR-1", status: "processing", dueDate: "2026-05-11" },
+  { id: "GST-007", period: "Mar 2026", gstin: "29AABCF5678G1Z1", businessName: "FMCG Commerce - Bangalore Hub", grossSales: 4980000, taxableValue: 4482000, cgst: 224100, sgst: 224100, igst: 0, totalTaxLiability: 448200, inputCredit: 172000, netPayable: 276200, returnType: "GSTR-1", status: "filed", dueDate: "2026-04-11", filedDate: "2026-04-10" },
+];
+
+// ── Customer Reports ───────────────────────────────────────
+
+export interface CustomerReportEntry {
+  id: string;
+  customerId: string;
+  name: string;
+  email: string;
+  totalOrders: number;
+  totalSpent: number;
+  avgOrderValue: number;
+  lastOrderDate: string;
+  lifetimeValue: string;
+  segment: "platinum" | "gold" | "silver" | "bronze" | "new";
+  acquisitionChannel: string;
+  retentionRate: number;
+  ordersThisMonth: number;
+  preferredCategory: string;
+  city: string;
+}
+
+export const mockCustomerReportEntries: CustomerReportEntry[] = [
+  { id: "CR-001", customerId: "CUST001", name: "Ravi Kumar", email: "ravi.k@example.com", totalOrders: 245, totalSpent: 312000, avgOrderValue: 1273, lastOrderDate: "2026-05-24", lifetimeValue: "₹3.12L", segment: "platinum", acquisitionChannel: "Referral", retentionRate: 96, ordersThisMonth: 12, preferredCategory: "Groceries", city: "Mumbai" },
+  { id: "CR-002", customerId: "CUST002", name: "Anita Singh", email: "anita.s@example.com", totalOrders: 189, totalSpent: 198000, avgOrderValue: 1048, lastOrderDate: "2026-05-23", lifetimeValue: "₹1.98L", segment: "gold", acquisitionChannel: "Organic", retentionRate: 91, ordersThisMonth: 8, preferredCategory: "Dairy", city: "Delhi" },
+  { id: "CR-003", customerId: "CUST003", name: "Priya Patel", email: "priya.p@example.com", totalOrders: 156, totalSpent: 175000, avgOrderValue: 1122, lastOrderDate: "2026-05-22", lifetimeValue: "₹1.75L", segment: "gold", acquisitionChannel: "Social Media", retentionRate: 88, ordersThisMonth: 7, preferredCategory: "Beverages", city: "Bangalore" },
+  { id: "CR-004", customerId: "CUST004", name: "Mohammed Ali", email: "mohd.a@example.com", totalOrders: 98, totalSpent: 89000, avgOrderValue: 908, lastOrderDate: "2026-05-20", lifetimeValue: "₹89K", segment: "silver", acquisitionChannel: "Paid Ads", retentionRate: 82, ordersThisMonth: 5, preferredCategory: "Snacks", city: "Hyderabad" },
+  { id: "CR-005", customerId: "CUST005", name: "Sarah Johnson", email: "sarah.j@example.com", totalOrders: 67, totalSpent: 72000, avgOrderValue: 1075, lastOrderDate: "2026-05-19", lifetimeValue: "₹72K", segment: "silver", acquisitionChannel: "Email Campaign", retentionRate: 76, ordersThisMonth: 4, preferredCategory: "Health", city: "Pune" },
+  { id: "CR-006", customerId: "CUST006", name: "Arun Sharma", email: "arun.s@example.com", totalOrders: 42, totalSpent: 38000, avgOrderValue: 905, lastOrderDate: "2026-05-17", lifetimeValue: "₹38K", segment: "bronze", acquisitionChannel: "Organic", retentionRate: 65, ordersThisMonth: 2, preferredCategory: "Groceries", city: "Chennai" },
+  { id: "CR-007", customerId: "CUST007", name: "Deepa Krishnan", email: "deepa.k@example.com", totalOrders: 28, totalSpent: 24000, avgOrderValue: 857, lastOrderDate: "2026-05-15", lifetimeValue: "₹24K", segment: "bronze", acquisitionChannel: "Referral", retentionRate: 58, ordersThisMonth: 1, preferredCategory: "Dairy", city: "Kochi" },
+  { id: "CR-008", customerId: "CUST008", name: "Vikram Reddy", email: "vikram.r@example.com", totalOrders: 12, totalSpent: 15000, avgOrderValue: 1250, lastOrderDate: "2026-05-10", lifetimeValue: "₹15K", segment: "new", acquisitionChannel: "Paid Ads", retentionRate: 35, ordersThisMonth: 3, preferredCategory: "Beverages", city: "Bangalore" },
+  { id: "CR-009", customerId: "CUST009", name: "Neha Gupta", email: "neha.g@example.com", totalOrders: 312, totalSpent: 425000, avgOrderValue: 1362, lastOrderDate: "2026-05-24", lifetimeValue: "₹4.25L", segment: "platinum", acquisitionChannel: "Referral", retentionRate: 98, ordersThisMonth: 15, preferredCategory: "Groceries", city: "Delhi" },
+  { id: "CR-010", customerId: "CUST010", name: "Rahul Verma", email: "rahul.v@example.com", totalOrders: 5, totalSpent: 6200, avgOrderValue: 1240, lastOrderDate: "2026-05-08", lifetimeValue: "₹6.2K", segment: "new", acquisitionChannel: "Social Media", retentionRate: 25, ordersThisMonth: 1, preferredCategory: "Snacks", city: "Lucknow" },
+];
+
+// ── Cohort Analysis ────────────────────────────────────────
+
+export interface CohortEntry {
+  id: string;
+  cohort: string;
+  period: string;
+  users: number;
+  week0: number;
+  week1: number;
+  week2: number;
+  week3: number;
+  week4: number;
+  week5: number;
+  week6: number;
+  week7: number;
+  week8: number;
+  week9: number;
+  week10: number;
+  week11: number;
+}
+
+export const mockCohortData: CohortEntry[] = [
+  { id: "CH-001", cohort: "Mar 1-7", period: "Week 1", users: 2450, week0: 100, week1: 42.8, week2: 36.5, week3: 32.1, week4: 28.6, week5: 26.2, week6: 24.8, week7: 23.1, week8: 21.5, week9: 20.2, week10: 19.1, week11: 18.3 },
+  { id: "CH-002", cohort: "Mar 8-14", period: "Week 2", users: 2320, week0: 100, week1: 44.1, week2: 37.8, week3: 33.5, week4: 30.1, week5: 27.8, week6: 25.9, week7: 24.2, week8: 22.8, week9: 21.4, week10: 20.1, week11: 0 },
+  { id: "CH-003", cohort: "Mar 15-21", period: "Week 3", users: 2180, week0: 100, week1: 41.5, week2: 35.2, week3: 31.8, week4: 28.5, week5: 26.1, week6: 24.3, week7: 22.6, week8: 21.2, week9: 19.8, week10: 0, week11: 0 },
+  { id: "CH-004", cohort: "Mar 22-28", period: "Week 4", users: 2050, week0: 100, week1: 43.2, week2: 36.8, week3: 32.5, week4: 29.2, week5: 26.8, week6: 24.9, week7: 23.1, week8: 21.8, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-005", cohort: "Mar 29-Apr 4", period: "Week 5", users: 1980, week0: 100, week1: 42.6, week2: 36.1, week3: 31.8, week4: 28.4, week5: 25.9, week6: 24.1, week7: 22.5, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-006", cohort: "Apr 5-11", period: "Week 6", users: 2150, week0: 100, week1: 45.3, week2: 38.5, week3: 34.2, week4: 30.8, week5: 28.2, week6: 26.1, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-007", cohort: "Apr 12-18", period: "Week 7", users: 2280, week0: 100, week1: 43.8, week2: 37.2, week3: 32.9, week4: 29.5, week5: 27.1, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-008", cohort: "Apr 19-25", period: "Week 8", users: 2340, week0: 100, week1: 44.5, week2: 38.1, week3: 33.8, week4: 30.2, week5: 0, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-009", cohort: "Apr 26-May 2", period: "Week 9", users: 2210, week0: 100, week1: 42.1, week2: 35.8, week3: 31.5, week4: 0, week5: 0, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-010", cohort: "May 3-9", period: "Week 10", users: 2450, week0: 100, week1: 43.5, week2: 36.9, week3: 0, week4: 0, week5: 0, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-011", cohort: "May 10-16", period: "Week 11", users: 2560, week0: 100, week1: 44.2, week2: 0, week3: 0, week4: 0, week5: 0, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+  { id: "CH-012", cohort: "May 17-23", period: "Week 12", users: 2310, week0: 100, week1: 0, week2: 0, week3: 0, week4: 0, week5: 0, week6: 0, week7: 0, week8: 0, week9: 0, week10: 0, week11: 0 },
+];
+
+// ── Abandoned Cart Reports ─────────────────────────────────
+
+export interface AbandonedCartEntry {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  items: number;
+  cartValue: number;
+  status: "abandoned" | "recovered" | "lost";
+  abandonedAt: string;
+  recoveredAt?: string;
+  recoveryMethod?: string;
+  itemsList: string[];
+}
+
+export const mockAbandonedCartData: AbandonedCartEntry[] = [
+  { id: "AC-001", customerName: "Amit Jain", customerEmail: "amit.j@example.com", items: 5, cartValue: 2450, status: "recovered", abandonedAt: "2026-05-24 14:30", recoveredAt: "2026-05-24 16:45", recoveryMethod: "Email Reminder", itemsList: ["Organic Basmati Rice 5kg", "Fresh Milk 1L x2", "Greek Yogurt", "Honey 500g"] },
+  { id: "AC-002", customerName: "Pooja Mehta", customerEmail: "pooja.m@example.com", items: 3, cartValue: 1890, status: "recovered", abandonedAt: "2026-05-24 10:15", recoveredAt: "2026-05-24 12:30", recoveryMethod: "Push Notification", itemsList: ["Green Tea Pack", "Almonds 250g", "Cold Brew Coffee"] },
+  { id: "AC-003", customerName: "Suresh Reddy", customerEmail: "suresh.r@example.com", items: 8, cartValue: 4560, status: "abandoned", abandonedAt: "2026-05-23 18:45", itemsList: ["Premium Almonds", "Organic Honey", "Fresh Fruits Box", "Muesli Pack", "Protein Bars", "Coconut Water x2", "Salted Butter", "Whole Wheat Bread"] },
+  { id: "AC-004", customerName: "Kavita Sharma", customerEmail: "kavita.s@example.com", items: 2, cartValue: 840, status: "lost", abandonedAt: "2026-05-23 09:30", itemsList: ["Cold Brew Coffee", "Greek Yogurt"] },
+  { id: "AC-005", customerName: "Rohit Kumar", customerEmail: "rohit.k@example.com", items: 4, cartValue: 3250, status: "recovered", abandonedAt: "2026-05-22 20:00", recoveredAt: "2026-05-23 08:15", recoveryMethod: "SMS Reminder", itemsList: ["Organic Basmati Rice", "Pure Ghee 1L", "Cashews 500g", "Dates 500g"] },
+  { id: "AC-006", customerName: "Meera Nair", customerEmail: "meera.n@example.com", items: 6, cartValue: 5200, status: "abandoned", abandonedAt: "2026-05-22 15:20", itemsList: ["Fresh Apples x3kg", "Pomegranate x2kg", "Grapes 1kg", "Orange Juice 1L", "Mixed Nuts", "Protein Powder"] },
+  { id: "AC-007", customerName: "Vijay Singh", customerEmail: "vijay.s@example.com", items: 3, cartValue: 1670, status: "recovered", abandonedAt: "2026-05-21 11:10", recoveredAt: "2026-05-21 14:25", recoveryMethod: "Email Reminder", itemsList: ["Organic Turmeric", "Cold Pressed Oil", "Honey"] },
+  { id: "AC-008", customerName: "Sunita Patel", customerEmail: "sunita.p@example.com", items: 7, cartValue: 4100, status: "abandoned", abandonedAt: "2026-05-21 08:45", itemsList: ["Full Cream Milk x3", "Cheese Block", "Butter Pack", "Cream", "Yogurt Pack", "Paneer 500g", "Flavored Milk"] },
+  { id: "AC-009", customerName: "Arvind Joshi", customerEmail: "arvind.j@example.com", items: 4, cartValue: 2890, status: "lost", abandonedAt: "2026-05-20 19:30", itemsList: ["Chicken Breast 1kg", "Fish Fillet 500g", "Eggs 30pk", "Olive Oil"] },
+  { id: "AC-010", customerName: "Lakshmi Iyer", customerEmail: "lakshmi.i@example.com", items: 5, cartValue: 3780, status: "recovered", abandonedAt: "2026-05-20 16:00", recoveredAt: "2026-05-20 18:30", recoveryMethod: "WhatsApp Notification", itemsList: ["Fresh Veg Box", "Dal Mix", "Spices Set", "Coconut Oil", "Brown Rice"] },
+];
+
+// ── Revenue Analytics ─────────────────────────────────────
+
+export interface RevenueAnalyticsEntry {
+  id: string;
+  month: string;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  grossMargin: number;
+  operatingExpenses: number;
+  operatingProfit: number;
+  netProfit: number;
+  ebitda: number;
+  revenuePerOrder: number;
+  costPerOrder: number;
+}
+
+export const mockRevenueAnalytics: RevenueAnalyticsEntry[] = [
+  { id: "RA-001", month: "Jan 2026", revenue: 9850000, cogs: 6895000, grossProfit: 2955000, grossMargin: 30.0, operatingExpenses: 1870000, operatingProfit: 1085000, netProfit: 785000, ebitda: 1245000, revenuePerOrder: 845, costPerOrder: 592 },
+  { id: "RA-002", month: "Feb 2026", revenue: 10230000, cogs: 7161000, grossProfit: 3069000, grossMargin: 30.0, operatingExpenses: 1920000, operatingProfit: 1149000, netProfit: 832000, ebitda: 1312000, revenuePerOrder: 852, costPerOrder: 597 },
+  { id: "RA-003", month: "Mar 2026", revenue: 11890000, cogs: 8204100, grossProfit: 3685900, grossMargin: 31.0, operatingExpenses: 2050000, operatingProfit: 1635900, netProfit: 1185000, ebitda: 1820000, revenuePerOrder: 868, costPerOrder: 599 },
+  { id: "RA-004", month: "Apr 2026", revenue: 12450000, cogs: 8466000, grossProfit: 3984000, grossMargin: 32.0, operatingExpenses: 2150000, operatingProfit: 1834000, netProfit: 1328000, ebitda: 2015000, revenuePerOrder: 875, costPerOrder: 595 },
+  { id: "RA-005", month: "May 2026", revenue: 13200000, cogs: 8976000, grossProfit: 4224000, grossMargin: 32.0, operatingExpenses: 2210000, operatingProfit: 2014000, netProfit: 1458000, ebitda: 2190000, revenuePerOrder: 882, costPerOrder: 600 },
+];
+
+// ── Promotion ROI Reports ─────────────────────────────────
+
+export interface PromotionROIEntry {
+  id: string;
+  promotionName: string;
+  type: "percentage" | "fixed" | "bogo" | "free_shipping";
+  cost: number;
+  revenueGenerated: number;
+  ordersIncremented: number;
+  redemptionCount: number;
+  roi: number;
+  conversionRate: number;
+  avgOrderValue: number;
+  status: "active" | "completed" | "scheduled" | "ended";
+  startDate: string;
+  endDate: string;
+}
+
+export const mockPromotionROIData: PromotionROIEntry[] = [
+  { id: "PROI-001", promotionName: "Summer Sale - 20% Off", type: "percentage", cost: 450000, revenueGenerated: 2850000, ordersIncremented: 3450, redemptionCount: 4200, roi: 533, conversionRate: 12.5, avgOrderValue: 678, status: "active", startDate: "2026-05-01", endDate: "2026-06-15" },
+  { id: "PROI-002", promotionName: "Free Delivery Weekend", type: "free_shipping", cost: 185000, revenueGenerated: 980000, ordersIncremented: 1820, redemptionCount: 2100, roi: 430, conversionRate: 18.2, avgOrderValue: 467, status: "completed", startDate: "2026-04-12", endDate: "2026-04-14" },
+  { id: "PROI-003", promotionName: "Buy 1 Get 1 Free - Snacks", type: "bogo", cost: 320000, revenueGenerated: 1560000, ordersIncremented: 2100, redemptionCount: 2800, roi: 388, conversionRate: 15.8, avgOrderValue: 743, status: "completed", startDate: "2026-03-15", endDate: "2026-04-15" },
+  { id: "PROI-004", promotionName: "New User - ₹200 Off", type: "fixed", cost: 280000, revenueGenerated: 1240000, ordersIncremented: 1650, redemptionCount: 1850, roi: 343, conversionRate: 9.8, avgOrderValue: 752, status: "active", startDate: "2026-05-01", endDate: "2026-06-30" },
+  { id: "PROI-005", promotionName: "Weekend Flash Sale - 40% Off", type: "percentage", cost: 520000, revenueGenerated: 3200000, ordersIncremented: 3800, redemptionCount: 4500, roi: 515, conversionRate: 14.2, avgOrderValue: 711, status: "ended", startDate: "2026-02-14", endDate: "2026-02-16" },
+  { id: "PROI-006", promotionName: "Dairy Combo - Flat 15% Off", type: "percentage", cost: 195000, revenueGenerated: 890000, ordersIncremented: 1250, redemptionCount: 1450, roi: 356, conversionRate: 11.5, avgOrderValue: 614, status: "completed", startDate: "2026-04-01", endDate: "2026-04-30" },
+  { id: "PROI-007", promotionName: "Monsoon Magic - Free Gift", type: "bogo", cost: 240000, revenueGenerated: 1120000, ordersIncremented: 1580, redemptionCount: 1750, roi: 367, conversionRate: 13.1, avgOrderValue: 640, status: "scheduled", startDate: "2026-06-01", endDate: "2026-07-15" },
+  { id: "PROI-008", promotionName: "Premium Members - Extra 10%", type: "percentage", cost: 150000, revenueGenerated: 980000, ordersIncremented: 1100, redemptionCount: 1250, roi: 553, conversionRate: 22.5, avgOrderValue: 891, status: "active", startDate: "2026-05-15", endDate: "2026-07-31" },
+];

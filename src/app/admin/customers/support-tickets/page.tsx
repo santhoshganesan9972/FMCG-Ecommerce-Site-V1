@@ -7,86 +7,203 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { MessageSquare, Eye, Reply, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { MessageSquare, Eye, Reply, CheckCircle, Clock, AlertTriangle, RefreshCw, Filter } from "lucide-react";
 import { toast } from "sonner";
-
-const tickets = [
-  { id: "TKT-001", customer: "Ravi Kumar", email: "ravi.k@example.com", subject: "Order not delivered", priority: "high", status: "open", createdAt: "2026-05-21 14:30", assignedTo: "Neha Singh" },
-  { id: "TKT-002", customer: "Anita Singh", email: "anita.s@example.com", subject: "Wrong item received", priority: "medium", status: "in_progress", createdAt: "2026-05-21 10:00", assignedTo: "Neha Singh" },
-  { id: "TKT-003", customer: "Deepak Joshi", email: "deepak.j@example.com", subject: "Refund not processed", priority: "high", status: "open", createdAt: "2026-05-20 18:30", assignedTo: null },
-  { id: "TKT-004", customer: "Priya Sharma", email: "priya.s@example.com", subject: "Delivery partner rude", priority: "low", status: "resolved", createdAt: "2026-05-19 09:00", assignedTo: "Support Team" },
-  { id: "TKT-005", customer: "Amit Gupta", email: "amit.g@example.com", subject: "Subscription cancellation", priority: "medium", status: "in_progress", createdAt: "2026-05-18 16:45", assignedTo: "Neha Singh" },
-];
+import { useSupportTickets } from "@/hooks/use-customers";
+import type { SupportTicket } from "@/types/customers";
 
 export default function SupportTicketsPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [showDetailModal, setShowDetailModal] = useState<typeof tickets[0] | null>(null);
+  const {
+    tickets, loading, error, search, setSearch,
+    statusFilter, setStatusFilter, priorityFilter, setPriorityFilter,
+    pagination, summary, setPage, setPageSize, fetchTickets,
+    updateTicketStatus,
+  } = useSupportTickets();
+  const [showDetailModal, setShowDetailModal] = useState<SupportTicket | null>(null);
+  const [assigning, setAssigning] = useState<string | null>(null);
 
-  const filtered = tickets.filter(t => !search || t.customer.toLowerCase().includes(search.toLowerCase()) || t.subject.toLowerCase().includes(search.toLowerCase()));
+  const handleAssign = async (ticketId: string) => {
+    setAssigning(ticketId);
+    const success = await updateTicketStatus(ticketId, "in_progress", "Support Agent");
+    if (success) {
+      toast.success("Ticket assigned to Support Agent");
+    } else {
+      toast.error("Failed to assign ticket");
+    }
+    setAssigning(null);
+  };
+
+  const handleResolve = async (ticketId: string) => {
+    const success = await updateTicketStatus(ticketId, "resolved");
+    if (success) {
+      toast.success("Ticket resolved");
+    } else {
+      toast.error("Failed to resolve ticket");
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
+        {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Customers</p>
-          <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Support Tickets</h1>
-          <p className="mt-2 text-sm text-[#666]">Manage customer support requests, assign agents, and track resolution.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Customers</p>
+              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Support Tickets</h1>
+              <p className="mt-2 text-sm text-[#666]">Manage customer support requests, assign agents, and track resolution.</p>
+            </div>
+            <button onClick={fetchTickets} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+          </div>
         </section>
 
+        {/* KPI Strip */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Open" value={tickets.filter(t => t.status === "open").length} icon={<MessageSquare className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
-          <ReusableCard title="In Progress" value={tickets.filter(t => t.status === "in_progress").length} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Resolved" value={tickets.filter(t => t.status === "resolved").length} icon={<CheckCircle className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="High Priority" value={tickets.filter(t => t.priority === "high").length} icon={<AlertTriangle className="h-4 w-4" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" />
+          <ReusableCard title="Open" value={summary.open} icon={<MessageSquare className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
+          <ReusableCard title="In Progress" value={summary.inProgress} icon={<Clock className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Resolved" value={summary.resolved} icon={<CheckCircle className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Urgent" value={summary.urgent} icon={<AlertTriangle className="h-4 w-4" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" />
         </div>
 
-        <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search tickets by customer or subject..." />
+        {/* Filters */}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex-1">
+            <ReusableSearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search tickets by customer or subject..." />
+          </div>
+          <div className="flex items-center gap-2">
+            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="h-10 rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none">
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+            <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }} className="h-10 rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none">
+              <option value="all">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
 
-        <ReusableTable
-          data={filtered.slice((page - 1) * pageSize, page * pageSize)}
-          keyExtractor={(t) => t.id}
-          page={page}
-          pageSize={pageSize}
-          total={filtered.length}
-          onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-          columns={[
-            { key: "id", header: "Ticket", width: "100px", render: (t) => <span className="font-bold text-[#0c831f]">{t.id}</span> },
-            { key: "customer", header: "Customer", render: (t) => <span className="font-bold text-[#1a1a1a]">{t.customer}</span> },
-            { key: "subject", header: "Subject", sortable: true, hideOnMobile: true },
-            { key: "priority", header: "Priority", width: "90px", render: (t) => <StatusBadge status={t.priority} /> },
-            { key: "status", header: "Status", width: "110px", render: (t) => <StatusBadge status={t.status} /> },
-            { key: "assignedTo", header: "Assigned To", width: "120px", hideOnMobile: true, render: (t) => t.assignedTo ?? <span className="text-[#999]">—</span> },
-            { key: "createdAt", header: "Created", width: "130px", hideOnMobile: true },
-          ]}
-          actions={[
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t) => setShowDetailModal(t) },
-            { label: "Reply", icon: <Reply className="h-3.5 w-3.5" />, onClick: (t) => toast.success(`Opening reply for ${t.id}`) },
-          ]}
-        />
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0c831f] border-t-transparent" />
+          </div>
+        ) : error ? (
+          <div className="rounded-xl bg-[#fef2f2] border border-[#fecaca] p-4 text-sm font-bold text-[#dc2626]">{error}</div>
+        ) : (
+          <>
+            {/* Tickets Table */}
+            <ReusableTable
+              data={tickets}
+              keyExtractor={(t: SupportTicket) => t.id}
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              total={pagination.total}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); }}
+              columns={[
+                { key: "id", header: "Ticket", width: "100px", render: (t: SupportTicket) => <span className="font-bold text-[#0c831f]">{t.id}</span> },
+                { key: "customer", header: "Customer", render: (t: SupportTicket) => <span className="font-bold text-[#1a1a1a]">{t.customer}</span> },
+                { key: "subject", header: "Subject", sortable: true, hideOnMobile: true },
+                { key: "priority", header: "Priority", width: "90px", render: (t: SupportTicket) => <StatusBadge status={t.priority} /> },
+                { key: "status", header: "Status", width: "110px", render: (t: SupportTicket) => <StatusBadge status={t.status} /> },
+                { key: "assignedTo", header: "Assigned", width: "120px", hideOnMobile: true, render: (t: SupportTicket) => t.assignedTo ?? <span className="text-[#999]">—</span> },
+                { key: "createdAt", header: "Created", width: "130px", hideOnMobile: true },
+              ]}
+              actions={[
+                { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t: SupportTicket) => setShowDetailModal(t) },
+                { label: "Assign", icon: <Reply className="h-3.5 w-3.5" />, onClick: (t: SupportTicket) => handleAssign(t.id), show: (t: SupportTicket) => t.status === "open" },
+                { label: "Resolve", icon: <CheckCircle className="h-3.5 w-3.5" />, onClick: (t: SupportTicket) => handleResolve(t.id), show: (t: SupportTicket) => t.status === "in_progress" },
+              ]}
+            />
+
+            {/* Empty State */}
+            {!loading && !error && tickets.length === 0 && (
+              <div className="rounded-2xl border border-[#e8e8e8] bg-white p-12 text-center">
+                <MessageSquare className="mx-auto h-8 w-8 text-[#ccc]" />
+                <p className="mt-2 text-sm font-bold text-[#666]">No tickets match your filters</p>
+                <p className="mt-1 text-xs text-[#999]">Try adjusting your search or filter criteria.</p>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
-      <ReusableModal open={!!showDetailModal} onClose={() => setShowDetailModal(null)} title={`Ticket ${showDetailModal?.id}`} subtitle={showDetailModal?.subject} size="md">
+      {/* Ticket Detail Modal */}
+      <ReusableModal open={!!showDetailModal} onClose={() => setShowDetailModal(null)} title={`${showDetailModal?.id} — ${showDetailModal?.subject}`} subtitle={showDetailModal?.customer} size="lg">
         {showDetailModal && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-[#f9fafb] p-3">
-                <p className="text-[10px] font-bold uppercase text-[#999]">Customer</p>
-                <p className="text-sm font-bold">{showDetailModal.customer}</p>
-                <p className="text-xs text-[#999]">{showDetailModal.email}</p>
-              </div>
-              <div className="rounded-xl bg-[#f9fafb] p-3">
-                <p className="text-[10px] font-bold uppercase text-[#999]">Priority</p>
-                <StatusBadge status={showDetailModal.priority} />
-              </div>
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Customer", value: showDetailModal.customer },
+                { label: "Email", value: showDetailModal.email },
+                { label: "Priority", value: <StatusBadge status={showDetailModal.priority} /> },
+                { label: "Status", value: <StatusBadge status={showDetailModal.status} /> },
+                { label: "Assigned To", value: showDetailModal.assignedTo || <span className="text-[#999]">Unassigned</span> },
+                { label: "Category", value: showDetailModal.category || "—" },
+                { label: "Created", value: showDetailModal.createdAt },
+                { label: "Updated", value: showDetailModal.updatedAt },
+              ].map((f) => (
+                <div key={f.label} className="rounded-xl bg-[#f9fafb] p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">{f.label}</p>
+                  <div className="mt-1 text-sm font-bold text-[#1a1a1a]">{f.value as React.ReactNode}</div>
+                </div>
+              ))}
             </div>
-            <div><p className="text-xs font-bold text-[#666]">Created</p><p className="text-sm">{showDetailModal.createdAt}</p></div>
-            <div className="flex justify-end gap-3 pt-4 border-t border-[#e8e8e8]">
-              <button onClick={() => { toast.success(`Assigned to Neha Singh`); setShowDetailModal(null); }} className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
-                Assign & Reply
-              </button>
+
+            {showDetailModal.description && (
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-[#666]">Description</p>
+                <p className="rounded-xl bg-[#f9fafb] p-3 text-sm text-[#1a1a1a]">{showDetailModal.description}</p>
+              </div>
+            )}
+
+            {/* Messages */}
+            {showDetailModal.messages.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#666]">Conversation</p>
+                <div className="space-y-2">
+                  {showDetailModal.messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.senderRole === "customer" ? "justify-start" : "justify-end"}`}>
+                      <div className={`max-w-[80%] rounded-xl p-3 ${
+                        msg.senderRole === "customer"
+                          ? "bg-[#f6f7f6] text-[#1a1a1a]"
+                          : msg.senderRole === "agent"
+                          ? "bg-[#0c831f] text-white"
+                          : "bg-[#fffbeb] text-[#1a1a1a]"
+                      }`}>
+                        <p className={`text-xs font-bold ${msg.senderRole === "agent" ? "text-white/80" : "text-[#666]"} mb-0.5`}>
+                          {msg.sender}
+                        </p>
+                        <p className="text-sm">{msg.content}</p>
+                        <p className={`text-[10px] mt-0.5 ${msg.senderRole === "agent" ? "text-white/60" : "text-[#999]"}`}>
+                          {msg.createdAt.includes("T") ? msg.createdAt.split("T").join(" ") : msg.createdAt}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 border-t border-[#e8e8e8] pt-4">
+              {showDetailModal.status === "open" && (
+                <button onClick={() => { handleAssign(showDetailModal.id); }} className="rounded-xl bg-[#2563eb] px-4 py-2 text-sm font-bold text-white hover:bg-[#1d4ed8]">
+                  Assign & Reply
+                </button>
+              )}
+              {showDetailModal.status === "in_progress" && (
+                <button onClick={() => { handleResolve(showDetailModal.id); setShowDetailModal(null); }} className="rounded-xl bg-[#0c831f] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a6a18]">
+                  Mark Resolved
+                </button>
+              )}
             </div>
           </div>
         )}
