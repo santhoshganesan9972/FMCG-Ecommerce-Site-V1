@@ -4,12 +4,12 @@ import Link from "next/link";
 import { Bell, Search, Zap } from "lucide-react";
 import MobileSidebar from "@/components/ui/admin/mobile-sidebar";
 
-export default function Topbar({ className }: { className?: string }) {
+export default function Topbar({ collapsed, className }: { collapsed?: boolean; className?: string }) {
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 h-14 border-b border-[#e8e8e8]/50 bg-white/70 backdrop-blur-xl md:left-64 ${
-        className || ""
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 h-14 border-b border-[#e8e8e8]/50 bg-white/70 backdrop-blur-xl transition-all duration-200 ${
+        collapsed ? "md:left-0" : "md:left-64"
+      } ${className || ""}`}
     >
       <div className="flex h-full items-center justify-between gap-2 px-2 sm:px-4 md:px-5">
         <MobileSidebar />
