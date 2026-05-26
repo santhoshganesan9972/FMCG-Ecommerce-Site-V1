@@ -218,18 +218,18 @@ export default function SalesReportsPage() {
               hideOnMobile: true,
               render: (r) => <span className="text-[#d97706]">₹{(r.refunds / 1000).toFixed(1)}K</span>,
             },
-            {
-              key: "returnRate",
-              header: "Return %",
-              align: "right",
-              width: "80px",
-              hideOnMobile: true,
-              render: (r) => (
-                <span className={`font-bold ${r.returnRate > 3 ? "text-red-500" : "text-[#0c831f]"}`}>
-                  {r.returnRate}%
-                </span>
-              ),
-            },
+{
+               key: "returnRate",
+               header: "Return %",
+               align: "right",
+               width: "80px",
+               hideOnMobile: true,
+               render: (r) => (
+                 <span className={`font-bold ${r.returnRate && r.returnRate > 3 ? "text-red-500" : "text-[#0c831f]"}`}>
+                   {r.returnRate ?? 0}%
+                 </span>
+               ),
+             },
           ]}
           actions={[
             {
@@ -293,16 +293,16 @@ export default function SalesReportsPage() {
                   <p className="text-[10px] font-bold text-[#666]">Avg Order Value</p>
                   <p className="mt-1 text-xl font-black text-[#1a1a1a]">₹{selectedEntry.avgOrderValue}</p>
                 </div>
-                <div className="rounded-lg bg-[#f9fafb] p-3">
-                  <p className="text-[10px] font-bold text-[#666]">Return Rate</p>
-                  <p className={`mt-1 text-xl font-black ${selectedEntry.returnRate > 3 ? "text-red-500" : "text-[#0c831f]"}`}>
-                    {selectedEntry.returnRate}%
-                  </p>
-                </div>
-                <div className="rounded-lg bg-[#f9fafb] p-3">
-                  <p className="text-[10px] font-bold text-[#666]">Top Category</p>
-                  <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory}</p>
-                </div>
+<div className="rounded-lg bg-[#f9fafb] p-3">
+                   <p className="text-[10px] font-bold text-[#666]">Return Rate</p>
+                   <p className={`mt-1 text-xl font-black ${selectedEntry.returnRate && selectedEntry.returnRate > 3 ? "text-red-500" : "text-[#0c831f]"}`}>
+                     {selectedEntry.returnRate ?? 0}%
+                   </p>
+                 </div>
+                 <div className="rounded-lg bg-[#f9fafb] p-3">
+                   <p className="text-[10px] font-bold text-[#666]">Top Category</p>
+                   <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory ?? "—"}</p>
+                 </div>
               </div>
             </div>
 

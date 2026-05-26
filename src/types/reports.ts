@@ -42,6 +42,8 @@ export const SalesReportEntrySchema = z.object({
   cashTransactions: z.number(),
   cardTransactions: z.number(),
   upiTransactions: z.number(),
+  topCategory: z.string().optional(),
+  returnRate: z.number().optional(),
 });
 export type SalesReportEntry = z.infer<typeof SalesReportEntrySchema>;
 
