@@ -2,10 +2,19 @@
 
 // ── Dashboard Loading Skeleton ────────────────────────────
 // Mirrors the layout of the dashboard for a smooth loading experience.
+//
+// IMPORTANT: This component must never use Math.random() or any other
+// non-deterministic value in JSX — it causes SSR/client hydration mismatches.
+// All bar heights are static constants defined below.
 
+import { useEffect, useState } from "react";
 import { RefreshCw, AlertCircle, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+
+// ── Static bar heights — never use Math.random() here ────
+const CHART_1_HEIGHTS = [55, 80, 45, 90, 65, 75] as const;
+const CHART_2_HEIGHTS = [40, 70, 55, 85, 50, 65, 80] as const;
 
 function ShimmerBlock({ className, style }: { className?: string; style?: CSSProperties }) {
   return (
@@ -16,7 +25,7 @@ function ShimmerBlock({ className, style }: { className?: string; style?: CSSPro
   );
 }
 
-export function DashboardSkeleton() {
+function SkeletonContent() {
   return (
     <div className="space-y-4">
       {/* Skeleton header */}
@@ -43,10 +52,10 @@ export function DashboardSkeleton() {
           <ShimmerBlock className="h-3 w-16 mb-1" />
           <ShimmerBlock className="h-4 w-28 mb-6" />
           <div className="flex items-end gap-2 h-48">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {CHART_1_HEIGHTS.map((h, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <ShimmerBlock className="h-3 w-10" />
-                <ShimmerBlock className="w-full rounded-t-lg" style={{ height: `${30 + Math.random() * 60}%` }} />
+                <ShimmerBlock className="w-full rounded-t-lg" style={{ height: `${h}%` }} />
                 <ShimmerBlock className="h-3 w-8" />
               </div>
             ))}
@@ -56,10 +65,10 @@ export function DashboardSkeleton() {
           <ShimmerBlock className="h-3 w-16 mb-1" />
           <ShimmerBlock className="h-4 w-28 mb-6" />
           <div className="flex items-end gap-2 h-48">
-            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            {CHART_2_HEIGHTS.map((h, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <ShimmerBlock className="h-3 w-10" />
-                <ShimmerBlock className="w-full rounded-t-lg" style={{ height: `${30 + Math.random() * 60}%` }} />
+                <ShimmerBlock className="w-full rounded-t-lg" style={{ height: `${h}%` }} />
                 <ShimmerBlock className="h-3 w-8" />
               </div>
             ))}
@@ -113,6 +122,34 @@ export function DashboardSkeleton() {
       </div>
     </div>
   );
+}
+
+// ── DashboardSkeleton ─────────────────────────────────────
+// Rendered only after hydration to guarantee server and client
+// produce identical HTML. The server emits a lightweight placeholder;
+// the real skeleton mounts on the client after the first paint.
+
+export function DashboardSkeleton() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Server render + first client render: plain placeholder with no
+    // dynamic values — guarantees a perfect SSR/hydration match.
+    return (
+      <div className="space-y-4" aria-hidden="true">
+        <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 sm:p-6 h-28 animate-pulse bg-[#f9fafb]" />
+        <div className="h-32 rounded-xl border border-[#e8e8e8] bg-[#f9fafb] animate-pulse" />
+        <div className="h-64 rounded-2xl border border-[#e8e8e8] bg-[#f9fafb] animate-pulse" />
+        <div className="h-48 rounded-2xl border border-[#e8e8e8] bg-[#f9fafb] animate-pulse" />
+      </div>
+    );
+  }
+
+  return <SkeletonContent />;
 }
 
 // ── Dashboard Error State ─────────────────────────────────

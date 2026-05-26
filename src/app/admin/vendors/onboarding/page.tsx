@@ -2,127 +2,323 @@
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
-import ReusableSearchBar from "@/components/ui/admin/reusable-search";
+import { ReusableTable } from "@/components/ui/admin/reusable-table";
+import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
+import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { UserPlus, CheckCircle, Clock, XCircle, Eye, Search } from "lucide-react";
+import { ReusablePageHeader, ReusableDrawer } from "@/components/reusable/reusable-components";
+import { useVendorOnboarding } from "@/hooks/use-vendors";
+import {
+  UserPlus, CheckCircle, Clock, XCircle, Eye, FileText,
+  AlertTriangle, Users, RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
+import type { VendorOnboarding } from "@/types/vendors";
 
-const onboardingVendors = [
-  { id: "VND-101", company: "Fresh Farms Ltd.", owner: "Rajesh Patel", email: "rajesh@freshfarms.com", phone: "+91-98765-43210", category: "Fruits & Vegetables", status: "pending_review", applied: "2026-05-18", documents: ["GST", "PAN", "Bank Details"] },
-  { id: "VND-102", company: "Daily Dairy Co.", owner: "Meena Sharma", email: "meena@dailydairy.com", phone: "+91-98765-43211", category: "Dairy", status: "approved", applied: "2026-05-16", documents: ["GST", "PAN", "Bank Details", "FSSAI"] },
-  { id: "VND-103", company: "Organic Harvest", owner: "Vikram Singh", email: "vikram@organicharvest.com", phone: "+91-98765-43212", category: "Organic Foods", status: "pending_documents", applied: "2026-05-15", documents: ["GST", "PAN"] },
-  { id: "VND-104", company: "Spice World", owner: "Anita Gupta", email: "anita@spiceworld.com", phone: "+91-98765-43213", category: "Spices", status: "rejected", applied: "2026-05-14", documents: ["GST", "PAN", "Bank Details"], rejection_reason: "Incomplete documentation" },
-  { id: "VND-105", company: "Baker's Delight", owner: "Suresh Reddy", email: "suresh@bakersdelight.com", phone: "+91-98765-43214", category: "Bakery", status: "pending_review", applied: "2026-05-13", documents: ["GST", "PAN"] },
-];
+const docStatusConfig: Record<string, { color: string; bg: string; label: string }> = {
+  uploaded:  { color: "text-[#2563eb]", bg: "bg-[#eff6ff]", label: "Uploaded" },
+  verified:  { color: "text-[#0c831f]", bg: "bg-[#e8f5e9]", label: "Verified" },
+  rejected:  { color: "text-[#dc2626]", bg: "bg-[#fef2f2]", label: "Rejected" },
+  pending:   { color: "text-[#999]",    bg: "bg-[#f6f7f6]", label: "Pending" },
+};
 
 export default function VendorOnboardingPage() {
-  const [search, setSearch] = useState("");
-  const [showApproveModal, setShowApproveModal] = useState<{ id: string; company: string } | null>(null);
+  const {
+    data, loading, error, summary, filters, meta,
+    fetchData, updateFilters, approveVendor, rejectVendor,
+    goToPage, changePageSize,
+  } = useVendorOnboarding();
 
-  const filtered = onboardingVendors.filter(v =>
-    !search || v.company.toLowerCase().includes(search.toLowerCase()) || v.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const [selectedApp, setSelectedApp] = useState<VendorOnboarding | null>(null);
+  const [rejectModal, setRejectModal] = useState<{ id: string; company: string } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleApprove = (id: string) => {
-    toast.success(`Vendor ${id} approved successfully`);
-    setShowApproveModal(null);
+  const handleApprove = async (id: string, company: string) => {
+    setActionLoading(true);
+    try {
+      await approveVendor(id);
+      toast.success(`${company} has been approved`);
+      setSelectedApp(null);
+    } catch {
+      toast.error("Failed to approve vendor");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectModal || !rejectReason.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await rejectVendor(rejectModal.id, rejectReason);
+      toast.success(`${rejectModal.company} application rejected`);
+      setRejectModal(null);
+      setRejectReason("");
+      setSelectedApp(null);
+    } catch {
+      toast.error("Failed to reject vendor");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
-        {/* Header */}
-        <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Vendors</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Vendor Onboarding</h1>
-              <p className="mt-2 text-sm text-[#666]">Review and approve new vendor applications.</p>
+      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+        <ReusablePageHeader
+          breadcrumb="Vendors"
+          title="Vendor Onboarding"
+          subtitle="Review, verify documents, and approve new vendor applications."
+          actions={
+            <div className="flex items-center gap-2">
+              <button onClick={fetchData} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              </button>
+              <button className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
+                <UserPlus className="h-4 w-4" /> Invite Vendor
+              </button>
             </div>
-            <button className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
-              <UserPlus className="h-4 w-4" /> Invite Vendor
-            </button>
-          </div>
-        </section>
+          }
+        />
 
-        <ReusableSearchBar value={search} onChange={setSearch} placeholder="Search by company name or ID..." />
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{error}</div>
+        )}
 
-        {/* Onboarding Table */}
-        <div className="overflow-x-auto rounded-2xl border border-[#e8e8e8] bg-white shadow-sm">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-[#f9fafb] text-left text-[10px] font-black uppercase tracking-wide text-[#666]">
-                <th className="px-4 py-3">Vendor ID</th>
-                <th className="px-4 py-3">Company</th>
-                <th className="px-4 py-3">Owner</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Applied</th>
-                <th className="px-4 py-3">Documents</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#e8e8e8]">
-              {filtered.map((v) => (
-                <tr key={v.id} className="text-sm hover:bg-[#f9fafb]">
-                  <td className="px-4 py-3 font-bold text-[#0c831f]">{v.id}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-bold text-[#1a1a1a]">{v.company}</p>
-                    <p className="text-xs text-[#999]">{v.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-[#666]">{v.owner}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-lg bg-[#f6f7f6] px-2 py-1 text-xs text-[#666]">{v.category}</span>
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={v.status} /></td>
-                  <td className="px-4 py-3 text-xs text-[#999]">{v.applied}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {v.documents.map((d) => (
-                        <span key={d} className="rounded bg-[#f6f7f6] px-2 py-0.5 text-[10px] font-semibold text-[#666]">{d}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      {v.status === "pending_review" && (
-                        <>
-                          <button onClick={() => setShowApproveModal({ id: v.id, company: v.company })} className="rounded-lg bg-[#e8f5e9] p-1.5 text-[#0c831f] hover:bg-[#d0edd4]">
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                          <button className="rounded-lg bg-[#fef2f2] p-1.5 text-[#dc2626] hover:bg-[#fee2e2]">
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
-                      <button className="rounded-lg bg-[#f6f7f6] p-1.5 text-[#666] hover:bg-[#e8e8e8]">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <ReusableCard title="Total Applications" value={summary?.total ?? 0} icon={<Users className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Pending Review" value={summary?.pendingReview ?? 0} icon={<Clock className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" subtitle={summary ? `${summary.pendingDocuments} pending docs` : undefined} />
+          <ReusableCard title="Approved" value={summary?.approved ?? 0} icon={<CheckCircle className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Rejected" value={summary?.rejected ?? 0} icon={<XCircle className="h-5 w-5" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" />
         </div>
 
-        {/* Approve Confirmation Modal */}
-        {showApproveModal && (
-          <ReusableModal open={true} onClose={() => setShowApproveModal(null)} title="Approve Vendor" size="sm">
-            <div className="space-y-4">
-              <p className="text-sm text-[#666]">
-                Are you sure you want to approve <span className="font-bold text-[#1a1a1a]">{showApproveModal.company}</span> ({showApproveModal.id})?
-                The vendor will gain access to the platform.
-              </p>
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setShowApproveModal(null)} className="rounded-lg border border-[#e8e8e8] px-4 py-2 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]">Cancel</button>
-                <button onClick={() => handleApprove(showApproveModal.id)} className="rounded-lg bg-[#0c831f] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a6a18]">Approve Vendor</button>
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[200px] max-w-sm">
+            <ReusableSearchBar
+              value={filters.search ?? ""}
+              onChange={(v) => updateFilters({ search: v })}
+              placeholder="Search by company, owner, ID..."
+            />
+          </div>
+          <select
+            value={filters.status ?? "all"}
+            onChange={(e) => updateFilters({ status: e.target.value })}
+            className="h-10 rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none"
+          >
+            <option value="all">All Status</option>
+            <option value="pending_review">Pending Review</option>
+            <option value="pending_documents">Pending Documents</option>
+            <option value="processing">Processing</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        {/* Applications Table */}
+        <ReusableTable
+          data={data}
+          keyExtractor={(a) => a.id}
+          isLoading={loading}
+          page={meta.page}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+          columns={[
+            {
+              key: "company", header: "Company", sortable: true,
+              render: (a) => (
+                <div>
+                  <span className="font-bold text-[#1a1a1a]">{a.company}</span>
+                  <span className="block text-[10px] text-[#999]">{a.id} · {a.owner}</span>
+                </div>
+              ),
+            },
+            { key: "category", header: "Category", width: "130px", hideOnMobile: true },
+            {
+              key: "documents", header: "Documents", width: "160px",
+              render: (a) => (
+                <div className="flex flex-wrap gap-1">
+                  {a.documents.map((doc) => (
+                    <span
+                      key={doc.type}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${docStatusConfig[doc.status]?.bg} ${docStatusConfig[doc.status]?.color}`}
+                    >
+                      {doc.type}
+                    </span>
+                  ))}
+                </div>
+              ),
+            },
+            { key: "status", header: "Status", width: "130px", render: (a) => <StatusBadge status={a.status} /> },
+            { key: "appliedDate", header: "Applied", width: "100px", hideOnMobile: true },
+            {
+              key: "city", header: "Location", width: "120px", hideOnMobile: true,
+              render: (a) => <span className="text-xs text-[#666]">{a.city}, {a.state}</span>,
+            },
+          ]}
+          actions={[
+            { label: "View Details", icon: <Eye className="h-3.5 w-3.5" />, onClick: (a) => setSelectedApp(a) },
+            {
+              label: "Approve",
+              icon: <CheckCircle className="h-3.5 w-3.5" />,
+              onClick: (a) => handleApprove(a.id, a.company),
+              variant: "success",
+              show: (a) => a.status === "pending_review" || a.status === "processing",
+            },
+            {
+              label: "Reject",
+              icon: <XCircle className="h-3.5 w-3.5" />,
+              onClick: (a) => setRejectModal({ id: a.id, company: a.company }),
+              variant: "danger",
+              show: (a) => a.status === "pending_review" || a.status === "pending_documents",
+            },
+          ]}
+        />
+      </div>
+
+      {/* Application Detail Drawer */}
+      <ReusableDrawer
+        open={!!selectedApp}
+        onClose={() => setSelectedApp(null)}
+        title="Application Details"
+        subtitle={selectedApp?.company}
+        width="lg"
+      >
+        {selectedApp && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={selectedApp.status} />
+              <span className="text-xs text-[#999]">Applied: {selectedApp.appliedDate}</span>
+            </div>
+
+            {/* Applicant Info */}
+            <div className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4">
+              <h4 className="mb-3 text-xs font-black uppercase tracking-wide text-[#666]">Applicant Information</h4>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Owner", value: selectedApp.owner },
+                  { label: "Email", value: selectedApp.email },
+                  { label: "Phone", value: selectedApp.phone },
+                  { label: "Category", value: selectedApp.category },
+                  { label: "City", value: `${selectedApp.city}, ${selectedApp.state}` },
+                  { label: "Expected Volume", value: selectedApp.expectedMonthlyVolume ? `₹${(selectedApp.expectedMonthlyVolume / 1000).toFixed(0)}K/mo` : "—" },
+                ].map((f) => (
+                  <div key={f.label}>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">{f.label}</p>
+                    <p className="mt-0.5 text-sm font-bold text-[#1a1a1a]">{f.value}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </ReusableModal>
+
+            {/* Documents */}
+            <div className="rounded-xl border border-[#e8e8e8] p-4">
+              <h4 className="mb-3 text-xs font-black uppercase tracking-wide text-[#666]">Document Verification</h4>
+              <div className="space-y-2.5">
+                {selectedApp.documents.map((doc) => {
+                  const cfg = docStatusConfig[doc.status];
+                  return (
+                    <div key={doc.type} className="flex items-center justify-between rounded-lg border border-[#e8e8e8] p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${cfg.bg}`}>
+                          <FileText className={`h-4 w-4 ${cfg.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-[#1a1a1a]">{doc.type}</p>
+                          {doc.uploadedAt && <p className="text-[10px] text-[#999]">Uploaded: {doc.uploadedAt}</p>}
+                          {doc.rejectionReason && <p className="text-[10px] text-red-500">{doc.rejectionReason}</p>}
+                        </div>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${cfg.bg} ${cfg.color}`}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Rejection reason if rejected */}
+            {selectedApp.status === "rejected" && selectedApp.rejectionReason && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-red-700">Rejection Reason</p>
+                    <p className="mt-1 text-sm text-red-600">{selectedApp.rejectionReason}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            {(selectedApp.status === "pending_review" || selectedApp.status === "processing") && (
+              <div className="flex gap-3 border-t border-[#e8e8e8] pt-4">
+                <button
+                  onClick={() => { setSelectedApp(null); setRejectModal({ id: selectedApp.id, company: selectedApp.company }); }}
+                  className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-100"
+                >
+                  <XCircle className="h-4 w-4" /> Reject
+                </button>
+                <button
+                  onClick={() => handleApprove(selectedApp.id, selectedApp.company)}
+                  disabled={actionLoading}
+                  className="ml-auto flex items-center gap-1.5 rounded-xl bg-[#0c831f] px-4 py-2 text-sm font-bold text-white hover:bg-[#0a6a18] disabled:opacity-50"
+                >
+                  <CheckCircle className="h-4 w-4" /> Approve Vendor
+                </button>
+              </div>
+            )}
+          </div>
         )}
-      </div>
+      </ReusableDrawer>
+
+      {/* Reject Confirmation Modal */}
+      <ReusableModal
+        open={!!rejectModal}
+        onClose={() => { setRejectModal(null); setRejectReason(""); }}
+        title="Reject Application"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[#666]">
+            Rejecting <span className="font-bold text-[#1a1a1a]">{rejectModal?.company}</span>. Please provide a reason.
+          </p>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Rejection Reason *</label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="e.g. Incomplete documentation, FSSAI license missing..."
+              rows={3}
+              className="w-full rounded-xl border border-[#e8e8e8] bg-white px-3 py-2.5 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#dc2626]"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => { setRejectModal(null); setRejectReason(""); }}
+              className="rounded-xl border border-[#e8e8e8] px-4 py-2 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={actionLoading || !rejectReason.trim()}
+              className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600 disabled:opacity-50"
+            >
+              {actionLoading ? "Rejecting..." : "Reject Application"}
+            </button>
+          </div>
+        </div>
+      </ReusableModal>
     </DashboardLayout>
   );
 }
