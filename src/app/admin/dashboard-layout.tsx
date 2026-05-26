@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SidebarEnterprise from "@/components/ui/admin/sidebar-enterprise";
 import Topbar from "./topbar";
 import AdminFooter from "@/components/ui/admin/footer";
@@ -12,14 +12,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Lazy initializer — SSR-safe: server returns false, client hydrates with false,
-  // then instantly reads localStorage to avoid any flash.
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem(STORAGE_KEY) === "true";
+  // Always start with false on both server and client to avoid hydration mismatch.
+  // After hydration, sync from localStorage in useEffect.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "true") {
+      setSidebarCollapsed(true);
     }
-    return false;
-  });
+  }, []);
 
   // Persist sidebar state on change
   const handleToggle = (collapsed: boolean) => {
@@ -41,7 +43,7 @@ export default function DashboardLayout({
         }`}
       >
         {/* Fixed/sticky header */}
-        <Topbar collapsed={sidebarCollapsed} />
+        <Topbar collapsed={sidebarCollapsed} onToggleSidebar={() => handleToggle(!sidebarCollapsed)} />
 
         {/* Spacer for fixed header */}
         <div className="h-14 shrink-0" />

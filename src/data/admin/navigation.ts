@@ -43,7 +43,6 @@ import {
   ShoppingBag,
   Receipt,
   Group,
-  Cart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -158,7 +157,7 @@ export const menuItems: MenuItem[] = [
       { icon: Receipt, label: "GST Reports", href: "/admin/reports/gst" },
       { icon: Group, label: "Cohort Analysis", href: "/admin/reports/cohort" },
       { icon: ShoppingBag, label: "Revenue Analytics", href: "/admin/reports/revenue-analytics" },
-      { icon: Cart, label: "Abandoned Cart", href: "/admin/reports/abandoned-cart" },
+      { icon: ShoppingCart, label: "Abandoned Cart", href: "/admin/reports/abandoned-cart" },
       { icon: Percent, label: "Promotion ROI", href: "/admin/reports/promotion-roi" },
     ],
   },

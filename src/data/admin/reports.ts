@@ -306,3 +306,147 @@ export const mockPromotionROIData: PromotionROIEntry[] = [
   { id: "PROI-007", promotionName: "Monsoon Magic - Free Gift", type: "bogo", cost: 240000, revenueGenerated: 1120000, ordersIncremented: 1580, redemptionCount: 1750, roi: 367, conversionRate: 13.1, avgOrderValue: 640, status: "scheduled", startDate: "2026-06-01", endDate: "2026-07-15" },
   { id: "PROI-008", promotionName: "Premium Members - Extra 10%", type: "percentage", cost: 150000, revenueGenerated: 980000, ordersIncremented: 1100, redemptionCount: 1250, roi: 553, conversionRate: 22.5, avgOrderValue: 891, status: "active", startDate: "2026-05-15", endDate: "2026-07-31" },
 ];
+
+// ── Sales Report Entries (daily granularity) ──────────────
+
+export interface SalesReportEntry {
+  id: string;
+  date: string;
+  grossRevenue: number;
+  netRevenue: number;
+  orders: number;
+  avgOrderValue: number;
+  refunds: number;
+  discounts: number;
+  promoCost: number;
+  cashTransactions: number;
+  cardTransactions: number;
+  upiTransactions: number;
+  topCategory: string;
+  returnRate: number;
+}
+
+export const mockSalesReportEntries: SalesReportEntry[] = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date(2026, 4, i + 1);
+  const gross = Math.round(380000 + Math.random() * 120000 + Math.sin(i / 3) * 60000);
+  const orders = Math.round(gross / 820);
+  const categories = ["Groceries", "Dairy", "Beverages", "Snacks", "Fruits & Veg", "Health"];
+  return {
+    id: `SR-${String(i + 1).padStart(3, "0")}`,
+    date: date.toISOString().split("T")[0],
+    grossRevenue: gross,
+    netRevenue: Math.round(gross * 0.89),
+    orders,
+    avgOrderValue: Math.round(gross / orders),
+    refunds: Math.round(gross * 0.025),
+    discounts: Math.round(gross * 0.065),
+    promoCost: Math.round(gross * 0.04),
+    cashTransactions: Math.round(orders * 0.12),
+    cardTransactions: Math.round(orders * 0.35),
+    upiTransactions: Math.round(orders * 0.53),
+    topCategory: categories[i % categories.length],
+    returnRate: Math.round((Math.random() * 3 + 1) * 10) / 10,
+  };
+});
+
+// ── Inventory Report Entries ──────────────────────────────
+
+export interface InventoryReportEntry {
+  id: string;
+  sku: string;
+  productName: string;
+  category: string;
+  warehouse: string;
+  totalStock: number;
+  reserved: number;
+  available: number;
+  damaged: number;
+  reorderPoint: number;
+  daysUntilStockout: number;
+  monthlyVelocity: number;
+  turnoverRate: number;
+  stockStatus: "healthy" | "low" | "critical" | "out_of_stock" | "overstocked";
+  lastRestocked: string;
+  unitCost: number;
+  stockValue: number;
+}
+
+export const mockInventoryReportEntries: InventoryReportEntry[] = [
+  { id: "INV-001", sku: "RICE-BAS-001", productName: "Organic Basmati Rice 5kg", category: "Groceries", warehouse: "Mumbai Central", totalStock: 420, reserved: 38, available: 382, damaged: 0, reorderPoint: 80, daysUntilStockout: 45, monthlyVelocity: 260, turnoverRate: 4.2, stockStatus: "healthy", lastRestocked: "2026-05-15", unitCost: 285, stockValue: 119700 },
+  { id: "INV-002", sku: "FRUIT-APL-001", productName: "Fresh Red Apples 1kg", category: "Fruits & Veg", warehouse: "Delhi Hub", totalStock: 85, reserved: 12, available: 73, damaged: 2, reorderPoint: 60, daysUntilStockout: 8, monthlyVelocity: 320, turnoverRate: 12.5, stockStatus: "low", lastRestocked: "2026-05-20", unitCost: 120, stockValue: 10200 },
+  { id: "INV-003", sku: "DAIRY-MLK-001", productName: "Full Cream Milk 1L", category: "Dairy", warehouse: "Mumbai Central", totalStock: 0, reserved: 0, available: 0, damaged: 0, reorderPoint: 200, daysUntilStockout: 0, monthlyVelocity: 1800, turnoverRate: 22.5, stockStatus: "out_of_stock", lastRestocked: "2026-05-18", unitCost: 68, stockValue: 0 },
+  { id: "INV-004", sku: "BEV-COF-001", productName: "Cold Brew Coffee 250ml", category: "Beverages", warehouse: "Bangalore Hub", totalStock: 38, reserved: 8, available: 30, damaged: 1, reorderPoint: 80, daysUntilStockout: 6, monthlyVelocity: 180, turnoverRate: 8.2, stockStatus: "critical", lastRestocked: "2026-05-12", unitCost: 145, stockValue: 5510 },
+  { id: "INV-005", sku: "SNK-CHP-001", productName: "Baked Multigrain Chips 200g", category: "Snacks", warehouse: "Mumbai Central", totalStock: 680, reserved: 45, available: 635, damaged: 5, reorderPoint: 120, daysUntilStockout: 38, monthlyVelocity: 520, turnoverRate: 7.8, stockStatus: "overstocked", lastRestocked: "2026-05-10", unitCost: 85, stockValue: 57800 },
+  { id: "INV-006", sku: "HEALTH-HNY-001", productName: "Natural Honey 500g", category: "Health", warehouse: "Delhi Hub", totalStock: 145, reserved: 18, available: 127, damaged: 0, reorderPoint: 40, daysUntilStockout: 28, monthlyVelocity: 155, turnoverRate: 3.8, stockStatus: "healthy", lastRestocked: "2026-05-08", unitCost: 320, stockValue: 46400 },
+  { id: "INV-007", sku: "DAIRY-YOG-001", productName: "Greek Yogurt 400g", category: "Dairy", warehouse: "Bangalore Hub", totalStock: 22, reserved: 6, available: 16, damaged: 0, reorderPoint: 50, daysUntilStockout: 4, monthlyVelocity: 165, turnoverRate: 14.2, stockStatus: "critical", lastRestocked: "2026-05-19", unitCost: 95, stockValue: 2090 },
+  { id: "INV-008", sku: "GROC-OIL-001", productName: "Cold Pressed Coconut Oil 1L", category: "Groceries", warehouse: "Mumbai Central", totalStock: 310, reserved: 28, available: 282, damaged: 3, reorderPoint: 60, daysUntilStockout: 52, monthlyVelocity: 175, turnoverRate: 5.1, stockStatus: "healthy", lastRestocked: "2026-05-05", unitCost: 420, stockValue: 130200 },
+  { id: "INV-009", sku: "BEV-JUI-001", productName: "Fresh Orange Juice 1L", category: "Beverages", warehouse: "Delhi Hub", totalStock: 55, reserved: 10, available: 45, damaged: 2, reorderPoint: 80, daysUntilStockout: 9, monthlyVelocity: 185, turnoverRate: 9.8, stockStatus: "low", lastRestocked: "2026-05-17", unitCost: 110, stockValue: 6050 },
+  { id: "INV-010", sku: "SNCK-NUT-001", productName: "Premium Cashews 250g", category: "Snacks", warehouse: "Bangalore Hub", totalStock: 195, reserved: 22, available: 173, damaged: 1, reorderPoint: 50, daysUntilStockout: 35, monthlyVelocity: 165, turnoverRate: 6.2, stockStatus: "healthy", lastRestocked: "2026-05-14", unitCost: 380, stockValue: 74100 },
+  { id: "INV-011", sku: "GROC-DAL-001", productName: "Toor Dal 1kg", category: "Groceries", warehouse: "Mumbai Central", totalStock: 520, reserved: 42, available: 478, damaged: 0, reorderPoint: 100, daysUntilStockout: 60, monthlyVelocity: 260, turnoverRate: 4.5, stockStatus: "overstocked", lastRestocked: "2026-04-28", unitCost: 145, stockValue: 75400 },
+  { id: "INV-012", sku: "HLTH-PRO-001", productName: "Whey Protein 1kg", category: "Health", warehouse: "Delhi Hub", totalStock: 12, reserved: 4, available: 8, damaged: 0, reorderPoint: 30, daysUntilStockout: 5, monthlyVelocity: 72, turnoverRate: 5.8, stockStatus: "critical", lastRestocked: "2026-05-10", unitCost: 1850, stockValue: 22200 },
+];
+
+// ── Vendor Report Entries ─────────────────────────────────
+
+export interface VendorReportEntry {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  category: string;
+  totalOrders: number;
+  grossSales: number;
+  commission: number;
+  commissionRate: number;
+  netPayout: number;
+  pendingPayout: number;
+  rating: number;
+  performance: "excellent" | "good" | "average" | "poor";
+  onTimeDeliveryRate: number;
+  returnRate: number;
+  activeProducts: number;
+  joinedDate: string;
+  lastPayoutDate: string;
+}
+
+export const mockVendorReportEntries: VendorReportEntry[] = [
+  { id: "VND-001", vendorId: "VEND001", vendorName: "Fresh Foods Pvt Ltd", category: "Groceries", totalOrders: 1845, grossSales: 2450000, commission: 245000, commissionRate: 10, netPayout: 2165500, pendingPayout: 39500, rating: 4.8, performance: "excellent", onTimeDeliveryRate: 97.2, returnRate: 1.2, activeProducts: 145, joinedDate: "2024-03-15", lastPayoutDate: "2026-05-15" },
+  { id: "VND-002", vendorId: "VEND002", vendorName: "Organic Farms Co", category: "Fruits & Veg", totalOrders: 1240, grossSales: 1680000, commission: 168000, commissionRate: 10, netPayout: 1484400, pendingPayout: 27600, rating: 4.6, performance: "excellent", onTimeDeliveryRate: 94.8, returnRate: 2.1, activeProducts: 88, joinedDate: "2024-06-20", lastPayoutDate: "2026-05-15" },
+  { id: "VND-003", vendorId: "VEND003", vendorName: "Daily Essentials Co", category: "Dairy", totalOrders: 2890, grossSales: 3120000, commission: 312000, commissionRate: 10, netPayout: 2757600, pendingPayout: 50400, rating: 4.9, performance: "excellent", onTimeDeliveryRate: 98.5, returnRate: 0.8, activeProducts: 62, joinedDate: "2024-01-10", lastPayoutDate: "2026-05-15" },
+  { id: "VND-004", vendorId: "VEND004", vendorName: "Snacks World Ltd", category: "Snacks", totalOrders: 780, grossSales: 890000, commission: 89000, commissionRate: 10, netPayout: 786660, pendingPayout: 14340, rating: 4.3, performance: "good", onTimeDeliveryRate: 91.2, returnRate: 3.4, activeProducts: 112, joinedDate: "2024-08-05", lastPayoutDate: "2026-05-01" },
+  { id: "VND-005", vendorId: "VEND005", vendorName: "Beverage Hub Pvt Ltd", category: "Beverages", totalOrders: 1120, grossSales: 1340000, commission: 134000, commissionRate: 10, netPayout: 1183800, pendingPayout: 22200, rating: 4.5, performance: "good", onTimeDeliveryRate: 93.6, returnRate: 2.8, activeProducts: 78, joinedDate: "2024-04-22", lastPayoutDate: "2026-05-15" },
+  { id: "VND-006", vendorId: "VEND006", vendorName: "Health Plus India", category: "Health", totalOrders: 520, grossSales: 780000, commission: 78000, commissionRate: 10, netPayout: 689220, pendingPayout: 12780, rating: 3.9, performance: "average", onTimeDeliveryRate: 87.4, returnRate: 5.2, activeProducts: 95, joinedDate: "2024-09-18", lastPayoutDate: "2026-04-30" },
+  { id: "VND-007", vendorId: "VEND007", vendorName: "Spice Garden", category: "Groceries", totalOrders: 340, grossSales: 420000, commission: 42000, commissionRate: 10, netPayout: 371160, pendingPayout: 6840, rating: 4.2, performance: "good", onTimeDeliveryRate: 90.8, returnRate: 2.5, activeProducts: 54, joinedDate: "2025-01-12", lastPayoutDate: "2026-05-01" },
+  { id: "VND-008", vendorId: "VEND008", vendorName: "Frozen Delights", category: "Frozen Foods", totalOrders: 185, grossSales: 245000, commission: 24500, commissionRate: 10, netPayout: 216585, pendingPayout: 3915, rating: 3.6, performance: "poor", onTimeDeliveryRate: 82.1, returnRate: 7.8, activeProducts: 38, joinedDate: "2025-03-08", lastPayoutDate: "2026-04-15" },
+];
+
+// ── Tax Report Entries ────────────────────────────────────
+
+export interface TaxReportEntry {
+  id: string;
+  reportTitle: string;
+  period: string;
+  type: "GSTR-1" | "GSTR-3B" | "GSTR-9" | "TDS" | "ITC" | "Annual";
+  totalTaxAmount: number;
+  taxableValue: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  tds: number;
+  status: "ready" | "generating" | "filed" | "pending" | "overdue";
+  format: "xlsx" | "pdf" | "csv";
+  fileSize: string;
+  dueDate: string;
+  generatedAt: string;
+  filedDate?: string;
+}
+
+export const mockTaxReportEntries: TaxReportEntry[] = [
+  { id: "TAX-001", reportTitle: "GSTR-3B Monthly Return - Apr 2026", period: "Apr 2026", type: "GSTR-3B", totalTaxAmount: 1120500, taxableValue: 11205000, cgst: 560250, sgst: 560250, igst: 0, tds: 0, status: "filed", format: "xlsx", fileSize: "3.2 MB", dueDate: "2026-05-20", generatedAt: "2026-05-18 10:30", filedDate: "2026-05-18" },
+  { id: "TAX-002", reportTitle: "GSTR-1 Outward Supplies - Apr 2026", period: "Apr 2026", type: "GSTR-1", totalTaxAmount: 1120500, taxableValue: 11205000, cgst: 560250, sgst: 560250, igst: 0, tds: 0, status: "filed", format: "xlsx", fileSize: "2.8 MB", dueDate: "2026-05-11", generatedAt: "2026-05-10 14:20", filedDate: "2026-05-10" },
+  { id: "TAX-003", reportTitle: "GSTR-3B Monthly Return - Mar 2026", period: "Mar 2026", type: "GSTR-3B", totalTaxAmount: 1082600, taxableValue: 10701000, cgst: 535050, sgst: 535050, igst: 12500, tds: 0, status: "filed", format: "xlsx", fileSize: "3.0 MB", dueDate: "2026-04-20", generatedAt: "2026-04-19 09:15", filedDate: "2026-04-19" },
+  { id: "TAX-004", reportTitle: "Input Tax Credit Report - Q1 2026", period: "Jan-Mar 2026", type: "ITC", totalTaxAmount: 1185000, taxableValue: 31800000, cgst: 0, sgst: 0, igst: 0, tds: 0, status: "ready", format: "xlsx", fileSize: "1.5 MB", dueDate: "—", generatedAt: "2026-04-05 11:00" },
+  { id: "TAX-005", reportTitle: "TDS Certificate Summary - FY 2025-26", period: "FY 2025-26", type: "TDS", totalTaxAmount: 1124500, taxableValue: 0, cgst: 0, sgst: 0, igst: 0, tds: 1124500, status: "ready", format: "pdf", fileSize: "1.1 MB", dueDate: "2026-07-31", generatedAt: "2026-04-10 16:45" },
+  { id: "TAX-006", reportTitle: "GSTR-3B Monthly Return - May 2026", period: "May 2026", type: "GSTR-3B", totalTaxAmount: 1245000, taxableValue: 12450000, cgst: 622500, sgst: 622500, igst: 0, tds: 0, status: "pending", format: "xlsx", fileSize: "—", dueDate: "2026-06-20", generatedAt: "—" },
+  { id: "TAX-007", reportTitle: "Annual GST Return - FY 2025-26", period: "FY 2025-26", type: "GSTR-9", totalTaxAmount: 11330000, taxableValue: 124500000, cgst: 5602500, sgst: 5602500, igst: 125000, tds: 0, status: "pending", format: "pdf", fileSize: "—", dueDate: "2026-12-31", generatedAt: "—" },
+  { id: "TAX-008", reportTitle: "GSTR-1 Outward Supplies - Feb 2026", period: "Feb 2026", type: "GSTR-1", totalTaxAmount: 929100, taxableValue: 9207000, cgst: 460350, sgst: 460350, igst: 8400, tds: 0, status: "filed", format: "xlsx", fileSize: "2.5 MB", dueDate: "2026-03-11", generatedAt: "2026-03-10 13:20", filedDate: "2026-03-10" },
+];

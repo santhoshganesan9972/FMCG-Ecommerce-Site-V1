@@ -13,6 +13,10 @@ import type {
   AbandonedCartEntry,
   RevenueAnalyticsEntry,
   PromotionROIEntry,
+  InventoryReportEntry,
+  VendorReportEntry,
+  TaxReportEntry,
+  SalesReportEntry,
   ReportPageMeta,
   ReportFilters,
 } from "@/types/reports";
@@ -23,6 +27,10 @@ import {
   mockAbandonedCartData,
   mockRevenueAnalytics,
   mockPromotionROIData,
+  mockInventoryReportEntries,
+  mockVendorReportEntries,
+  mockTaxReportEntries,
+  mockSalesReportEntries,
 } from "@/data/admin/reports";
 
 const delay = (ms = 200) => new Promise((res) => setTimeout(res, ms));
@@ -296,6 +304,211 @@ export const reportsService = {
     return {
       success: true,
       downloadUrl: `/api/reports/export/${reportType}?format=${format}`,
+    };
+  },
+
+  // ── Sales Reports ─────────────────────────────────────
+
+  async getSalesReports(
+    filters?: Partial<ReportFilters>,
+    page = 1,
+    pageSize = 10
+  ): Promise<{ data: SalesReportEntry[]; meta: ReportPageMeta }> {
+    await delay(250);
+    let filtered = [...mockSalesReportEntries];
+    if (filters?.search) {
+      filtered = applySearch(filtered, filters.search, ["date", "topCategory"] as (keyof SalesReportEntry)[]);
+    }
+    if (filters?.dateFrom) {
+      filtered = filtered.filter((r) => r.date >= filters.dateFrom!);
+    }
+    if (filters?.dateTo) {
+      filtered = filtered.filter((r) => r.date <= filters.dateTo!);
+    }
+    if (filters?.sortBy) {
+      const key = filters.sortBy as keyof SalesReportEntry;
+      const dir = filters.sortOrder === "asc" ? 1 : -1;
+      filtered.sort((a, b) => {
+        const aVal = a[key] ?? "";
+        const bVal = b[key] ?? "";
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      });
+    } else {
+      filtered.sort((a, b) => b.date.localeCompare(a.date));
+    }
+    return applyPagination(filtered, page, pageSize);
+  },
+
+  async getSalesSummary(): Promise<{
+    totalRevenue: number;
+    totalOrders: number;
+    avgOrderValue: number;
+    totalRefunds: number;
+    totalDiscounts: number;
+    revenueGrowth: number;
+    ordersGrowth: number;
+    topCategory: string;
+  }> {
+    await delay(150);
+    const data = mockSalesReportEntries;
+    const totalRevenue = data.reduce((s, r) => s + r.grossRevenue, 0);
+    const totalOrders = data.reduce((s, r) => s + r.orders, 0);
+    const categoryCount: Record<string, number> = {};
+    data.forEach((r) => { categoryCount[r.topCategory] = (categoryCount[r.topCategory] || 0) + 1; });
+    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Groceries";
+    return {
+      totalRevenue,
+      totalOrders,
+      avgOrderValue: Math.round(totalRevenue / totalOrders),
+      totalRefunds: data.reduce((s, r) => s + r.refunds, 0),
+      totalDiscounts: data.reduce((s, r) => s + r.discounts, 0),
+      revenueGrowth: 12.5,
+      ordersGrowth: 10.1,
+      topCategory,
+    };
+  },
+
+  // ── Inventory Reports ─────────────────────────────────
+
+  async getInventoryReports(
+    filters?: Partial<ReportFilters>,
+    page = 1,
+    pageSize = 10
+  ): Promise<{ data: InventoryReportEntry[]; meta: ReportPageMeta }> {
+    await delay(250);
+    let filtered = [...mockInventoryReportEntries];
+    if (filters?.search) {
+      filtered = applySearch(filtered, filters.search, ["productName", "sku", "category", "warehouse"] as (keyof InventoryReportEntry)[]);
+    }
+    if (filters?.sortBy) {
+      const key = filters.sortBy as keyof InventoryReportEntry;
+      const dir = filters.sortOrder === "asc" ? 1 : -1;
+      filtered.sort((a, b) => {
+        const aVal = a[key] ?? "";
+        const bVal = b[key] ?? "";
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      });
+    }
+    return applyPagination(filtered, page, pageSize);
+  },
+
+  async getInventorySummary(): Promise<{
+    totalSKUs: number;
+    totalStockValue: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+    overstockedCount: number;
+    avgTurnoverRate: number;
+    totalDamagedValue: number;
+  }> {
+    await delay(150);
+    const data = mockInventoryReportEntries;
+    return {
+      totalSKUs: data.length,
+      totalStockValue: data.reduce((s, r) => s + r.stockValue, 0),
+      lowStockCount: data.filter((r) => r.stockStatus === "low" || r.stockStatus === "critical").length,
+      outOfStockCount: data.filter((r) => r.stockStatus === "out_of_stock").length,
+      overstockedCount: data.filter((r) => r.stockStatus === "overstocked").length,
+      avgTurnoverRate: Math.round(data.reduce((s, r) => s + r.turnoverRate, 0) / data.length * 10) / 10,
+      totalDamagedValue: data.reduce((s, r) => s + r.damaged * r.unitCost, 0),
+    };
+  },
+
+  // ── Vendor Reports ────────────────────────────────────
+
+  async getVendorReports(
+    filters?: Partial<ReportFilters>,
+    page = 1,
+    pageSize = 10
+  ): Promise<{ data: VendorReportEntry[]; meta: ReportPageMeta }> {
+    await delay(250);
+    let filtered = [...mockVendorReportEntries];
+    if (filters?.search) {
+      filtered = applySearch(filtered, filters.search, ["vendorName", "category"] as (keyof VendorReportEntry)[]);
+    }
+    if (filters?.sortBy) {
+      const key = filters.sortBy as keyof VendorReportEntry;
+      const dir = filters.sortOrder === "asc" ? 1 : -1;
+      filtered.sort((a, b) => {
+        const aVal = a[key] ?? "";
+        const bVal = b[key] ?? "";
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      });
+    }
+    return applyPagination(filtered, page, pageSize);
+  },
+
+  async getVendorSummary(): Promise<{
+    totalVendors: number;
+    totalGrossSales: number;
+    totalCommission: number;
+    totalNetPayout: number;
+    totalPendingPayout: number;
+    avgRating: number;
+    excellentCount: number;
+    poorCount: number;
+  }> {
+    await delay(150);
+    const data = mockVendorReportEntries;
+    return {
+      totalVendors: data.length,
+      totalGrossSales: data.reduce((s, v) => s + v.grossSales, 0),
+      totalCommission: data.reduce((s, v) => s + v.commission, 0),
+      totalNetPayout: data.reduce((s, v) => s + v.netPayout, 0),
+      totalPendingPayout: data.reduce((s, v) => s + v.pendingPayout, 0),
+      avgRating: Math.round(data.reduce((s, v) => s + v.rating, 0) / data.length * 10) / 10,
+      excellentCount: data.filter((v) => v.performance === "excellent").length,
+      poorCount: data.filter((v) => v.performance === "poor").length,
+    };
+  },
+
+  // ── Tax Reports ───────────────────────────────────────
+
+  async getTaxReports(
+    filters?: Partial<ReportFilters>,
+    page = 1,
+    pageSize = 10
+  ): Promise<{ data: TaxReportEntry[]; meta: ReportPageMeta }> {
+    await delay(250);
+    let filtered = [...mockTaxReportEntries];
+    if (filters?.search) {
+      filtered = applySearch(filtered, filters.search, ["reportTitle", "period", "type"] as (keyof TaxReportEntry)[]);
+    }
+    if (filters?.sortBy) {
+      const key = filters.sortBy as keyof TaxReportEntry;
+      const dir = filters.sortOrder === "asc" ? 1 : -1;
+      filtered.sort((a, b) => {
+        const aVal = a[key] ?? "";
+        const bVal = b[key] ?? "";
+        return String(aVal).localeCompare(String(bVal)) * dir;
+      });
+    }
+    return applyPagination(filtered, page, pageSize);
+  },
+
+  async getTaxSummary(): Promise<{
+    totalTaxCollected: number;
+    totalTaxPaid: number;
+    pendingFilings: number;
+    overdueFilings: number;
+    nextDueDate: string;
+    totalITCClaimed: number;
+  }> {
+    await delay(150);
+    const data = mockTaxReportEntries;
+    const filed = data.filter((r) => r.status === "filed");
+    const itcEntry = data.find((r) => r.type === "ITC");
+    const pending = data.filter((r) => r.status === "pending");
+    const nextDue = pending
+      .filter((r) => r.dueDate !== "—")
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
+    return {
+      totalTaxCollected: filed.reduce((s, r) => s + r.totalTaxAmount, 0),
+      totalTaxPaid: filed.reduce((s, r) => s + r.totalTaxAmount, 0),
+      pendingFilings: pending.length,
+      overdueFilings: data.filter((r) => r.status === "overdue").length,
+      nextDueDate: nextDue?.dueDate ?? "—",
+      totalITCClaimed: itcEntry?.totalTaxAmount ?? 0,
     };
   },
 };

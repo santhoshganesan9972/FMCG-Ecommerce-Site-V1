@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   ChevronDown,
-  PanelLeftClose,
-  PanelLeft,
 } from "lucide-react";
 import { menuItems } from "@/data/admin/navigation";
 
@@ -21,7 +19,6 @@ export default function SidebarEnterprise({
 }) {
   const pathname = usePathname();
   const collapsed = collapsedProp ?? false;
-  const setCollapsed = (value: boolean) => onToggle?.(value);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,14 +74,12 @@ export default function SidebarEnterprise({
   return (
     <aside
       className={`fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-[#e8e8e8] bg-white transition-all duration-300 ease-in-out ${
-        collapsed
-          ? "w-16 items-center shadow-sm"
-          : "max-md:hidden w-64"
+        collapsed ? "w-16 shadow-sm" : "w-64 max-md:hidden"
       }`}
     >
       {/* ── Logo area ── */}
       <div
-        className={`flex items-center border-b border-[#e8e8e8] transition-all duration-300 ${
+        className={`flex w-full items-center border-b border-[#e8e8e8] transition-all duration-300 ${
           collapsed ? "justify-center px-0 py-4" : "justify-between px-4 py-4"
         }`}
       >
@@ -95,7 +90,7 @@ export default function SidebarEnterprise({
           {/* Logo label — hidden when collapsed */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
-              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             }`}
           >
             <div className="whitespace-nowrap">
@@ -105,21 +100,11 @@ export default function SidebarEnterprise({
           </div>
         </Link>
 
-        {/* Collapse button — only visible when expanded */}
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a] transition-all"
-            title="Collapse sidebar"
-          >
-            <PanelLeftClose className="h-3.5 w-3.5" />
-          </button>
-        )}
       </div>
 
       {/* ── Navigation ── */}
       <nav
-        className={`flex-1 overflow-y-auto space-y-0.5 transition-all duration-300 ${
+        className={`w-full flex-1 overflow-y-auto space-y-0.5 transition-all duration-300 ${
           collapsed ? "px-2 py-3" : "px-3 py-3"
         }`}
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ccc transparent" }}
@@ -135,7 +120,7 @@ export default function SidebarEnterprise({
                 <>
                   {/* ── Split row: Link (navigate) + Button (toggle) ── */}
                   <div
-                    className={`flex items-center ${collapsed ? "justify-center" : ""}`}
+                    className={`flex w-full items-center ${collapsed ? "justify-center" : ""}`}
                     onMouseEnter={() => handleMouseEnter(item.label)}
                     onMouseLeave={handleMouseLeave}
                   >
@@ -164,7 +149,7 @@ export default function SidebarEnterprise({
                       {/* Label — hidden when collapsed */}
                       <div
                         className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                          collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+                          collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                         }`}
                       >
                         <div className="min-w-0">
@@ -211,13 +196,12 @@ export default function SidebarEnterprise({
                     )}
                   </div>
 
-                  {/* ── Submenu with smooth animation — only when expanded ── */}
-                  {!collapsed && (
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                      }`}
-                    >
+                  {/* ── Submenu — CSS-animated, always in DOM ── */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      collapsed || !isExpanded ? "max-h-0 opacity-0" : "max-h-96 opacity-100"
+                    }`}
+                  >
                       <div className="ml-3 mt-0.5 border-l-2 border-[#e8e8e8] pl-3 space-y-0.5">
                         {item.submenu!.map((sub) => {
                           const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
@@ -240,13 +224,12 @@ export default function SidebarEnterprise({
                           );
                         })}
                       </div>
-                    </div>
-                  )}
+                  </div>
                 </>
               ) : (
                 /* ── No submenu — single link ── */
                 <div
-                  className="relative"
+                  className={`relative w-full ${collapsed ? "flex justify-center" : ""}`}
                   onMouseEnter={() => handleMouseEnter(item.label)}
                   onMouseLeave={handleMouseLeave}
                 >
@@ -262,7 +245,7 @@ export default function SidebarEnterprise({
                                 ? "bg-[#e8f5e9] text-[#0c831f]"
                                 : "text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                             }`
-                          : `rounded-xl px-3 py-2.5 gap-2.5 ${
+                          : `w-full rounded-xl px-3 py-2.5 gap-2.5 ${
                               isActive
                                 ? "bg-[#e8f5e9] text-[#0c831f]"
                                 : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
@@ -275,7 +258,7 @@ export default function SidebarEnterprise({
                     {/* Label — hidden when collapsed */}
                     <div
                       className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-                        collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+                        collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
                       }`}
                     >
                       <div className="min-w-0">
@@ -305,7 +288,7 @@ export default function SidebarEnterprise({
 
       {/* ── Bottom section ── */}
       <div
-        className={`border-t border-[#e8e8e8] transition-all duration-300 ${
+        className={`w-full border-t border-[#e8e8e8] transition-all duration-300 ${
           collapsed ? "px-2 py-3" : "px-4 py-3"
         }`}
       >
@@ -318,7 +301,7 @@ export default function SidebarEnterprise({
             <div className="h-2 w-2 rounded-full bg-[#0c831f] animate-pulse" />
             <span
               className={`overflow-hidden whitespace-nowrap text-xs font-bold text-[#666] transition-all duration-300 ${
-                collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+                collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
               }`}
             >
               System Online
@@ -326,7 +309,7 @@ export default function SidebarEnterprise({
           </div>
           <span
             className={`overflow-hidden whitespace-nowrap text-xs font-bold text-[#0c831f] transition-all duration-300 ${
-              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             }`}
           >
             99.9%
@@ -342,7 +325,7 @@ export default function SidebarEnterprise({
           </div>
           <div
             className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
-              collapsed ? "max-w-0 opacity-0" : "max-w-full opacity-100"
+              collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             }`}
           >
             <div className="min-w-0">
@@ -351,17 +334,6 @@ export default function SidebarEnterprise({
             </div>
           </div>
         </div>
-
-        {/* Expand button — only when collapsed */}
-        {collapsed && (
-          <button
-            onClick={() => setCollapsed(false)}
-            className="mt-3 flex h-10 w-10 items-center justify-center rounded-xl text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a] transition-all mx-auto"
-            title="Expand sidebar"
-          >
-            <PanelLeft className="h-4 w-4" />
-          </button>
-        )}
       </div>
     </aside>
   );

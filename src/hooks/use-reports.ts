@@ -9,6 +9,10 @@ import type {
   AbandonedCartEntry,
   RevenueAnalyticsEntry,
   PromotionROIEntry,
+  SalesReportEntry,
+  InventoryReportEntry,
+  VendorReportEntry,
+  TaxReportEntry,
   ReportPageMeta,
   ReportFilters,
 } from "@/types/reports";
@@ -373,4 +377,256 @@ export function useReportExport() {
   }, []);
 
   return { handleExport, exporting };
+}
+
+// ── Sales Reports Hook ───────────────────────────────────
+
+export function useSalesReports(initialFilters?: Partial<ReportFilters>) {
+  const [data, setData] = useState<SalesReportEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{
+    totalRevenue: number;
+    totalOrders: number;
+    avgOrderValue: number;
+    totalRefunds: number;
+    totalDiscounts: number;
+    revenueGrowth: number;
+    ordersGrowth: number;
+    topCategory: string;
+  } | null>(null);
+  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const [filters, setFilters] = useState<ReportFilters>({
+    dateFrom: "",
+    dateTo: "",
+    period: "30d",
+    search: "",
+    sortBy: "",
+    sortOrder: "desc",
+    ...initialFilters,
+  });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await reportsService.getSalesReports(filters, page, pageSize);
+      setData(result.data);
+      setMeta(result.meta);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch sales reports");
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.dateFrom, filters.dateTo, filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    reportsService.getSalesSummary().then(setSummary).catch(() => {});
+  }, []);
+
+  const updateFilters = useCallback((update: Partial<ReportFilters>) => {
+    setFilters((prev) => ({ ...prev, ...update }));
+    goToPage(1);
+  }, [goToPage]);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ dateFrom: "", dateTo: "", period: "30d", search: "", sortBy: "", sortOrder: "desc" });
+    goToPage(1);
+  }, [goToPage]);
+
+  const activeFilterCount = useMemo(
+    () => Object.entries(filters).filter(([k, v]) => v !== "" && v !== undefined && k !== "period" && k !== "sortOrder" && k !== "sortBy").length,
+    [filters]
+  );
+
+  return { data, loading, error, summary, filters, meta, activeFilterCount, fetchData, updateFilters, clearFilters, goToPage, changePageSize };
+}
+
+// ── Inventory Reports Hook ───────────────────────────────
+
+export function useInventoryReports(initialFilters?: Partial<ReportFilters>) {
+  const [data, setData] = useState<InventoryReportEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{
+    totalSKUs: number;
+    totalStockValue: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+    overstockedCount: number;
+    avgTurnoverRate: number;
+    totalDamagedValue: number;
+  } | null>(null);
+  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const [filters, setFilters] = useState<ReportFilters>({
+    search: "",
+    sortBy: "",
+    sortOrder: "asc",
+    ...initialFilters,
+  });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await reportsService.getInventoryReports(filters, page, pageSize);
+      setData(result.data);
+      setMeta(result.meta);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch inventory reports");
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    reportsService.getInventorySummary().then(setSummary).catch(() => {});
+  }, []);
+
+  const updateFilters = useCallback((update: Partial<ReportFilters>) => {
+    setFilters((prev) => ({ ...prev, ...update }));
+    goToPage(1);
+  }, [goToPage]);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ search: "", sortBy: "", sortOrder: "asc" });
+    goToPage(1);
+  }, [goToPage]);
+
+  const activeFilterCount = useMemo(
+    () => Object.entries(filters).filter(([k, v]) => v !== "" && v !== undefined && k !== "sortOrder" && k !== "sortBy").length,
+    [filters]
+  );
+
+  return { data, loading, error, summary, filters, meta, activeFilterCount, fetchData, updateFilters, clearFilters, goToPage, changePageSize };
+}
+
+// ── Vendor Reports Hook ──────────────────────────────────
+
+export function useVendorReports(initialFilters?: Partial<ReportFilters>) {
+  const [data, setData] = useState<VendorReportEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{
+    totalVendors: number;
+    totalGrossSales: number;
+    totalCommission: number;
+    totalNetPayout: number;
+    totalPendingPayout: number;
+    avgRating: number;
+    excellentCount: number;
+    poorCount: number;
+  } | null>(null);
+  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const [filters, setFilters] = useState<ReportFilters>({
+    search: "",
+    sortBy: "",
+    sortOrder: "desc",
+    ...initialFilters,
+  });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await reportsService.getVendorReports(filters, page, pageSize);
+      setData(result.data);
+      setMeta(result.meta);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch vendor reports");
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    reportsService.getVendorSummary().then(setSummary).catch(() => {});
+  }, []);
+
+  const updateFilters = useCallback((update: Partial<ReportFilters>) => {
+    setFilters((prev) => ({ ...prev, ...update }));
+    goToPage(1);
+  }, [goToPage]);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    goToPage(1);
+  }, [goToPage]);
+
+  const activeFilterCount = useMemo(
+    () => Object.entries(filters).filter(([k, v]) => v !== "" && v !== undefined && k !== "sortOrder" && k !== "sortBy").length,
+    [filters]
+  );
+
+  return { data, loading, error, summary, filters, meta, activeFilterCount, fetchData, updateFilters, clearFilters, goToPage, changePageSize };
+}
+
+// ── Tax Reports Hook ─────────────────────────────────────
+
+export function useTaxReports(initialFilters?: Partial<ReportFilters>) {
+  const [data, setData] = useState<TaxReportEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{
+    totalTaxCollected: number;
+    totalTaxPaid: number;
+    pendingFilings: number;
+    overdueFilings: number;
+    nextDueDate: string;
+    totalITCClaimed: number;
+  } | null>(null);
+  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const [filters, setFilters] = useState<ReportFilters>({
+    search: "",
+    sortBy: "",
+    sortOrder: "desc",
+    ...initialFilters,
+  });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await reportsService.getTaxReports(filters, page, pageSize);
+      setData(result.data);
+      setMeta(result.meta);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch tax reports");
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    reportsService.getTaxSummary().then(setSummary).catch(() => {});
+  }, []);
+
+  const updateFilters = useCallback((update: Partial<ReportFilters>) => {
+    setFilters((prev) => ({ ...prev, ...update }));
+    goToPage(1);
+  }, [goToPage]);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    goToPage(1);
+  }, [goToPage]);
+
+  const activeFilterCount = useMemo(
+    () => Object.entries(filters).filter(([k, v]) => v !== "" && v !== undefined && k !== "sortOrder" && k !== "sortBy").length,
+    [filters]
+  );
+
+  return { data, loading, error, summary, filters, meta, activeFilterCount, fetchData, updateFilters, clearFilters, goToPage, changePageSize };
 }
