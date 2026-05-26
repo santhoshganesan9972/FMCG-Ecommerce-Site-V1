@@ -48,7 +48,6 @@ export const SalesReportEntrySchema = z.object({
 export type SalesReportEntry = z.infer<typeof SalesReportEntrySchema>;
 
 export const CustomerReportEntrySchema = z.object({
-  id: z.string(),
   customerId: z.string(),
   name: z.string(),
   email: z.string(),

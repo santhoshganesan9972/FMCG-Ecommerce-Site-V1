@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, ChevronDown, Check, RotateCcw, Star, Tag, Percent, Sparkles } from "lucide-react";
+import { X, ChevronDown, Check, RotateCcw, Star, Percent, Sparkles } from "lucide-react";
 import type { StockStatus } from "@/data/products";
 
 const PRICE_RANGES = [
@@ -92,9 +92,9 @@ export default function AdvancedFilters({ isOpen, onClose, filters, onApply, onC
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function toggleArray(key: keyof FilterState, value: any) {
+  function toggleArray(key: 'priceRanges' | 'discounts' | 'ratings' | 'stock', value: number | string) {
     setDraft((prev) => {
-      const arr = prev[key] as any[];
+      const arr = prev[key] as (number | string)[];
       return {
         ...prev,
         [key]: arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value],

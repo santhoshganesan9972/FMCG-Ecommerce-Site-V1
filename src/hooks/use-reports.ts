@@ -72,6 +72,7 @@ export function useGSTReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.dateFrom, filters.dateTo, filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -79,7 +80,7 @@ export function useGSTReports(initialFilters?: Partial<ReportFilters>) {
   }, []);
 
   const updateFilters = useCallback((update: Partial<ReportFilters>) => {
-    setFilters((prev) => ({ ...prev, ...update }));
+    setFilters((prev) => ({ ...prev, ...update } as ReportFilters));
     goToPage(1);
   }, [goToPage]);
 
@@ -135,6 +136,7 @@ export function useCustomerReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.dateFrom, filters.dateTo, filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export function useCustomerReports(initialFilters?: Partial<ReportFilters>) {
   }, []);
 
   const updateFilters = useCallback((update: Partial<ReportFilters>) => {
-    setFilters((prev) => ({ ...prev, ...update }));
+    setFilters((prev) => ({ ...prev, ...update } as ReportFilters));
     goToPage(1);
   }, [goToPage]);
 
@@ -189,6 +191,7 @@ export function useCohortData() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -218,7 +221,7 @@ export function useAbandonedCart(initialFilters?: Partial<ReportFilters>) {
     sortBy: "",
     sortOrder: "desc",
     ...initialFilters,
-  });
+  } as ReportFilters);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -235,6 +238,7 @@ export function useAbandonedCart(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -247,7 +251,7 @@ export function useAbandonedCart(initialFilters?: Partial<ReportFilters>) {
   }, [goToPage]);
 
   const clearFilters = useCallback(() => {
-    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" } as ReportFilters);
     goToPage(1);
   }, [goToPage]);
 
@@ -290,6 +294,7 @@ export function useRevenueAnalytics() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -320,7 +325,7 @@ export function usePromotionROI(initialFilters?: Partial<ReportFilters>) {
     sortBy: "",
     sortOrder: "desc",
     ...initialFilters,
-  });
+  } as ReportFilters);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -337,6 +342,7 @@ export function usePromotionROI(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -344,12 +350,12 @@ export function usePromotionROI(initialFilters?: Partial<ReportFilters>) {
   }, []);
 
   const updateFilters = useCallback((update: Partial<ReportFilters>) => {
-    setFilters((prev) => ({ ...prev, ...update }));
+    setFilters((prev) => ({ ...prev, ...update } as ReportFilters));
     goToPage(1);
   }, [goToPage]);
 
   const clearFilters = useCallback(() => {
-    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" } as ReportFilters);
     goToPage(1);
   }, [goToPage]);
 
@@ -421,6 +427,7 @@ export function useSalesReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.dateFrom, filters.dateTo, filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -428,7 +435,7 @@ export function useSalesReports(initialFilters?: Partial<ReportFilters>) {
   }, []);
 
   const updateFilters = useCallback((update: Partial<ReportFilters>) => {
-    setFilters((prev) => ({ ...prev, ...update }));
+    setFilters((prev) => ({ ...prev, ...update } as ReportFilters));
     goToPage(1);
   }, [goToPage]);
 
@@ -466,7 +473,7 @@ export function useInventoryReports(initialFilters?: Partial<ReportFilters>) {
     sortBy: "",
     sortOrder: "asc",
     ...initialFilters,
-  });
+  } as ReportFilters);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -483,6 +490,7 @@ export function useInventoryReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -495,7 +503,7 @@ export function useInventoryReports(initialFilters?: Partial<ReportFilters>) {
   }, [goToPage]);
 
   const clearFilters = useCallback(() => {
-    setFilters({ search: "", sortBy: "", sortOrder: "asc" });
+    setFilters({ search: "", sortBy: "", sortOrder: "asc" } as ReportFilters);
     goToPage(1);
   }, [goToPage]);
 
@@ -529,7 +537,7 @@ export function useVendorReports(initialFilters?: Partial<ReportFilters>) {
     sortBy: "",
     sortOrder: "desc",
     ...initialFilters,
-  });
+  } as ReportFilters);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -546,6 +554,7 @@ export function useVendorReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -558,7 +567,7 @@ export function useVendorReports(initialFilters?: Partial<ReportFilters>) {
   }, [goToPage]);
 
   const clearFilters = useCallback(() => {
-    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" } as ReportFilters);
     goToPage(1);
   }, [goToPage]);
 
@@ -590,7 +599,7 @@ export function useTaxReports(initialFilters?: Partial<ReportFilters>) {
     sortBy: "",
     sortOrder: "desc",
     ...initialFilters,
-  });
+  } as ReportFilters);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -607,6 +616,7 @@ export function useTaxReports(initialFilters?: Partial<ReportFilters>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
@@ -619,7 +629,7 @@ export function useTaxReports(initialFilters?: Partial<ReportFilters>) {
   }, [goToPage]);
 
   const clearFilters = useCallback(() => {
-    setFilters({ search: "", sortBy: "", sortOrder: "desc" });
+    setFilters({ search: "", sortBy: "", sortOrder: "desc" } as ReportFilters);
     goToPage(1);
   }, [goToPage]);
 

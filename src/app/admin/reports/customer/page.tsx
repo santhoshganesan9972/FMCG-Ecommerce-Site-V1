@@ -65,9 +65,9 @@ export default function CustomerReportsPage() {
           </div>
         </div>
 
-        <ReusableTable
-          data={data}
-          keyExtractor={(r) => r.id}
+<ReusableTable
+           data={data}
+           keyExtractor={(r) => r.customerId}
           isLoading={loading}
           page={meta.page}
           pageSize={meta.pageSize}

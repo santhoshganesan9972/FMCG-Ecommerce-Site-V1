@@ -53,14 +53,11 @@ export default function SearchPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { addQuery } = useSearchHistoryStore();
 
   const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
     await new Promise((resolve) => setTimeout(resolve, 600));
-    setRefreshing(false);
     toast.success("Search refreshed! ✓", { duration: 1500 });
   }, []);
 
@@ -80,7 +77,8 @@ export default function SearchPage() {
   const handleVoiceSearch = useCallback(() => {
     const SpeechRecognitionAPI =
       (typeof window !== "undefined" &&
-        ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) ||
+        ((window as { SpeechRecognition?: new () => SpeechRecognition }).SpeechRecognition ||
+         (window as { webkitSpeechRecognition?: new () => SpeechRecognition }).webkitSpeechRecognition)) ||
       null;
     if (!SpeechRecognitionAPI) {
       alert("Voice search is not supported on your browser. Try Chrome on desktop or Android.");
@@ -91,7 +89,7 @@ export default function SearchPage() {
       const recognition = new SpeechRecognitionAPI();
       recognition.lang = "en-IN";
       recognition.interimResults = false;
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setSearchQuery(transcript);
         addQuery(transcript);
