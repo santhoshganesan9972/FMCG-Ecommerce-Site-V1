@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ShoppingBag, RotateCcw, Plus, Check, X, ChevronRight, Clock } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 import { useCartStore } from "@/store/cart-store";
 import { toast } from "sonner";
 
@@ -133,7 +134,7 @@ export default function ReorderFromHistory({ isOpen, onClose, orderId, orderDate
                   {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
                 <div className="relative w-12 h-12 rounded-lg bg-[#f2f2f2] overflow-hidden flex-shrink-0">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                  <SafeImage src={item.image} alt={item.name} fill className="object-cover" loading="lazy" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#1a1a1a] truncate">{item.name}</p>

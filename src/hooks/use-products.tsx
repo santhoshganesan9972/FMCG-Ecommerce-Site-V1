@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { productService, categoryService } from "@/services/products.service";
+import { notifyProduct } from "@/lib/notifications";
 import type {
   Product,
   ProductFilters,
@@ -156,6 +157,9 @@ export function useProductForm() {
     setError(null);
     try {
       const product = await productService.createProduct(data);
+      if (product) {
+        notifyProduct.created(product.name).catch(() => {});
+      }
       return product;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
@@ -171,6 +175,9 @@ export function useProductForm() {
       setError(null);
       try {
         const product = await productService.updateProduct(id, data);
+        if (product) {
+          notifyProduct.updated(product.name, "Details updated").catch(() => {});
+        }
         return product || null;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to update product");
@@ -186,7 +193,11 @@ export function useProductForm() {
     setSubmitting(true);
     setError(null);
     try {
-      return await productService.deleteProduct(id);
+      const success = await productService.deleteProduct(id);
+      if (success) {
+        notifyProduct.deleted(`Product (ID: ${id})`).catch(() => {});
+      }
+      return success;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete product");
       return false;

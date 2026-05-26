@@ -7,7 +7,7 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusablePagination from "@/components/ui/admin/reusable-pagination";
-import { ReusablePageHeader } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader } from "@/components/common";
 import {
   Key,
   Plus,

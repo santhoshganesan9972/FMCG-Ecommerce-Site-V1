@@ -3,8 +3,9 @@
 // Swap baseURL via env var — defaults to mock/data layer when not set.
 
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from "axios";
+import { env } from "@/lib/env";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const API_BASE_URL = env.apiBaseUrl;
 
 class ApiClient {
   private client: AxiosInstance;

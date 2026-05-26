@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Deals & Offers | FMCG Commerce — Up to 50% Off",
@@ -17,11 +18,11 @@ export const metadata: Metadata = {
     "FMCG discounts",
   ],
   robots: { index: true, follow: true },
-  alternates: { canonical: "https://fmcg-commerce.vercel.app/offers" },
+  alternates: { canonical: `${env.siteUrl}/offers` },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://fmcg-commerce.vercel.app/offers",
+    url: `${env.siteUrl}/offers`,
     title: "Deals & Offers | Save Up to 50% | FMCG Commerce",
     description:
       "Flash sales, deal of the day and combo offers. Shop groceries at minimum prices with free delivery above ₹199.",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
       "Up to 50% off on groceries. Flash sales, daily deals & combo offers.",
     creator: "@fmcgcommerce",
   },
-  metadataBase: new URL("https://fmcg-commerce.vercel.app"),
+  metadataBase: new URL(env.siteUrl),
 };
 
 export default function OffersLayout({

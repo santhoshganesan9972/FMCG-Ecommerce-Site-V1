@@ -7,7 +7,7 @@ import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
-import { ReusablePageHeader, ReusableChart } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableChart } from "@/components/common";
 import { usePromotionROI } from "@/hooks/use-reports";
 import { Percent, TrendingUp, DollarSign, Target, Download, Eye, Zap } from "lucide-react";
 import { toast } from "sonner";

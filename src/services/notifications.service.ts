@@ -478,6 +478,19 @@ export const notificationService = {
   },
 
   /**
+   * Add a new notification (used by notification triggers).
+   */
+  async addNotification(
+    notification: Omit<AdminNotification, "read" | "archived">
+  ): Promise<void> {
+    MOCK_NOTIFICATIONS.unshift({
+      ...notification,
+      read: false,
+      archived: false,
+    });
+  },
+
+  /**
    * Get notification preferences.
    */
   async getPreferences(): Promise<NotificationPreferences> {

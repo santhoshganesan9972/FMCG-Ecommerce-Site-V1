@@ -8,7 +8,7 @@ import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { ReusablePageHeader, ReusableDrawer } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableDrawer } from "@/components/common";
 import { useVendors } from "@/hooks/use-vendors";
 import { vendorsService } from "@/services/vendors.service";
 import {

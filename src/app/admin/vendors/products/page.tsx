@@ -7,7 +7,7 @@ import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
-import { ReusablePageHeader, ReusableDrawer } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableDrawer } from "@/components/common";
 import { useVendorProducts } from "@/hooks/use-vendors";
 import { mockVendors } from "@/data/admin/vendors";
 import {

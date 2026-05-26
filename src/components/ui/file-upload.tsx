@@ -173,6 +173,7 @@ export default function FileUpload({
               >
                 {f.preview ? (
                   <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-md border border-[#e8e8e8]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={f.preview} alt="" className="h-full w-full object-cover" />
                   </div>
                 ) : (
@@ -262,6 +263,7 @@ export default function FileUpload({
                 {/* Preview / Icon */}
                 {f.preview ? (
                   <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-[#e8e8e8]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={f.preview} alt="" className="h-full w-full object-cover" />
                   </div>
                 ) : (

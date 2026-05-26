@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, RotateCcw, Package, Clock, CheckCircle, XCircle, Truck, Search } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 import { useReturnsStore, type ReturnReason } from "@/store/returns-store";
 
 const reasonLabels: Record<ReturnReason, string> = {
@@ -98,7 +99,7 @@ export default function ReturnsPage() {
                   <div className="px-5 py-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-[#f2f2f2]">
-                        <img src={ret.productImage} alt={ret.productName} className="h-full w-full object-cover" loading="lazy" />
+                        <SafeImage src={ret.productImage} alt={ret.productName} fill className="object-cover" loading="lazy" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-[#1a1a1a]">{ret.productName}</p>

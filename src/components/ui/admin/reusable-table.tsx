@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import type { ReactNode } from "react";
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -80,31 +80,32 @@ export function ReusableTable<T>({
     });
   }, [data, sortKey, sortDir]);
 
-  const handleSort = (key: string) => {
+  const handleSort = useCallback((key: string) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
       setSortDir("asc");
     }
-  };
+  }, [sortKey]);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const toggleAll = () => {
-    if (selectedIds.size === data.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(data.map(keyExtractor)));
-    }
-  };
+  const toggleAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === data.length) {
+        return new Set();
+      }
+      return new Set(data.map(keyExtractor));
+    });
+  }, [data, keyExtractor]);
 
   const totalPages = total ? Math.ceil(total / pageSize) : 1;
 

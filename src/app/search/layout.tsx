@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Search Groceries & Daily Essentials | FMCG Commerce",
@@ -16,11 +17,11 @@ export const metadata: Metadata = {
     "FMCG product search",
   ],
   robots: { index: true, follow: true },
-  alternates: { canonical: "https://fmcg-commerce.vercel.app/search" },
+  alternates: { canonical: `${env.siteUrl}/search` },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://fmcg-commerce.vercel.app/search",
+    url: `${env.siteUrl}/search`,
     title: "Search Groceries & Daily Essentials | FMCG Commerce",
     description:
       "Search 10,000+ groceries, vegetables, fruits, snacks, dairy & beverages and get 10-minute delivery.",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     description: "Search fresh groceries and daily essentials delivered in 10 minutes.",
     creator: "@fmcgcommerce",
   },
-  metadataBase: new URL("https://fmcg-commerce.vercel.app"),
+  metadataBase: new URL(env.siteUrl),
 };
 
 export default function SearchLayout({

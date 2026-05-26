@@ -7,6 +7,7 @@ import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { useComparisonStore } from "@/store/comparison-store";
 import { SafeProductImage } from "@/components/ui/safe-image";
+import { env } from "@/lib/env";
 import ProductView360 from "@/components/ui/home/product-view-360";
 import { toast } from "sonner";
 import type { Product } from "@/data/products";
@@ -67,7 +68,7 @@ function ProductCard({ product }: ProductCardProps) {
         <meta itemProp="price" content={String(product.price)} />
         <meta itemProp="priceCurrency" content="INR" />
         <meta itemProp="brand" content="FMCG Commerce" />
-        <link itemProp="url" href={`https://fmcg-commerce.vercel.app/product/${product.id}`} />
+        <link itemProp="url" href={`${env.siteUrl}/product/${product.id}`} />
         <meta itemProp="image" content={product.image} />
 
         {/* ── Image ── */}

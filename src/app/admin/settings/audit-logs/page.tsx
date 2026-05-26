@@ -3,7 +3,7 @@
 import { useAuditLogs } from "@/hooks/use-settings";
 import DashboardLayout from "../../dashboard-layout";
 import AuditLogTable from "@/components/settings/audit-log-table";
-import { ReusablePageHeader } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader } from "@/components/common";
 import { History, RefreshCw, Download } from "lucide-react";
 import { toast } from "sonner";
 

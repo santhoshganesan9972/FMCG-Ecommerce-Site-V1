@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useThemeSettings } from "@/hooks/use-settings";
 import DashboardLayout from "../../dashboard-layout";
 import { ThemeSelector } from "@/components/settings/theme-selector";
-import { ReusablePageHeader } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader } from "@/components/common";
 import { Palette, Monitor, Sun, Moon, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

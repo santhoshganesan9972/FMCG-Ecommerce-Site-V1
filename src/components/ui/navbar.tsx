@@ -2,6 +2,7 @@
 
 import { ShoppingCart, Search } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
+import { env } from "@/lib/env";
 import dynamic from "next/dynamic";
 import NotificationPanel from "./notification-panel";
 import Link from "next/link";
@@ -22,7 +23,7 @@ export default function Navbar() {
       itemType="https://schema.org/WebSite"
     >
       <meta itemProp="name" content="FMCG Commerce" />
-      <meta itemProp="url" content="https://fmcg-commerce.vercel.app" />
+      <meta itemProp="url" content={env.siteUrl} />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 h-16 flex items-center gap-2 sm:gap-3 md:gap-4">
 
         {/* LOGO */}

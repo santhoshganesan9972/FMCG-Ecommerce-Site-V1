@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
 import ReusableCard from "@/components/ui/admin/reusable-card";
-import { ReusablePageHeader, ReusableChart } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableChart } from "@/components/common";
 import { useCohortData } from "@/hooks/use-reports";
 import { Users, TrendingUp, Activity, Target, ChevronRight, Info } from "lucide-react";
 

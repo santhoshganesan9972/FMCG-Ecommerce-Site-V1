@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useSystemConfigs } from "@/hooks/use-settings";
 import DashboardLayout from "../../dashboard-layout";
 import ConfigForm from "@/components/settings/config-form";
-import { ReusablePageHeader } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader } from "@/components/common";
 import type { UpdateConfigFormData } from "@/types/settings";
 
 export default function SystemConfigurationsPage() {

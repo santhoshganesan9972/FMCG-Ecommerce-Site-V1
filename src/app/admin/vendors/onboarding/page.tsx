@@ -7,7 +7,7 @@ import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
-import { ReusablePageHeader, ReusableDrawer } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableDrawer } from "@/components/common";
 import { useVendorOnboarding } from "@/hooks/use-vendors";
 import {
   UserPlus, CheckCircle, Clock, XCircle, Eye, FileText,

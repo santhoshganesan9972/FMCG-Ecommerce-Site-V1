@@ -4,7 +4,7 @@ import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
-import { ReusablePageHeader, ReusableChart } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader, ReusableChart } from "@/components/common";
 import { useRevenueAnalytics } from "@/hooks/use-reports";
 import { DollarSign, TrendingUp, TrendingDown, BarChart3, PiggyBank, Download, Eye, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";

@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import Navbar from "@/components/ui/navbar";
 import Hero from "@/components/ui/home/hero";
 import CategoryPills from "@/components/ui/home/category-pills";
@@ -9,7 +10,7 @@ import PullToRefresh from "@/components/ui/mobile/pull-to-refresh";
 import Footer from "@/components/ui/footer";
 import HomeClient from "@/components/ui/home/home-client";
 
-import { Metadata } from "next";
+import { env } from "@/lib/env";
 
 export const revalidate = 3600;
 
@@ -47,18 +48,18 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  alternates: { canonical: "https://fmcg-commerce.vercel.app" },
+  alternates: { canonical: env.siteUrl },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://fmcg-commerce.vercel.app",
+    url: env.siteUrl,
     title: "FMCG Commerce — Groceries & Daily Essentials in 10 Minutes",
     description:
       "Order online fresh groceries, vegetables, fruits, snacks, dairy & beverages delivered in 10 minutes. Free delivery above ₹199.",
     siteName: "FMCG Commerce",
     images: [
       {
-        url: "https://fmcg-commerce.vercel.app/og-image.png",
+        url: `${env.siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "FMCG Commerce — Online Grocery Delivery",
@@ -70,10 +71,10 @@ export const metadata: Metadata = {
     title: "FMCG Commerce — Groceries Delivered in 10 Minutes",
     description:
       "Fresh groceries, vegetables, fruits, snacks, dairy & beverages at best prices. Free delivery above ₹199.",
-    images: ["https://fmcg-commerce.vercel.app/og-image.png"],
+    images: [`${env.siteUrl}/og-image.png`],
     creator: "@fmcgcommerce",
   },
-  metadataBase: new URL("https://fmcg-commerce.vercel.app"),
+  metadataBase: new URL(env.siteUrl),
 };
 
 export default function Home() {

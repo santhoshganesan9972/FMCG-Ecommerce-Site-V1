@@ -1,6 +1,7 @@
 import { products } from "@/data/products";
 import { categorySections } from "@/data/categories";
 import type { Metadata } from "next";
+import { env } from "@/lib/env";
 import Navbar from "@/components/ui/navbar";
 import Link from "next/link";
 import Image from "next/image";
@@ -32,11 +33,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     description: `Buy ${product.name} at ₹${product.price} (${discount}% off). ${product.category} product with 10-minute delivery in India. Fresh quality assured. Free delivery above ₹199.`,
     keywords: [product.name, `${product.category} product`, `buy ${product.name} online`, `${product.name} price`, `FMCG ${product.name}`, `grocery delivery ${product.name}`],
     robots: { index: true, follow: true },
-    alternates: { canonical: `https://fmcg-commerce.vercel.app/product/${id}` },
+    alternates: { canonical: `${env.siteUrl}/product/${id}` },
     openGraph: {
       type: "website",
       locale: "en_IN",
-      url: `https://fmcg-commerce.vercel.app/product/${id}`,
+      url: `${env.siteUrl}/product/${id}`,
       title: `${product.name} — ₹${product.price} | FMCG Commerce`,
       description: `Buy ${product.name} at ₹${product.price} (${discount}% off). 10-minute delivery. Free delivery above ₹199.`,
       siteName: "FMCG Commerce",

@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import Link from "next/link";
 
 export default function PromoBanner() {
@@ -21,7 +22,7 @@ export default function PromoBanner() {
           <div className="relative z-10" itemScope itemType="https://schema.org/Offer">
             <meta itemProp="name" content="Flash Sale — Up to 50% OFF" />
             <meta itemProp="description" content="On daily essentials and grocery items at FMCG Commerce" />
-            <meta itemProp="url" content="https://fmcg-commerce.vercel.app/offers" />
+            <meta itemProp="url" content={`${env.siteUrl}/offers`} />
             <span className="mb-2 inline-block rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider">
               FLASH SALE
             </span>
@@ -48,7 +49,7 @@ export default function PromoBanner() {
           <div className="relative z-10" itemScope itemType="https://schema.org/Offer">
             <meta itemProp="name" content="Free Delivery on Orders Above ₹199" />
             <meta itemProp="description" content="No minimum on first order at FMCG Commerce" />
-            <meta itemProp="url" content="https://fmcg-commerce.vercel.app/offers" />
+            <meta itemProp="url" content={`${env.siteUrl}/offers`} />
             <span className="mb-2 inline-block rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider">
               FREE DELIVERY
             </span>

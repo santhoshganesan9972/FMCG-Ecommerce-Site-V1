@@ -3,7 +3,7 @@
 import Link from "next/link";
 import DashboardLayout from "../dashboard-layout";
 import ReusableCard from "@/components/ui/admin/reusable-card";
-import { ReusablePageHeader } from "@/components/reusable/reusable-components";
+import { ReusablePageHeader } from "@/components/common";
 import {
   TrendingUp,
   TrendingDown,

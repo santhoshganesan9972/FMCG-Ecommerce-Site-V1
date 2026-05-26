@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { env } from "@/lib/env";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { products } from "@/data/products";
@@ -26,11 +27,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: `Shop fresh ${section.label.toLowerCase()} online at FMCG Commerce. Wide selection of ${section.label.toLowerCase()} with 10-minute delivery. Free delivery above ₹199. Best prices guaranteed.`,
     keywords: [`${section.label.toLowerCase()} online`, `buy ${section.label.toLowerCase()}`, `${section.label.toLowerCase()} delivery`, `fresh ${section.label.toLowerCase()}`, `FMCG ${section.label.toLowerCase()}`, `grocery ${section.label.toLowerCase()} India`],
     robots: { index: true, follow: true },
-    alternates: { canonical: `https://fmcg-commerce.vercel.app/category/${slug}` },
+    alternates: { canonical: `${env.siteUrl}/category/${slug}` },
     openGraph: {
       type: "website",
       locale: "en_IN",
-      url: `https://fmcg-commerce.vercel.app/category/${slug}`,
+      url: `${env.siteUrl}/category/${slug}`,
       title: `Buy ${section.label} Online | FMCG Commerce`,
       description: `Shop fresh ${section.label.toLowerCase()} online with 10-minute delivery. Best prices & free delivery above ₹199.`,
       siteName: "FMCG Commerce",
@@ -61,7 +62,7 @@ export default async function CategoryPage({ params }: PageProps) {
             "@type": "CollectionPage",
             name: `${section.label} | FMCG Commerce`,
             description: `Shop fresh ${section.label.toLowerCase()} online with 10-minute delivery.`,
-            url: `https://fmcg-commerce.vercel.app/category/${slug}`,
+            url: `${env.siteUrl}/category/${slug}`,
             numberOfItems: items.length,
           }),
         }}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Camera, CheckCircle2, X, MapPin, Clock, User, Image as ImageIcon, Shield, ChevronRight } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 import { toast } from "sonner";
 
 interface DeliveryProofProps {
@@ -120,7 +121,7 @@ export default function DeliveryProof({ isOpen, onClose, orderId, deliveryDate, 
                     onClick={() => setShowPhoto(true)}
                     className="relative aspect-square rounded-xl overflow-hidden bg-[#f2f2f2] group"
                   >
-                    <img src={src} alt={`Delivery proof ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                    <SafeImage src={src} alt={`Delivery proof ${i + 1}`} fill className="object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                       <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-80 transition-opacity" />
                     </div>
@@ -162,6 +163,7 @@ export default function DeliveryProof({ isOpen, onClose, orderId, deliveryDate, 
           <button onClick={() => setShowPhoto(false)} className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
             <X className="w-6 h-6" />
           </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={proofPhotos[0]}
             alt="Delivery proof"

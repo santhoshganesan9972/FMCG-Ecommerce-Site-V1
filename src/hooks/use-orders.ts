@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { orderService } from "@/services/orders.service";
+import { notifyOrder } from "@/lib/notifications";
 import type {
   Order,
   DeliveryPartner,
@@ -103,6 +104,8 @@ export function useOrder(id: string) {
   const updateStatus = useCallback(async (newStatus: string, note?: string) => {
     const updated = await orderService.updateOrderStatus(id, newStatus, note);
     if (updated) setOrder(updated);
+    // Fire-and-forget admin notification (non-critical, won't break the action)
+    notifyOrder.statusChanged(id, newStatus).catch(() => {});
     return !!updated;
   }, [id]);
 
@@ -120,6 +123,8 @@ export function useOrderActions() {
     setError(null);
     try {
       await orderService.updateOrderStatus(data.orderId, data.newStatus, data.note);
+      // Fire-and-forget admin notification (non-critical, won't break the action)
+      notifyOrder.statusChanged(data.orderId, data.newStatus).catch(() => {});
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update status");

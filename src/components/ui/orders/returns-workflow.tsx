@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RotateCcw, X, CheckCircle2, Truck, AlertCircle, Camera, Package, ChevronRight, Loader2 } from "lucide-react";
+import { SafeImage } from "@/components/ui/safe-image";
 import { toast } from "sonner";
 
 type ReturnReason = {
@@ -171,7 +172,7 @@ export default function ReturnsWorkflow({ isOpen, onClose, orderId, items, onSub
                       }`}
                     >
                       <div className="relative w-12 h-12 rounded-lg bg-[#f2f2f2] overflow-hidden flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                        <SafeImage src={item.image} alt={item.name} fill className="object-cover" loading="lazy" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-[#1a1a1a] truncate">{item.name}</p>
@@ -258,7 +259,7 @@ export default function ReturnsWorkflow({ isOpen, onClose, orderId, items, onSub
                   <div className="bg-[#fafafa] rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-3 pb-3 border-b border-[#e8e8e8]">
                       <div className="relative w-12 h-12 rounded-lg bg-[#f2f2f2] overflow-hidden flex-shrink-0">
-                        <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover" loading="lazy" />
+                        <SafeImage src={selectedItem.image} alt={selectedItem.name} fill className="object-cover" loading="lazy" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-[#1a1a1a]">{selectedItem.name}</p>

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import { resolveProductImage } from "@/lib/image-utils";
 
 interface SafeProductImageProps {
@@ -20,7 +20,7 @@ interface SafeProductImageProps {
  * Automatically handles image loading errors with fallback images
  * Ensures all product images are visible
  */
-export function SafeProductImage({
+export const SafeProductImage = memo(function SafeProductImage({
   src,
   alt,
   fill,
@@ -69,12 +69,12 @@ export function SafeProductImage({
       )}
     </>
   );
-}
+});
 
 /**
  * Simple Safe Image component for non-product images
  */
-export function SafeImage({
+export const SafeImage = memo(function SafeImage({
   src,
   alt,
   fill,
@@ -102,4 +102,4 @@ export function SafeImage({
       onError={handleError}
     />
   );
-}
+});

@@ -6,6 +6,7 @@ import LayoutClient from "./layout-client";
 import SkipLink from "@/components/ui/a11y/skip-link";
 import AnimatedBackground from "@/components/ui/animated-background";
 import GroceryAssistant from "@/components/ui/grocery-assistant/grocery-assistant";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "FMCG Commerce — Ultra-fast Grocery Delivery",
@@ -26,18 +27,18 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://fmcg-commerce.vercel.app",
+    canonical: env.siteUrl,
   },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://fmcg-commerce.vercel.app",
+    url: env.siteUrl,
     title: "FMCG Commerce — Ultra-fast Grocery Delivery in India",
     description: "Premium AI-powered grocery delivery in 10 minutes. Fresh groceries, vegetables, fruits, snacks, dairy & beverages at the best prices.",
     siteName: "FMCG Commerce",
     images: [
       {
-        url: "https://fmcg-commerce.vercel.app/og-image.png",
+        url: `${env.siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "FMCG Commerce — Ultra-fast Grocery Delivery",
@@ -48,10 +49,10 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FMCG Commerce — Ultra-fast Grocery Delivery",
     description: "Fresh groceries, fruits, snacks & more delivered in 10 minutes. Free delivery on orders above ₹199.",
-    images: ["https://fmcg-commerce.vercel.app/og-image.png"],
+    images: [`${env.siteUrl}/og-image.png`],
     creator: "@fmcgcommerce",
   },
-  metadataBase: new URL("https://fmcg-commerce.vercel.app"),
+  metadataBase: new URL(env.siteUrl),
 };
 
 export default function RootLayout({

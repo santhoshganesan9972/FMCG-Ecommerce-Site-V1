@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { env } from "@/lib/env";
 import Link from "next/link";
 import { ChevronLeft, Sparkles } from "lucide-react";
 import Navbar from "@/components/ui/navbar";
@@ -21,11 +22,11 @@ export const metadata: Metadata = {
     "FMCG recommendations",
   ],
   robots: { index: true, follow: true },
-  alternates: { canonical: "https://fmcg-commerce.vercel.app/recommendations" },
+  alternates: { canonical: `${env.siteUrl}/recommendations` },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://fmcg-commerce.vercel.app/recommendations",
+    url: `${env.siteUrl}/recommendations`,
     title: "Personalized Grocery Recommendations | FMCG Commerce",
     description:
       "AI-powered personalized grocery recommendations with 10-minute delivery. Fresh picks just for you.",
@@ -59,7 +60,7 @@ export default function RecommendationsPage() {
             "@type": "CollectionPage",
             name: "AI Recommendations | FMCG Commerce",
             description: "AI-powered personalized grocery recommendations with 10-minute delivery.",
-            url: "https://fmcg-commerce.vercel.app/recommendations",
+            url: `${env.siteUrl}/recommendations`,
             numberOfItems: recommendedProducts.length,
           }),
         }}

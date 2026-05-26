@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { env } from "@/lib/env";
 import PullToRefresh from "@/components/ui/mobile/pull-to-refresh";
 import Navbar from "@/components/ui/navbar";
 import Hero from "@/components/ui/home/hero";
@@ -47,8 +48,8 @@ export default function HomeClient() {
                 "@context": "https://schema.org",
                 "@type": ["Organization", "LocalBusiness"],
                 name: "FMCG Commerce",
-                url: "https://fmcg-commerce.vercel.app",
-                logo: "https://fmcg-commerce.vercel.app/logo.png",
+                url: env.siteUrl,
+                logo: `${env.siteUrl}/logo.png`,
                 description:
                   "Ultra-fast grocery delivery in India. Fresh products delivered in under 10 minutes.",
                 areaServed: "India",
@@ -111,12 +112,12 @@ export default function HomeClient() {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              url: "https://fmcg-commerce.vercel.app",
+              url: env.siteUrl,
               potentialAction: {
                 "@type": "SearchAction",
                 target: {
                   "@type": "EntryPoint",
-                  urlTemplate: "https://fmcg-commerce.vercel.app/search?q={search_term_string}",
+                  urlTemplate: `${env.siteUrl}/search?q={search_term_string}`,
                 },
                 "query-input": "required name=search_term_string",
               },
