@@ -23,9 +23,14 @@ export default function SidebarEnterprise({
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Snapshot navigation data at mount so server & client use the same reference.
+  // Prevents hydration mismatches caused by Turbopack Hot Module Replacement
+  // refreshing the navigation module on the client while the server HTML is stale.
+  const [navItems] = useState(() => menuItems);
+
   // Determine active parent menu item (not submenu)
   const activeParent = useMemo(() => {
-    const match = menuItems.find(
+    const match = navItems.find(
       (item) =>
         pathname === item.href ||
         (item.submenu && item.submenu.some((sub) => pathname.startsWith(sub.href)))
@@ -41,7 +46,7 @@ export default function SidebarEnterprise({
   // Auto-expand parent on navigation — only responds to pathname changes,
   // never overrides a manual collapse by the user.
   useEffect(() => {
-    const parent = menuItems.find(
+    const parent = navItems.find(
       (item) =>
         item.submenu && item.submenu.some((sub) => pathname.startsWith(sub.href))
     );
@@ -109,7 +114,7 @@ export default function SidebarEnterprise({
         }`}
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ccc transparent" }}
       >
-        {menuItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = activeParent === item.label;
           const isExpanded = expandedSection === item.label;
           const hasSubmenu = item.submenu && item.submenu.length > 0;

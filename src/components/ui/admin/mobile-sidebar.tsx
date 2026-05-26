@@ -12,9 +12,13 @@ export default function MobileSidebar() {
   const [open, setOpen] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
+  // Snapshot nav data at mount so server & client use the same reference.
+  // Prevents hydration mismatches from Turbopack HMR.
+  const [navItems] = useState(() => menuItems);
+
   // Determine active parent menu item
   const activeParent = useMemo(() => {
-    const match = menuItems.find(
+    const match = navItems.find(
       (item) =>
         pathname === item.href ||
         (item.submenu && item.submenu.some((sub) => pathname.startsWith(sub.href)))
@@ -24,7 +28,7 @@ export default function MobileSidebar() {
 
   // Auto-open parent section if a sub-route is active
   useEffect(() => {
-    const parent = menuItems.find(
+    const parent = navItems.find(
       (item) =>
         item.submenu && item.submenu.some((sub) => pathname.startsWith(sub.href))
     );
@@ -77,7 +81,7 @@ export default function MobileSidebar() {
             className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5"
             style={{ scrollbarWidth: "thin" }}
           >
-            {menuItems.map((item) => {
+            {navItems.map((item) => {
               const isActive = activeParent === item.label;
               const isExpanded = expandedSection === item.label;
               const hasSubmenu = item.submenu && item.submenu.length > 0;
