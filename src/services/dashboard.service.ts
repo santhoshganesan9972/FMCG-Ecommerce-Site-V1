@@ -15,41 +15,96 @@ import type {
 } from "@/types/dashboard";
 import { mockDashboardOverview, delay } from "@/data/admin/dashboard";
 
-// Uncomment when API is ready:
-// import { apiClient } from "@/lib/api-client";
-
-const DEFAULT_PARAMS: DashboardQueryParams = {
+const DEFAULT_PARAMS: Partial<DashboardQueryParams> = {
   period: "30d",
 };
+
+// Helper to get live data from localStorage
+function getLiveDashboardStats(base: DashboardOverview): DashboardOverview {
+  if (typeof window === "undefined") return base;
+
+  try {
+    const orderStorage = localStorage.getItem("order-storage");
+    const productStorage = localStorage.getItem("inventory-storage"); // Assuming product changes are here
+    
+    let liveOrders = [];
+    if (orderStorage) {
+      const parsed = JSON.parse(orderStorage);
+      liveOrders = parsed.state?.orders || [];
+    }
+
+    if (liveOrders.length === 0) return base;
+
+    // Merge live orders into metrics
+    const liveRevenue = liveOrders.reduce((s: number, o: any) => s + o.total, 0);
+    const liveOrderCount = liveOrders.length;
+
+    const updatedRevenue = {
+      ...base.revenue,
+      total: base.revenue.total + liveRevenue,
+      formatted: `₹${((base.revenue.total + liveRevenue) / 10000000).toFixed(2)}Cr`,
+    };
+
+    const updatedOrders = {
+      ...base.orders,
+      total: base.orders.total + liveOrderCount,
+      pending: base.orders.pending + liveOrders.filter((o: any) => o.status === "Processing").length,
+    };
+
+    // Add live orders to recent activity
+    const liveActivity = liveOrders.slice(0, 5).map((o: any) => ({
+      id: `live-${o.id}`,
+      type: "order",
+      message: `New order ${o.id} placed by ${o.deliveryAddress.name}`,
+      time: "Just now",
+      icon: "ShoppingCart",
+    }));
+
+    return {
+      ...base,
+      revenue: updatedRevenue,
+      orders: updatedOrders,
+      recentActivity: [...liveActivity, ...(base.recentActivity ?? [])].slice(0, 10),
+      liveOrders: [
+        ...liveOrders.map((o: any) => ({
+          id: o.id,
+          customer: o.deliveryAddress.name,
+          items: o.items.length,
+          total: o.total,
+          status: o.status === "Processing" ? "preparing" : "confirmed",
+          time: "Just now",
+          area: o.deliveryAddress.city,
+        })),
+        ...base.liveOrders,
+      ].slice(0, 15),
+    };
+  } catch (e) {
+    console.error("Failed to merge live dashboard stats", e);
+    return base;
+  }
+}
 
 // ── Dashboard Service ────────────────────────────────────
 
 export const dashboardService = {
   /**
    * Fetch the full executive dashboard overview.
-   * Currently returns mock data. Backend-ready shape matches ApiResponse<DashboardOverview>.
    */
   async getOverview(params?: Partial<DashboardQueryParams>): Promise<ApiResponse<DashboardOverview>> {
     const merged = { ...DEFAULT_PARAMS, ...params };
-
-    // ── MOCK IMPLEMENTATION ──────────────────────────
-    // Replace the block below with real API call when backend is ready.
     await delay(400);
+
+    const data = getLiveDashboardStats(mockDashboardOverview);
 
     return {
       success: true,
-      data: mockDashboardOverview,
+      data,
       meta: {
         cachedAt: new Date().toISOString(),
       },
     };
-    // ── END MOCK ─────────────────────────────────────
-
-    // ── REAL API (uncomment when backend is ready) ────
-    // return apiClient.get<ApiResponse<DashboardOverview>>(
-    //   `/dashboard/overview?period=${merged.period}${merged.warehouse ? `&warehouse=${merged.warehouse}` : ""}${merged.region ? `&region=${merged.region}` : ""}`
-    // );
   },
+// ...
 
   /**
    * Fetch only revenue data.

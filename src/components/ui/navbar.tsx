@@ -3,16 +3,21 @@
 import { ShoppingCart, Search } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { env } from "@/lib/env";
-import dynamic from "next/dynamic";
 import NotificationPanel from "./notification-panel";
+import AuthModal from "./auth/auth-modal";
 import Link from "next/link";
 import LocationPicker from "./location-picker";
-
-const AuthModal = dynamic(() => import("./auth/auth-modal"), { ssr: false });
+import { useState, useEffect } from "react";
 
 
 export default function Navbar() {
   const cart = useCartStore((state) => state.cart);
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
@@ -61,7 +66,7 @@ export default function Navbar() {
           <div className="relative">
            <Link href="/cart" className="min-w-[44px] min-h-[44px] w-10 h-10 rounded-lg bg-[#f2f2f2] border border-[#e8e8e8] flex items-center justify-center hover-border-pink transition-all duration-200 btn-press hover:scale-105">
               <ShoppingCart className="w-4 h-4" />
-              {totalItems > 0 && (
+              {isHydrated && totalItems > 0 && (
                 <span className="bg-[#ff4f8b] text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center leading-none absolute -top-1 -right-1">
                   {totalItems}
                 </span>

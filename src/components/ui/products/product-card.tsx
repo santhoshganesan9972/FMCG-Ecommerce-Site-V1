@@ -17,6 +17,7 @@ import type { Product } from "@/data/products";
 const categoryGlowClass: Record<string, string> = {
   Groceries: "product-card-groceries",
   Fruits:    "product-card-fruits",
+  Vegetables: "product-card-vegetables",
   Snacks:    "product-card-snacks",
   Health:    "product-card-health",
   Dairy:     "product-card-dairy",
@@ -226,7 +227,7 @@ function ProductCard({ product }: ProductCardProps) {
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                  addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1, weight: product.weight });
                   toast.success("Added to cart 🛒");
                 }}
                 className="add-btn min-h-[44px] h-7 px-2.5 rounded-md bg-[#ff4f8b] text-white font-bold text-[11px] flex-shrink-0 shadow-sm hover:bg-[#e63872] active:scale-95 transition-all"

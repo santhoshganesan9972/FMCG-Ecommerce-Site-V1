@@ -603,6 +603,11 @@ tr.table-row-hover:hover {
   -webkit-backface-visibility: hidden;
 }
 
+/* ── Safe area for mobile bottom nav ── */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* ── Slide animations (previously styled-jsx) ── */
 @keyframes slide-up {
   from {

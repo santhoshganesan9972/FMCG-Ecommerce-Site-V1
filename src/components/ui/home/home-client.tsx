@@ -8,6 +8,8 @@ import Navbar from "@/components/ui/navbar";
 import Hero from "@/components/ui/home/hero";
 import CategoryPills from "@/components/ui/home/category-pills";
 import PromoBanner from "@/components/ui/home/promo-banner";
+import FlashSaleSection from "@/components/ui/home/flash-sale-section";
+import FeaturedProducts from "@/components/ui/home/featured-products";
 import RecommendationSection from "@/components/ui/products/recommendation-section";
 import RecentlyViewed from "@/components/ui/home/recently-viewed";
 import ReorderReminders from "@/components/ui/home/reorder-reminders";
@@ -144,6 +146,8 @@ export default function HomeClient() {
           <Hero />
           <CategoryPills />
           <PromoBanner />
+          <FlashSaleSection />
+          <FeaturedProducts />
           <RecentlyViewed />
           <ReorderReminders />
           <NearbyTrends />

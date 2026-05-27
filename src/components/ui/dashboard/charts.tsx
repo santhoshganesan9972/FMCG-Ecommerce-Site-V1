@@ -4,7 +4,7 @@
 // Extracted from inline dashboard code. Use across any admin section.
 // All follow the same design language: rounded corners, soft colors, clean typography.
 
-import { type ReactNode } from "react";
+import { type ReactNode, memo } from "react";
 import { cn } from "@/lib/utils";
 
 // ── Section Header ────────────────────────────────────────
@@ -48,7 +48,7 @@ interface BarChartProps {
   height?: number;
 }
 
-export function BarChart({
+export const BarChart = memo(function BarChart({
   data,
   color = "text-[#0c831f]",
   barColor = "bg-[#0c831f]/20",
@@ -56,7 +56,7 @@ export function BarChart({
   formatValue,
   height = 192,
 }: BarChartProps) {
-  const max = Math.max(...data.map((p) => p.value));
+  const max = Math.max(...data.map((p) => p.value), 1);
   return (
     <div className="flex items-end gap-1.5 sm:gap-2" style={{ height }}>
       {data.map((point) => (
@@ -77,7 +77,7 @@ export function BarChart({
       ))}
     </div>
   );
-}
+});
 
 // ── Donut Chart ───────────────────────────────────────────
 
@@ -93,10 +93,31 @@ interface DonutChartProps {
   strokeWidth?: number;
 }
 
-export function DonutChart({ data, size = 120, strokeWidth = 20 }: DonutChartProps) {
+export const DonutChart = memo(function DonutChart({ data, size = 120, strokeWidth = 20 }: DonutChartProps) {
   const total = data.reduce((s, d) => s + d.value, 0);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+
+  if (total === 0) {
+    return (
+      <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90 absolute inset-0">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#e8e8e8"
+            strokeWidth={strokeWidth}
+          />
+        </svg>
+        <div className="relative z-10 flex flex-col items-center">
+          <span className="text-lg font-black text-[#999]">0</span>
+          <span className="text-[9px] text-[#999]">Total</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -131,7 +152,7 @@ export function DonutChart({ data, size = 120, strokeWidth = 20 }: DonutChartPro
       </div>
     </div>
   );
-}
+});
 
 // ── Legend Row (for use below donut charts) ───────────────
 
@@ -155,7 +176,7 @@ export function LegendRows({ data, total }: { data: { label: string; value: numb
   return (
     <div className="mt-4 space-y-2">
       {data.map((d) => (
-        <LegendRow key={d.label} label={d.label} value={`${((d.value / total) * 100).toFixed(0)}%`} color={d.color} />
+        <LegendRow key={d.label} label={d.label} value={total > 0 ? `${((d.value / total) * 100).toFixed(0)}%` : "0%"} color={d.color} />
       ))}
     </div>
   );
@@ -170,8 +191,8 @@ interface MiniProgressBarProps {
   label?: string;
 }
 
-export function MiniProgressBar({ value, max, color = "#0c831f", label }: MiniProgressBarProps) {
-  const pct = Math.min(100, (value / max) * 100);
+export const MiniProgressBar = memo(function MiniProgressBar({ value, max, color = "#0c831f", label }: MiniProgressBarProps) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-2">
       {label && <span className="w-20 text-[10px] text-[#666] truncate">{label}</span>}
@@ -181,7 +202,7 @@ export function MiniProgressBar({ value, max, color = "#0c831f", label }: MiniPr
       <span className="w-12 text-right text-[10px] font-bold text-[#666]">{value.toLocaleString()}</span>
     </div>
   );
-}
+});
 
 // ── Chart Card Wrapper ────────────────────────────────────
 

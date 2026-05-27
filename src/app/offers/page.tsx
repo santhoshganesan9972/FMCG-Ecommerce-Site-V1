@@ -32,7 +32,7 @@ export default function OffersPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
     <main
-      className="min-h-screen bg-[#f8f9fa] pb-20"
+      className="min-h-screen bg-[#f8f9fa] pb-20 md:pb-0"
       itemScope
       itemType="https://schema.org/CollectionPage"
     >

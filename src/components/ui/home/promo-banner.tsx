@@ -10,7 +10,7 @@ export default function PromoBanner() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {/* Flash Sale Banner */}
         <Link
-          href="/offers"
+          href="/offers/flash-sale"
           aria-label="Flash Sale — Up to 50% off on daily essentials at FMCG Commerce"
           className="relative flex items-center justify-between rounded-xl p-5 sm:col-span-2 sm:p-6 overflow-hidden"
           style={{
@@ -22,7 +22,7 @@ export default function PromoBanner() {
           <div className="relative z-10" itemScope itemType="https://schema.org/Offer">
             <meta itemProp="name" content="Flash Sale — Up to 50% OFF" />
             <meta itemProp="description" content="On daily essentials and grocery items at FMCG Commerce" />
-            <meta itemProp="url" content={`${env.siteUrl}/offers`} />
+            <meta itemProp="url" content={`${env.siteUrl}/offers/flash-sale`} />
             <span className="mb-2 inline-block rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider">
               FLASH SALE
             </span>
@@ -37,7 +37,7 @@ export default function PromoBanner() {
 
         {/* Free Delivery Banner */}
         <Link
-          href="/offers"
+          href="/shipping-offers"
           aria-label="Free Delivery on orders above ₹199 at FMCG Commerce"
           className="relative flex items-center justify-between rounded-xl p-5 sm:p-6 overflow-hidden"
           style={{
@@ -49,7 +49,7 @@ export default function PromoBanner() {
           <div className="relative z-10" itemScope itemType="https://schema.org/Offer">
             <meta itemProp="name" content="Free Delivery on Orders Above ₹199" />
             <meta itemProp="description" content="No minimum on first order at FMCG Commerce" />
-            <meta itemProp="url" content={`${env.siteUrl}/offers`} />
+            <meta itemProp="url" content={`${env.siteUrl}/shipping-offers`} />
             <span className="mb-2 inline-block rounded-full bg-white/25 px-2.5 py-0.5 text-[10px] font-black text-white uppercase tracking-wider">
               FREE DELIVERY
             </span>

@@ -17,11 +17,13 @@ import {
   Calendar,
   Repeat,
   Sparkles,
+  Plus,
 } from "lucide-react";
 
 import Navbar from "@/components/ui/navbar";
 import { useCartStore } from "@/store/cart-store";
 import { useOrderStore, generateOrderId, buildTrackingSteps } from "@/store/order-store";
+import { useAddressStore, Address } from "@/store/address-store";
 import { toast } from "sonner";
 import BillRow from "@/components/ui/a11y/bill-row";
 import PullToRefresh from "@/components/ui/mobile/pull-to-refresh";
@@ -30,7 +32,7 @@ import EmiBnpl from "@/components/ui/checkout/emi-bnpl";
 import ScheduledDelivery from "@/components/ui/checkout/scheduled-delivery";
 import StorePickup from "@/components/ui/checkout/store-pickup";
 import SubstitutionSuggestions from "@/components/ui/checkout/substitution-suggestions";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 type DeliveryMode = "express" | "scheduled" | "pickup" | "subscription";
 
@@ -42,23 +44,26 @@ const VALID_COUPONS: Record<string, { discount: number; type: "percent" | "fixed
   SUPER15: { discount: 15, type: "percent", minAmount: 199 },
 };
 
-
-
 export default function CheckoutPage() {
   const router = useRouter();
   const cart = useCartStore((state) => state.cart);
   const clearCart = useCartStore((state) => state.clearCart);
   const addOrder = useOrderStore((state) => state.addOrder);
+  const { addresses, getDefaultAddress } = useAddressStore();
+  
+  const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("");
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string>("10 minutes");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  
   const [deliveryName, setDeliveryName] = useState("");
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryPincode, setDeliveryPincode] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // New checkout features
+  // ... (deliveryMode, subscriptionFrequency, etc. same as before)
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("express");
   const [subscriptionFrequency, setSubscriptionFrequency] = useState("weekly");
   const [pickupStore, setPickupStore] = useState("andheri");
@@ -69,10 +74,62 @@ export default function CheckoutPage() {
   const [selectedEmi, setSelectedEmi] = useState<number>(3);
   const [selectedBnpl, setSelectedBnpl] = useState<string>("lazypay");
 
+  // Load default address on mount
+  useEffect(() => {
+    const defaultAddr = getDefaultAddress();
+    if (defaultAddr) {
+      setSelectedAddressId(defaultAddr.id);
+      setDeliveryName(defaultAddr.name);
+      setDeliveryPhone(defaultAddr.phone);
+      setDeliveryAddress(defaultAddr.address);
+      setDeliveryCity(defaultAddr.city);
+      setDeliveryPincode(defaultAddr.pincode);
+    } else {
+      setSelectedAddressId("new");
+    }
+  }, [getDefaultAddress]);
+
+  const handleAddressSelect = (addr: Address | "new") => {
+    if (addr === "new") {
+      setSelectedAddressId("new");
+      setDeliveryName("");
+      setDeliveryPhone("");
+      setDeliveryAddress("");
+      setDeliveryCity("");
+      setDeliveryPincode("");
+    } else {
+      setSelectedAddressId(addr.id);
+      setDeliveryName(addr.name);
+      setDeliveryPhone(addr.phone);
+      setDeliveryAddress(addr.address);
+      setDeliveryCity(addr.city);
+      setDeliveryPincode(addr.pincode);
+    }
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!deliveryName.trim()) newErrors.name = "Name is required";
+    if (!deliveryPhone.trim()) newErrors.phone = "Phone is required";
+    else if (!/^\+?91\s?\d{10}$|^\d{10}$/.test(deliveryPhone.trim())) newErrors.phone = "Invalid phone number";
+    
+    if (deliveryMode !== "pickup") {
+      if (!deliveryAddress.trim()) newErrors.address = "Address is required";
+      if (!deliveryCity.trim()) newErrors.city = "City is required";
+      if (!deliveryPincode.trim()) newErrors.pincode = "Pincode is required";
+      else if (!/^\d{6}$/.test(deliveryPincode.trim())) newErrors.pincode = "Invalid pincode";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const itemTotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [cart]
   );
+  // ... (rest of memos same as before)
   const deliveryFee = useMemo(
     () => {
       if (deliveryMode === "pickup") return 0;
@@ -103,7 +160,74 @@ export default function CheckoutPage() {
     [itemTotal, deliveryFee, handlingFee, totalDiscount]
   );
 
-  // Auto-apply coupon on eligible items
+  const handlePlaceOrder = () => {
+    if (!validateForm()) {
+      toast.error("Please fill all required fields correctly");
+      return;
+    }
+    if (!selectedPayment) {
+      toast.error("Please select a payment method");
+      return;
+    }
+    
+    setIsPlacingOrder(true);
+
+    const orderId = generateOrderId();
+    const estimatedTime = deliveryMode === "express"
+      ? selectedSlot === "10 minutes" ? "10 mins" : "2 hrs"
+      : deliveryMode === "pickup" ? "30 mins" : "1 day";
+    const now = new Date();
+    const deliveryDate = now.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
+
+    let status: "Delivered" | "Processing" | "Cancelled" | "Out for Delivery" = "Processing";
+    if (deliveryMode === "express") {
+      status = selectedSlot === "10 minutes" ? "Out for Delivery" : "Processing";
+    }
+
+    addOrder({
+      id: orderId,
+      date: now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+      items: cart.map((item) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        quantity: item.quantity,
+      })),
+      total,
+      status,
+      paymentMethod: `${selectedPayment!}${paymentMode === "emi" ? ` (EMI ${selectedEmi}m)` : ""}${paymentMode === "bnpl" ? ` (${selectedBnpl})` : ""}`,
+      deliveryAddress: {
+        name: deliveryName,
+        phone: deliveryPhone,
+        address: deliveryAddress,
+        city: deliveryCity,
+        pincode: deliveryPincode,
+      },
+      deliverySlot: deliveryMode === "express" ? selectedSlot :
+        deliveryMode === "scheduled" ? `${scheduledDate || "Today"} ${scheduledTime}` :
+        deliveryMode === "pickup" ? `Pickup at ${{ andheri: "Andheri West Store", bandra: "Bandra Kurla Store", powai: "Powai Hiranandani Store", worli: "Worli Seaface Store" }[pickupStore] || pickupStore}` :
+        `${subscriptionFrequency} subscription`,
+      deliveryDate,
+      estimatedTime,
+      deliveryPartner: deliveryMode === "express"
+        ? "Rahul (FMCG Partner)"
+        : deliveryMode === "pickup" ? "Store Pickup" : "FMCG Logistics",
+      trackingSteps: buildTrackingSteps(status, estimatedTime),
+    });
+
+    setTimeout(() => {
+      clearCart();
+      setIsPlacingOrder(false);
+      toast.success("Order placed successfully! 🎉", {
+        description: `Order ${orderId} • ₹${total}`,
+        duration: 4000,
+      });
+      router.push(`/account/orders`);
+    }, 1500);
+  };
+
+  // ... (handleRefresh)
   const handleRefresh = useCallback(async () => {
     await new Promise((resolve) => setTimeout(resolve, 600));
     toast.success("Checkout refreshed! ✓", { duration: 1500 });
@@ -153,7 +277,7 @@ export default function CheckoutPage() {
                     </button>
                   ))}
                 </div>
-
+                {/* ... (Subscription, Scheduled, Pickup blocks same as before) */}
                 {/* Subscription details */}
                 {deliveryMode === "subscription" && (
                   <div className="px-4 pb-4 animate-slide-down">
@@ -202,345 +326,237 @@ export default function CheckoutPage() {
               {/* Delivery Address */}
               <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
                 <SectionHeader icon={MapPin} title="Delivery Address" />
-                <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-                  <input
-                    aria-label="Full Name"
-                    aria-required="true"
-                    placeholder="Full Name"
-                    value={deliveryName}
-                    onChange={(e) => setDeliveryName(e.target.value)}
-                    className="h-11 rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink"
-                  />
-                  <input
-                    aria-label="Phone Number"
-                    aria-required="true"
-                    type="tel"
-                    placeholder="Phone Number"
-                    value={deliveryPhone}
-                    onChange={(e) => setDeliveryPhone(e.target.value)}
-                    className="h-11 rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink"
-                  />
-                  <input
-                    aria-label="Full Address"
-                    aria-required="true"
-                    placeholder="Full Address"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="h-11 rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink sm:col-span-2"
-                  />
-                  <input
-                    aria-label="City"
-                    aria-required="true"
-                    placeholder="City"
-                    value={deliveryCity}
-                    onChange={(e) => setDeliveryCity(e.target.value)}
-                    className="h-11 rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink"
-                  />
-                  <input
-                    aria-label="Pincode"
-                    aria-required="true"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]{6}"
-                    placeholder="Pincode"
-                    value={deliveryPincode}
-                    onChange={(e) => setDeliveryPincode(e.target.value)}
-                    className="h-11 rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink"
-                  />
-                </div>
-              </section>
-
-              {/* Delivery Slot (Express only) */}
-              {deliveryMode === "express" && (
-                <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
-                  <SectionHeader icon={Clock} title="Delivery Slot" />
-                  <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
-                    {["10 minutes", "9 AM - 11 AM", "11 AM - 1 PM", "6 PM - 8 PM"].map(
-                      (slot) => (
+                <div className="p-4 space-y-4">
+                  {/* Saved Addresses */}
+                  {addresses.length > 0 && (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {addresses.map((addr) => (
                         <button
-                          key={slot}
-                          onClick={() => setSelectedSlot(slot)}
-                          className={`h-11 rounded-lg border-2 text-xs font-bold transition-all sm:text-sm ${
-                            selectedSlot === slot
-                              ? "border-[#ff4f8b] bg-[#fff0f6] text-[#ff4f8b]"
-                              : "border-[#e8e8e8] text-[#666] hover-border-pink hover-bg-pink-light hover-text-pink"
+                          key={addr.id}
+                          onClick={() => handleAddressSelect(addr)}
+                          className={`flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all ${
+                            selectedAddressId === addr.id
+                              ? "border-[#ff4f8b] bg-[#fff0f6]"
+                              : "border-[#e8e8e8] hover:border-[#ff4f8b]/30"
                           }`}
                         >
-                          {slot}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-[#ff4f8b]">{addr.type}</span>
+                            {selectedAddressId === addr.id && <CheckCircle className="h-3 w-3 text-[#ff4f8b]" />}
+                          </div>
+                          <p className="text-sm font-bold text-[#1a1a1a]">{addr.name}</p>
+                          <p className="line-clamp-2 text-xs text-[#666]">{addr.address}</p>
+                          <p className="text-xs font-semibold text-[#999]">{addr.phone}</p>
                         </button>
-                      )
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* Substitution Suggestions */}
-              <SubstitutionSuggestions
-                cartItems={cart}
-                onApply={(originalId, suggestedId) => {
-                  toast.success(`Substituted item ₹${originalId} with ₹${suggestedId}`, { duration: 2000 });
-                }}
-              />
-
-              {/* Payment Method */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
-                <SectionHeader icon={CreditCard} title="Payment Method" />
-                <div className="p-4 space-y-3">
-                  {/* Standard Payment */}
-                  <div className="space-y-2">
-                    {[
-                      { id: "upi", label: "UPI", sub: "Pay via any UPI app" },
-                      { id: "card", label: "Credit / Debit Card", sub: "Visa, Mastercard, RuPay" },
-                      { id: "cod", label: "Cash on Delivery", sub: "Pay when delivered" },
-                      { id: "wallet", label: "Wallet", sub: "Paytm, PhonePe, Amazon Pay" },
-                    ].map((method) => (
+                      ))}
                       <button
-                        key={method.id}
-                        onClick={() => { setSelectedPayment(method.id); setPaymentMode("full"); }}
-                        className={`group flex h-14 w-full items-center gap-3 rounded-lg border px-4 text-left transition-all ${
-                          selectedPayment === method.id && paymentMode === "full"
-                            ? "border-[#0c831f] bg-[#e8f5e9]"
-                            : "border-[#e8e8e8] hover-border-pink hover-bg-pink-light"
+                        onClick={() => handleAddressSelect("new")}
+                        className={`flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed p-3 text-center transition-all ${
+                          selectedAddressId === "new"
+                            ? "border-[#ff4f8b] bg-[#fff0f6] text-[#ff4f8b]"
+                            : "border-[#e8e8e8] text-[#999] hover:border-[#ff4f8b]/30 hover:text-[#ff4f8b]"
                         }`}
                       >
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black ${
-                          selectedPayment === method.id && paymentMode === "full"
-                            ? "bg-[#0c831f] text-white"
-                            : "bg-[#fff0f6] text-[#ff4f8b]"
-                        }`}>
-                          {selectedPayment === method.id && paymentMode === "full" ? (
-                            <CheckCircle className="w-4 h-4" />
-                          ) : (
-                            "Pay"
-                          )}
-                        </span>
-                        <div className="flex-1">
-                          <p className={`text-sm font-bold ${selectedPayment === method.id && paymentMode === "full" ? "text-[#0c831f]" : "text-[#1a1a1a] group-hover-text-pink"}`}>
-                            {method.label}
-                          </p>
-                          <p className="text-[10px] text-[#999]">{method.sub}</p>
-                        </div>
-                        {selectedPayment === method.id && paymentMode === "full" ? (
-                          <CheckCircle className="h-4 w-4 text-[#0c831f]" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-[#ccc] group-hover-text-pink" />
-                        )}
+                        <Plus className="h-4 w-4" />
+                        <span className="text-xs font-bold">Add New Address</span>
                       </button>
-                    ))}
-                  </div>
+                    </div>
+                  )}
 
-                  {/* EMI / BNPL */}
-                  <EmiBnpl
-                    total={total}
-                    paymentMode={paymentMode}
-                    selectedEmi={selectedEmi}
-                    selectedBnpl={selectedBnpl}
-                    onModeChange={(mode) => { setPaymentMode(mode); if (mode !== "full") setSelectedPayment(mode); }}
-                    onEmiChange={setSelectedEmi}
-                    onBnplChange={setSelectedBnpl}
-                  />
+                  {/* Address Form (only if "new" or no addresses) */}
+                  {(selectedAddressId === "new" || addresses.length === 0) && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2 border-t border-[#f0f0f0]">
+                      <div>
+                        <input
+                          aria-label="Full Name"
+                          placeholder="Full Name"
+                          value={deliveryName}
+                          onChange={(e) => setDeliveryName(e.target.value)}
+                          className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.name ? "border-red-500" : "border-[#e8e8e8]"}`}
+                        />
+                        {errors.name && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.name}</p>}
+                      </div>
+                      <div>
+                        <input
+                          aria-label="Phone Number"
+                          type="tel"
+                          placeholder="Phone Number"
+                          value={deliveryPhone}
+                          onChange={(e) => setDeliveryPhone(e.target.value)}
+                          className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.phone ? "border-red-500" : "border-[#e8e8e8]"}`}
+                        />
+                        {errors.phone && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.phone}</p>}
+                      </div>
+                      {deliveryMode !== "pickup" && (
+                        <>
+                          <div className="sm:col-span-2">
+                            <input
+                              aria-label="Full Address"
+                              placeholder="Full Address"
+                              value={deliveryAddress}
+                              onChange={(e) => setDeliveryAddress(e.target.value)}
+                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.address ? "border-red-500" : "border-[#e8e8e8]"}`}
+                            />
+                            {errors.address && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.address}</p>}
+                          </div>
+                          <div>
+                            <input
+                              aria-label="City"
+                              placeholder="City"
+                              value={deliveryCity}
+                              onChange={(e) => setDeliveryCity(e.target.value)}
+                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.city ? "border-red-500" : "border-[#e8e8e8]"}`}
+                            />
+                            {errors.city && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.city}</p>}
+                          </div>
+                          <div>
+                            <input
+                              aria-label="Pincode"
+                              type="text"
+                              inputMode="numeric"
+                              placeholder="Pincode"
+                              value={deliveryPincode}
+                              onChange={(e) => setDeliveryPincode(e.target.value)}
+                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.pincode ? "border-red-500" : "border-[#e8e8e8]"}`}
+                            />
+                            {errors.pincode && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.pincode}</p>}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </section>
             </div>
 
-            {/* Order Summary Sidebar */}
-            <aside>
-              <div className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white shadow-sm lg:sticky lg:top-20">
-                <div className="flex items-center gap-2 border-b border-[#e8e8e8] px-4 py-3">
-                  <ReceiptText className="h-4 w-4 text-[#0c831f]" />
-                  <h2 className="text-sm font-black text-[#1a1a1a]">
-                    Order Summary
-                  </h2>
-                </div>
-
-                <div className="bg-[#fff0f6] px-4 py-2">
-                  <p className="text-xs font-black text-[#ff4f8b]">
-                    {deliveryMode === "pickup" ? "Ready in 30 minutes" :
-                     deliveryMode === "subscription" ? `Saving 10% • ${subscriptionFrequency}` :
-                     deliveryMode === "scheduled" ? `Delivery on ${scheduledDate || "selected date"}` :
-                     "Delivery in 10 minutes"}
-                  </p>
-                </div>
-
-                <div className="max-h-64 space-y-3 overflow-y-auto px-4 py-3">
-                  {cart.length === 0 ? (
-                    <div className="py-6 text-center">
-                      <p className="text-sm font-bold text-[#1a1a1a]">
-                        No items in cart
-                      </p>
-                      <Link
-                        href="/"
-                        className="mt-2 inline-flex text-xs font-black text-[#ff4f8b] hover-text-pink"
-                      >
-                        Continue shopping
-                      </Link>
-                    </div>
-                  ) : (
-                    cart.map((item) => (
-                      <div key={item.id} className="flex items-center gap-3">
-                        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg bg-[#f2f2f2]">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            sizes="44px"
-                            className="object-cover"
-                            loading="lazy"
-                            quality={65}
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-[#1a1a1a]">
-                            {item.name}
-                          </p>
-                          <p className="text-[10px] text-[#999]">
-                            Qty: {item.quantity}
-                          </p>
-                        </div>
-                        <p className="flex-shrink-0 text-xs font-black text-[#1a1a1a]">
-                          &#8377;{item.price * item.quantity}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Coupon Section */}
-                <div className="border-t border-[#e8e8e8] px-4 py-3">
-                  <AutoCoupons
-                    itemTotal={itemTotal}
-                    appliedCoupon={appliedCoupon}
-                    onApplyCoupon={(code) => { setAppliedCoupon(code); }}
-                    onRemoveCoupon={() => { setAppliedCoupon(null); }}
-                  />
-                </div>
-
-                {/* Bill Summary */}
-                <div className="space-y-2 border-t border-[#e8e8e8] px-4 py-3">
-                  <BillRow label="Item total" value={<>&#8377;{itemTotal}</>} />
-                  <BillRow
-                    label="Delivery fee"
-                    value={deliveryFee === 0 ? "FREE" : <>&#8377;{deliveryFee}</>}
-                    valueClassName={deliveryFee === 0 ? "text-[#ff4f8b]" : undefined}
-                  />
-                  <BillRow
-                    label="Handling fee"
-                    value={<>&#8377;{handlingFee}</>}
-                  />
-                  {subscriptionDiscount > 0 && (
-                    <BillRow
-                      label="Subscription (10%)"
-                      value={<>&minus;&#8377;{subscriptionDiscount}</>}
-                      valueClassName="text-[#0c831f]"
-                    />
-                  )}
-                  {couponDiscount > 0 && (
-                    <BillRow
-                      label="Coupon discount"
-                      value={<>&minus;&#8377;{couponDiscount}</>}
-                      valueClassName="text-[#0c831f]"
-                    />
-                  )}
-                  <div className="flex justify-between border-t border-[#e8e8e8] pt-2 text-sm font-black text-[#1a1a1a]">
-                    <span>To pay</span>
-                    <span>&#8377;{total}</span>
+            {/* Right Column — Order Summary & Payment */}
+            <aside className="space-y-3 lg:sticky lg:top-20 lg:h-fit">
+              {/* Coupon */}
+              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+                <SectionHeader icon={Tag} title="Apply Coupon" />
+                <div className="p-4">
+                  <div className="flex gap-2">
+                    <select
+                      value={appliedCoupon ?? ""}
+                      onChange={(e) => setAppliedCoupon(e.target.value || null)}
+                      className="flex-1 h-10 rounded-lg border border-[#e8e8e8] px-3 text-sm outline-none focus:border-[#ff4f8b] bg-white text-[#1a1a1a]"
+                    >
+                      <option value="">Select coupon</option>
+                      <option value="SAVE20">SAVE20 — 20% OFF</option>
+                      <option value="FIRST50">FIRST50 — ₹50 OFF (min ₹299)</option>
+                      <option value="WELCOME10">WELCOME10 — 10% OFF</option>
+                      <option value="FMCG100">FMCG100 — ₹100 OFF (min ₹499)</option>
+                      <option value="SUPER15">SUPER15 — 15% OFF (min ₹199)</option>
+                    </select>
                   </div>
-                </div>
-
-                {/* Place Order */}
-                <div className="px-4 pb-4">
-                  <button
-                    onClick={() => {
-                      if (!selectedPayment) {
-                        toast.error("Please select a payment method");
-                        return;
-                      }
-                      setIsPlacingOrder(true);
-
-                      const orderId = generateOrderId();
-                      const estimatedTime = deliveryMode === "express"
-                        ? selectedSlot === "10 minutes" ? "10 mins" : "2 hrs"
-                        : deliveryMode === "pickup" ? "30 mins" : "1 day";
-                      const now = new Date();
-                      const deliveryDate = now.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
-
-                      let status: "Delivered" | "Processing" | "Cancelled" | "Out for Delivery" = "Processing";
-                      if (deliveryMode === "express") {
-                        status = selectedSlot === "10 minutes" ? "Out for Delivery" : "Processing";
-                      } else if (deliveryMode === "pickup") {
-                        status = "Processing";
-                      } else {
-                        status = "Processing";
-                      }
-
-                      addOrder({
-                        id: orderId,
-                        date: now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-                        items: cart.map((item) => ({
-                          id: item.id,
-                          name: item.name,
-                          price: item.price,
-                          image: item.image,
-                          quantity: item.quantity,
-                        })),
-                        total,
-                        status,
-                        paymentMethod: `${selectedPayment!}${paymentMode === "emi" ? ` (EMI ${selectedEmi}m)` : ""}${paymentMode === "bnpl" ? ` (${selectedBnpl})` : ""}`,
-                        deliveryAddress: {
-                          name: deliveryName || "You",
-                          phone: deliveryPhone || "+91XXXXXXXXXX",
-                          address: deliveryAddress || "123 Main Street",
-                          city: deliveryCity || "Mumbai",
-                          pincode: deliveryPincode || "400058",
-                        },
-                        deliverySlot: deliveryMode === "express" ? selectedSlot :
-                          deliveryMode === "scheduled" ? `${scheduledDate || "Today"} ${scheduledTime}` :
-                          deliveryMode === "pickup" ? `Pickup at ${{ andheri: "Andheri West Store", bandra: "Bandra Kurla Store", powai: "Powai Hiranandani Store", worli: "Worli Seaface Store" }[pickupStore] || pickupStore}` :
-                          `${subscriptionFrequency} subscription`,
-                        deliveryDate,
-                        estimatedTime,
-                        deliveryPartner: deliveryMode === "express"
-                          ? "Rahul (FMCG Partner)"
-                          : deliveryMode === "pickup" ? "Store Pickup" : "FMCG Logistics",
-                        trackingSteps: buildTrackingSteps(status, estimatedTime),
-                      });
-
-                      setTimeout(() => {
-                        clearCart();
-                        setIsPlacingOrder(false);
-                        toast.success("Order placed successfully! 🎉", {
-                          description: `Order ${orderId} • ₹${total} • ${selectedPayment!.toUpperCase()} • ${deliveryMode}`,
-                          duration: 4000,
-                          position: "top-center",
-                          className: "bg-gradient-to-r from-[#0c831f] to-[#10b981] text-white border-none",
-                        });
-                        router.push(`/account/orders`);
-                      }, 1500);
-                    }}
-                    className="flex h-12 w-full items-center justify-between rounded-xl bg-[#ff4f8b] px-4 text-sm font-black text-white transition hover:bg-[#e63872] disabled:cursor-not-allowed disabled:bg-[#cccccc]"
-                    disabled={cart.length === 0 || isPlacingOrder}
-                  >
-                    <span>{isPlacingOrder ? "Placing Order..." : "Place Order"}</span>
-                    <span>
-                      {cart.length > 0 ? (
-                        isPlacingOrder ? (
-                          <span className="flex items-center gap-1">
-                            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                          </span>
-                        ) : (
-                          <>&#8377;{total}</>
-                        )
-                      ) : (
-                        "Add items"
-                      )}
-                    </span>
-                  </button>
-                  {!selectedPayment && cart.length > 0 && (
-                    <p className="text-[10px] text-[#ff4f8b] mt-1.5 text-center font-medium">
-                      Select a payment method to continue
+                  {appliedCoupon && (
+                    <p className="mt-2 text-[10px] font-bold text-[#0c831f]">
+                      Coupon applied! You save ₹{couponDiscount}
                     </p>
                   )}
                 </div>
+              </section>
+
+              {/* Bill Details */}
+              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+                <SectionHeader icon={ReceiptText} title="Bill Details" />
+                <div className="p-4 space-y-3">
+                  <BillRow label="Item total" value={<>₹{itemTotal}</>} />
+                  {couponDiscount > 0 && (
+                    <BillRow label="Coupon discount" value={<span className="text-[#0c831f]">-₹{couponDiscount}</span>} />
+                  )}
+                  {subscriptionDiscount > 0 && (
+                    <BillRow label="Subscription discount" value={<span className="text-[#0c831f]">-₹{subscriptionDiscount}</span>} />
+                  )}
+                  <BillRow
+                    label="Delivery fee"
+                    value={deliveryFee === 0 ? <span className="text-[#ff4f8b]">FREE</span> : <>₹{deliveryFee}</>}
+                  />
+                  <BillRow label="Handling fee" value={<>₹{handlingFee}</>} />
+                  <div className="flex items-center justify-between border-t border-[#e8e8e8] pt-3 text-base font-black text-[#1a1a1a]">
+                    <span>To pay</span>
+                    <span>₹{total}</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Payment Method */}
+              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+                <SectionHeader icon={CreditCard} title="Payment Method" />
+                <div className="p-4 space-y-2">
+                  {[
+                    { id: "cod", label: "Cash on Delivery", sub: "Pay when you receive", icon: "💵" },
+                    { id: "card", label: "Credit / Debit Card", sub: "Visa, Mastercard, RuPay", icon: "💳" },
+                    { id: "upi", label: "UPI", sub: "Google Pay, PhonePe, Paytm", icon: "📱" },
+                    { id: "netbanking", label: "Net Banking", sub: "All major banks", icon: "🏦" },
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => {
+                        setSelectedPayment(method.id);
+                        setPaymentMode("full");
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl border-2 p-3 text-left transition-all ${
+                        selectedPayment === method.id
+                          ? "border-[#ff4f8b] bg-[#fff0f6]"
+                          : "border-[#e8e8e8] hover:border-[#ff4f8b]/30"
+                      }`}
+                    >
+                      <span className="text-lg">{method.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#1a1a1a]">{method.label}</p>
+                        <p className="text-[10px] text-[#999]">{method.sub}</p>
+                      </div>
+                      {selectedPayment === method.id && (
+                        <CheckCircle className="h-4 w-4 flex-shrink-0 text-[#ff4f8b]" />
+                      )}
+                    </button>
+                  ))}
+
+                  {/* EMI / BNPL options */}
+                  {selectedPayment === "card" && (
+                    <div className="pt-2 animate-slide-down">
+                      <EmiBnpl
+                        paymentMode={paymentMode}
+                        onModeChange={setPaymentMode}
+                        selectedEmi={selectedEmi}
+                        onEmiChange={setSelectedEmi}
+                        selectedBnpl={selectedBnpl}
+                        onBnplChange={setSelectedBnpl}
+                        total={total}
+                      />
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Place Order */}
+              <div className="rounded-xl border border-[#e8e8e8] bg-white p-4 shadow-sm">
+                <button
+                  onClick={handlePlaceOrder}
+                  className="flex h-12 w-full items-center justify-between rounded-xl bg-[#ff4f8b] px-4 text-sm font-black text-white transition hover:bg-[#e63872] disabled:cursor-not-allowed disabled:bg-[#cccccc]"
+                  disabled={cart.length === 0 || isPlacingOrder}
+                >
+                  <span>{isPlacingOrder ? "Placing Order..." : "Place Order"}</span>
+                  <span>
+                    {cart.length > 0 ? (
+                      isPlacingOrder ? (
+                        <span className="flex items-center gap-1">
+                          <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        </span>
+                      ) : (
+                        <>₹{total}</>
+                      )
+                    ) : (
+                      "Add items"
+                    )}
+                  </span>
+                </button>
+                {!selectedPayment && cart.length > 0 && (
+                  <p className="text-[10px] text-[#ff4f8b] mt-1.5 text-center font-medium">
+                    Select a payment method to continue
+                  </p>
+                )}
               </div>
             </aside>
           </div>

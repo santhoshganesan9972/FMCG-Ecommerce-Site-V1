@@ -21,6 +21,9 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
+import FileUpload from "@/components/ui/file-upload";
+import type { UploadedFile } from "@/components/ui/file-upload";
+import type { ProductFormData, ProductMedia } from "@/types/products";
 
 export default function ProductsPage() {
   const {
@@ -36,12 +39,15 @@ export default function ProductsPage() {
     setPageSize,
   } = useProducts({ sortBy: "createdAt", sortOrder: "desc" });
 
-  const { deleteProduct } = useProductForm();
+  const { createProduct, updateProduct, deleteProduct, submitting } = useProductForm();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState<Partial<ProductFormData>>({});
+  const [addFiles, setAddFiles] = useState<UploadedFile[]>([]);
+  const [editFiles, setEditFiles] = useState<UploadedFile[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [showViewModal, setShowViewModal] = useState<string | null>(null);
 
@@ -52,6 +58,7 @@ export default function ProductsPage() {
   const openEditDrawer = (p: Product) => {
     setEditProduct(p);
     setEditForm({ ...p });
+    setEditFiles([]);
   };
 
   const closeEditDrawer = () => {
@@ -60,9 +67,23 @@ export default function ProductsPage() {
   };
 
   const handleEditSave = async () => {
-    toast.success(`"${editForm.name}" updated successfully`);
-    closeEditDrawer();
-    fetchProducts();
+    if (!editProduct) return;
+    // Merge newly uploaded files with existing media
+    const newMedia = filesToMedia(editFiles, editForm.name || editProduct.name);
+    const mergedMedia = newMedia.length > 0
+      ? [...(editForm.media || editProduct.media || []), ...newMedia]
+      : undefined;
+    const result = await updateProduct(editProduct.id, {
+      ...editForm,
+      ...(mergedMedia ? { media: mergedMedia } : {}),
+    });
+    if (result) {
+      toast.success(`"${editForm.name}" updated successfully`);
+      closeEditDrawer();
+      fetchProducts();
+    } else {
+      toast.error("Failed to update product");
+    }
   };
 
   const handleSearch = (value: string) => {
@@ -80,10 +101,46 @@ export default function ProductsPage() {
     updateFilters({ category: value === "all" ? "" : value as never });
   };
 
+  const resetAddForm = () => {
+    setAddForm({});
+    setAddFiles([]);
+  };
+
+  // ── Image handling helpers ────────────────────────────────
+  function filesToMedia(files: UploadedFile[], productName: string): ProductMedia[] {
+    return files.map((f, i) => ({
+      id: f.id,
+      productId: "", // will be set by the service after ID generation
+      type: f.type === "image" ? "image" : "document" as const,
+      url: f.preview || "",
+      alt: productName,
+      isPrimary: i === 0,
+      uploadedAt: new Date().toISOString(),
+    }));
+  }
+
+  const handleAddProduct = async () => {
+    if (!addForm.name || !addForm.sku) {
+      toast.error("Product name and SKU are required");
+      return;
+    }
+    const media = filesToMedia(addFiles, addForm.name);
+    const result = await createProduct({ ...addForm, media: media.length > 0 ? media : undefined });
+    if (result) {
+      toast.success(`"${addForm.name}" created successfully`);
+      setShowAddModal(false);
+      resetAddForm();
+      fetchProducts();
+    } else {
+      toast.error("Failed to create product");
+    }
+  };
+
   const handleDelete = async (id: string) => {
+    const product = products.find((p) => p.id === id);
     const success = await deleteProduct(id);
     if (success) {
-      toast.success("Product deleted successfully");
+      toast.success(`"${product?.name || 'Product'}" deleted successfully`);
       fetchProducts();
     } else {
       toast.error("Failed to delete product");
@@ -116,7 +173,7 @@ export default function ProductsPage() {
               </button>
               <ReusableExportButton onExport={(fmt) => toast.success(`Exporting as ${fmt.toUpperCase()}`)} />
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => { resetAddForm(); setShowAddModal(true); }}
                 className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all"
               >
                 <Plus className="h-4 w-4" />
@@ -273,67 +330,207 @@ export default function ProductsPage() {
       {/* Add Product Modal */}
       <ReusableModal
         open={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => { setShowAddModal(false); resetAddForm(); }}
         title="Add New Product"
         subtitle="Fill in the details to create a new product"
         size="lg"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[
-            { label: "Product Name", placeholder: "Enter product name" },
-            { label: "SKU", placeholder: "e.g. PROD-SKU-001" },
-            {
-              label: "Category",
-              type: "select",
-              options: ["Groceries","Fruits","Vegetables","Dairy","Beverages","Snacks","Health","Personal Care","Home Care","Baby Care"],
-            },
-            { label: "Brand", placeholder: "Brand name" },
-            { label: "Price (₹)", type: "number", placeholder: "0" },
-            { label: "MRP (₹)", type: "number", placeholder: "0" },
-            { label: "Stock", type: "number", placeholder: "0" },
-            { label: "Weight", placeholder: "e.g. 1 kg, 500 ml" },
-            { label: "Tax Rate (%)", type: "number", placeholder: "5" },
-            {
-              label: "Warehouse",
-              type: "select",
-              options: ["Mumbai Hub","Delhi Central","Pune Cold Storage","Bangalore Cold Room","Hyderabad Depot"],
-            },
-          ].map((field) => (
-            <div key={field.label}>
-              <label className="mb-1.5 block text-xs font-bold text-[#666]">{field.label}</label>
-              {field.type === "select" ? (
-                <select className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
-                  <option value="">Select {field.label}</option>
-                  {field.options?.map((opt: string) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type={field.type || "text"}
-                  placeholder={field.placeholder}
-                  className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
-                />
-              )}
+          {/* Product Name */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Product Name *</label>
+            <input
+              type="text"
+              placeholder="Enter product name"
+              value={addForm.name ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* SKU */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">SKU *</label>
+            <input
+              type="text"
+              placeholder="e.g. PROD-SKU-001"
+              value={addForm.sku ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, sku: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Category */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Category</label>
+            <select
+              value={addForm.category ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, category: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+            >
+              <option value="">Select Category</option>
+              {["Groceries","Fruits","Vegetables","Dairy","Beverages","Snacks","Health","Personal Care","Home Care","Baby Care"].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          {/* Brand */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Brand</label>
+            <input
+              type="text"
+              placeholder="Brand name"
+              value={addForm.brand ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, brand: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Price */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Price (₹)</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={addForm.price ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, price: Number(e.target.value) }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* MRP */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (₹)</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={addForm.mrp ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, mrp: Number(e.target.value) }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Stock */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Stock</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={addForm.stock ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, stock: Number(e.target.value) }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Weight */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Weight</label>
+            <input
+              type="text"
+              placeholder="e.g. 1 kg, 500 ml"
+              value={addForm.weight ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, weight: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Tax Rate */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Tax Rate (%)</label>
+            <input
+              type="number"
+              placeholder="5"
+              value={addForm.taxRate ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, taxRate: Number(e.target.value) }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+            />
+          </div>
+          {/* Warehouse */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Warehouse</label>
+            <select
+              value={addForm.warehouse ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, warehouse: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+            >
+              <option value="">Select Warehouse</option>
+              {["Mumbai Hub","Delhi Central","Pune Cold Storage","Bangalore Cold Room","Hyderabad Depot"].map((w) => (
+                <option key={w} value={w}>{w}</option>
+              ))}
+            </select>
+          </div>
+          {/* Description */}
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Description</label>
+            <textarea
+              rows={3}
+              placeholder="Product description..."
+              value={addForm.description ?? ""}
+              onChange={(e) => setAddForm((f) => ({ ...f, description: e.target.value }))}
+              className="w-full rounded-xl border border-[#e8e8e8] bg-white px-3 py-2.5 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f] resize-none"
+            />
+          </div>
+
+          {/* Featured / Flash Sale / Discount */}
+          <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label className="flex items-center gap-3 rounded-xl border border-[#e8e8e8] bg-white px-4 py-3 cursor-pointer hover:border-[#0c831f] transition-colors">
+              <input
+                type="checkbox"
+                checked={addForm.isFeatured ?? false}
+                onChange={(e) => setAddForm((f) => ({ ...f, isFeatured: e.target.checked }))}
+                className="h-4 w-4 rounded border-[#e8e8e8] text-[#0c831f] focus:ring-[#0c831f]"
+              />
+              <div>
+                <p className="text-xs font-bold text-[#1a1a1a]">Featured</p>
+                <p className="text-[10px] text-[#999]">Show on homepage banners</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-[#e8e8e8] bg-white px-4 py-3 cursor-pointer hover:border-[#0c831f] transition-colors">
+              <input
+                type="checkbox"
+                checked={addForm.isFlashSale ?? false}
+                onChange={(e) => setAddForm((f) => ({ ...f, isFlashSale: e.target.checked }))}
+                className="h-4 w-4 rounded border-[#e8e8e8] text-[#ff4f8b] focus:ring-[#ff4f8b]"
+              />
+              <div>
+                <p className="text-xs font-bold text-[#1a1a1a]">Flash Sale</p>
+                <p className="text-[10px] text-[#999]">Mark as limited-time deal</p>
+              </div>
+            </label>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount %</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                placeholder="Override %"
+                value={addForm.discountPercent ?? ""}
+                onChange={(e) => setAddForm((f) => ({ ...f, discountPercent: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+              />
             </div>
-          ))}
+          </div>
         </div>
+
+        {/* Image Upload */}
+        <div className="mt-4">
+          <label className="mb-1.5 block text-xs font-bold text-[#666]">Product Images</label>
+          <FileUpload
+            files={addFiles}
+            onFilesChange={setAddFiles}
+            maxFiles={5}
+            maxSizeMB={5}
+            accept="image/*"
+            variant="standalone"
+          />
+        </div>
+
         <div className="mt-6 flex justify-end gap-3 border-t border-[#e8e8e8] pt-4">
           <button
-            onClick={() => setShowAddModal(false)}
+            onClick={() => { setShowAddModal(false); resetAddForm(); }}
             className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]"
           >
             Cancel
           </button>
           <button
-            onClick={() => {
-              toast.success("Product created successfully");
-              setShowAddModal(false);
-              fetchProducts();
-            }}
-            className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]"
+            onClick={handleAddProduct}
+            disabled={submitting}
+            className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Product
+            {submitting ? "Creating..." : "Create Product"}
           </button>
         </div>
       </ReusableModal>
@@ -354,6 +551,9 @@ export default function ProductsPage() {
                 { label: "Price", value: `₹${selectedProduct.price}` },
                 { label: "MRP", value: `₹${selectedProduct.mrp}` },
                 { label: "Cost Price", value: `₹${selectedProduct.costPrice}` },
+                { label: "Featured", value: selectedProduct.isFeatured ? "Yes ✓" : "No" },
+                { label: "Flash Sale", value: selectedProduct.isFlashSale ? "Yes ⚡" : "No" },
+                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "—" },
                 { label: "Stock", value: selectedProduct.stock.toString() },
                 { label: "Status", value: selectedProduct.status },
                 { label: "Warehouse", value: selectedProduct.warehouse },
@@ -682,6 +882,59 @@ export default function ProductsPage() {
               className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
             />
           </div>
+
+          {/* Featured / Flash Sale / Discount */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label className="flex items-center gap-3 rounded-xl border border-[#e8e8e8] bg-white px-4 py-3 cursor-pointer hover:border-[#0c831f] transition-colors">
+              <input
+                type="checkbox"
+                checked={editForm.isFeatured ?? false}
+                onChange={(e) => setEditForm((f) => ({ ...f, isFeatured: e.target.checked }))}
+                className="h-4 w-4 rounded border-[#e8e8e8] text-[#0c831f] focus:ring-[#0c831f]"
+              />
+              <div>
+                <p className="text-xs font-bold text-[#1a1a1a]">Featured</p>
+                <p className="text-[10px] text-[#999]">Show on homepage banners</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-[#e8e8e8] bg-white px-4 py-3 cursor-pointer hover:border-[#0c831f] transition-colors">
+              <input
+                type="checkbox"
+                checked={editForm.isFlashSale ?? false}
+                onChange={(e) => setEditForm((f) => ({ ...f, isFlashSale: e.target.checked }))}
+                className="h-4 w-4 rounded border-[#e8e8e8] text-[#ff4f8b] focus:ring-[#ff4f8b]"
+              />
+              <div>
+                <p className="text-xs font-bold text-[#1a1a1a]">Flash Sale</p>
+                <p className="text-[10px] text-[#999]">Mark as limited-time deal</p>
+              </div>
+            </label>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount %</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                placeholder="Override %"
+                value={editForm.discountPercent ?? ""}
+                onChange={(e) => setEditForm((f) => ({ ...f, discountPercent: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]"
+              />
+            </div>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Product Images</label>
+            <FileUpload
+              files={editFiles}
+              onFilesChange={setEditFiles}
+              maxFiles={5}
+              maxSizeMB={5}
+              accept="image/*"
+              variant="standalone"
+            />
+          </div>
         </div>
 
         {/* Drawer footer */}
@@ -694,10 +947,11 @@ export default function ProductsPage() {
           </button>
           <button
             onClick={handleEditSave}
-            className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all"
+            disabled={submitting}
+            className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="h-4 w-4" />
-            Save Changes
+            <Save className={`h-4 w-4 ${submitting ? "animate-spin" : ""}`} />
+            {submitting ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </aside>

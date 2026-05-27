@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronRight, MapPin, Smartphone } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
@@ -8,9 +8,16 @@ import { toast } from "sonner";
 
 export default function AuthGate() {
   const pathname = usePathname();
+  const { isLoggedIn, login } = useAuthStore();
   const [open, setOpen] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const { login } = useAuthStore();
+
+  // Close gate if user is already logged in (handles Zustand rehydration)
+  useEffect(() => {
+    if (isLoggedIn) {
+      setOpen(false);
+    }
+  }, [isLoggedIn]);
 
   // Don't show the gate on admin routes — the admin panel has its own auth context.
   if (pathname?.startsWith("/admin")) {

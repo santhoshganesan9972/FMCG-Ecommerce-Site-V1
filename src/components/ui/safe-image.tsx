@@ -44,7 +44,7 @@ export const SafeProductImage = memo(function SafeProductImage({
     onError?.();
   }, [imageSrc, onError]);
 
-  const handleLoadingComplete = useCallback(() => {
+  const handleLoad = useCallback(() => {
     setIsLoading(false);
   }, []);
 
@@ -59,7 +59,7 @@ export const SafeProductImage = memo(function SafeProductImage({
         priority={priority}
         loading={loading}
         onError={handleError}
-        onLoadingComplete={handleLoadingComplete}
+        onLoad={handleLoad}
         style={{
           objectFit: "cover",
         }}

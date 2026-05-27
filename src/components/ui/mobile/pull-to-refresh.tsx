@@ -116,11 +116,11 @@ export default function PullToRefresh({
         )}
       </div>
 
-      {/* Content with pull offset */}
+      {/* Content with pull offset — only apply transform when active to avoid breaking position:fixed */}
       <div
-        className="transition-transform duration-200 ease-out"
+        className={pullDistance > 0 ? "transition-transform duration-200 ease-out" : ""}
         style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : "translateY(0)",
+          transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
         }}
       >
         {children}

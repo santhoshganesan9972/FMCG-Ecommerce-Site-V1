@@ -16,7 +16,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-[#e8e8e8] flex items-center justify-around md:hidden z-50 safe-area-pb">
+    <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-lg border-t border-[#e8e8e8] flex items-center justify-around md:hidden z-50 safe-area-bottom shadow-[0_-2px_16px_rgba(0,0,0,0.06)]">
       {items.map(({ icon: Icon, label, href }) => (
         <Link
           key={label}

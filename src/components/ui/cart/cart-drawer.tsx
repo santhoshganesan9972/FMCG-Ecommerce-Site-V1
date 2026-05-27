@@ -14,10 +14,25 @@ import {
 } from "lucide-react";
 
 import { useCartStore } from "@/store/cart-store";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function CartDrawer() {
   const { cart, increaseQuantity, decreaseQuantity, removeFromCart } =
     useCartStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return (
+      <div className="fixed right-0 top-0 z-50 flex h-screen w-full flex-col border-l border-[#e8e8e8] bg-white shadow-2xl sm:w-96 items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff4f8b]"></div>
+      </div>
+    );
+  }
 
   const itemTotal = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
@@ -106,10 +121,13 @@ export default function CartDrawer() {
                       <h3 className="line-clamp-2 text-sm font-bold leading-5 text-[#1a1a1a]">
                         {item.name}
                       </h3>
-                      <p className="mt-1 text-xs text-[#999]">500 g</p>
+                      <p className="mt-1 text-xs text-[#999]">{item.weight || "500 g"}</p>
                     </div>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => {
+                        removeFromCart(item.id);
+                        toast.success(`${item.name} removed`);
+                      }}
                       className="flex min-h-[44px] min-w-[44px] h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-[#999] transition hover:bg-[#fff0f6] hover:text-[#ff4f8b]"
                       aria-label={`Remove ${item.name}`}
                     >
@@ -129,7 +147,10 @@ export default function CartDrawer() {
 
                     <div className="flex min-h-[44px] h-8 items-center overflow-hidden rounded-lg border-2 border-[#ff4f8b] bg-[#ff4f8b] text-white">
                       <button
-                        onClick={() => decreaseQuantity(item.id)}
+                        onClick={() => {
+                          decreaseQuantity(item.id);
+                          if (item.quantity > 1) toast.success(`Decreased ${item.name} quantity`);
+                        }}
                         className="flex h-full min-w-[44px] w-8 items-center justify-center hover:bg-[#e63872]"
                         aria-label={`Decrease ${item.name}`}
                       >
@@ -139,7 +160,10 @@ export default function CartDrawer() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => increaseQuantity(item.id)}
+                        onClick={() => {
+                          increaseQuantity(item.id);
+                          toast.success(`Increased ${item.name} quantity`);
+                        }}
                         className="flex h-full min-w-[44px] w-8 items-center justify-center hover:bg-[#e63872]"
                         aria-label={`Increase ${item.name}`}
                       >
@@ -208,6 +232,7 @@ export default function CartDrawer() {
     </div>
   );
 }
+
 
 function BillRow({
   label,

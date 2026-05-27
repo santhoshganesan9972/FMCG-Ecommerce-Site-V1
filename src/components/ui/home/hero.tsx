@@ -12,8 +12,8 @@ export default function Hero() {
       <div className="mx-auto max-w-[1400px] px-3 py-3 sm:px-4 sm:py-4 md:px-6">
         {/* Hero / primary banner - Flash Sale */}
         <Link
-          href="/search"
-          aria-label="Up to 50% OFF — On daily essentials & groceries"
+          href="/offers/flash-sale"
+          aria-label="Up to 50% OFF — Flash Sale on daily essentials & groceries"
           className="relative block overflow-hidden rounded-xl sm:rounded-2xl p-5 sm:p-8 md:p-10"
           style={{
             backgroundImage: `linear-gradient(to right, rgba(220, 38, 38, 0.9), rgba(249, 115, 22, 0.85)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80')`,
@@ -22,7 +22,7 @@ export default function Hero() {
           }}
         >
           <span className="hidden" itemProp="description">
-            Up to 50% OFF — On daily essentials & groceries
+            Up to 50% OFF — Flash Sale on daily essentials & groceries
           </span>
           <div className="relative z-10 max-w-lg">
             <span className="mb-3 inline-block rounded-full bg-white/25 px-3 py-1 text-xs font-black text-white uppercase tracking-wider">
@@ -34,9 +34,9 @@ export default function Hero() {
             <p className="mt-2 mb-4 text-sm text-white/90 sm:text-base">
               On daily essentials & groceries
             </p>
-            <div className="inline-flex min-h-[44px] h-10 items-center rounded-lg bg-white px-5 text-sm font-black text-[#dc2626] transition hover:bg-white/95 sm:h-11 sm:px-6 shadow-lg">
+            <span className="inline-flex min-h-[44px] h-10 items-center rounded-lg bg-white px-5 text-sm font-black text-[#dc2626] transition hover:bg-white/95 sm:h-11 sm:px-6 shadow-lg cursor-pointer">
               Shop Now
-            </div>
+            </span>
           </div>
         </Link>
 
@@ -44,8 +44,8 @@ export default function Hero() {
         <div className="mt-3 grid grid-cols-2 gap-3">
           {/* Fresh Arrivals - Veggies */}
           <Link
-            href="/search?category=Fruits"
-            aria-label="Farm Fresh Veggies — Delivered in 10 minutes"
+            href="/offers/fresh-arrivals"
+            aria-label="Farm Fresh Veggies & Fruits — Delivered in 10 minutes"
             className="relative overflow-hidden rounded-xl p-4 transition hover:opacity-95 sm:p-6"
             style={{
               backgroundImage: `linear-gradient(to right, rgba(5, 150, 105, 0.92), rgba(16, 185, 129, 0.85)), url('https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=900&q=80')`,
@@ -68,7 +68,7 @@ export default function Hero() {
 
           {/* Weekend Special - Snacks */}
           <Link
-            href="/search?category=Snacks"
+            href="/offers/snacks-beverages"
             aria-label="Snacks & Beverages — Stock up for the weekend"
             className="relative overflow-hidden rounded-xl p-4 transition hover:opacity-95 sm:p-6"
             style={{

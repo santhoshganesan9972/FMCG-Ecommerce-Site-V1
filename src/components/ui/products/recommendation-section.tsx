@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from "react";
 import Link from "next/link";
-import { ChevronRight, Sparkles, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { products } from "@/data/products";
 import { SafeProductImage } from "@/components/ui/safe-image";
 import { useCartStore } from "@/store/cart-store";
@@ -10,6 +10,9 @@ import { toast } from "sonner";
 
 export default function RecommendationSection() {
   const addToCart = useCartStore((s) => s.addToCart);
+  const increaseQty = useCartStore((s) => s.increaseQuantity);
+  const decreaseQty = useCartStore((s) => s.decreaseQuantity);
+  const cart = useCartStore((s) => s.cart);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const aiRecommendedProducts = useMemo(() => {
@@ -70,7 +73,7 @@ export default function RecommendationSection() {
           >
             {aiRecommendedProducts.map((product) => {
               const discount = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
-              const cartItem = useCartStore.getState().cart.find((item) => item.id === product.id);
+              const cartItem = cart.find((item) => item.id === product.id);
               const quantity = cartItem?.quantity ?? 0;
 
               return (
@@ -137,7 +140,7 @@ export default function RecommendationSection() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                useCartStore.getState().decreaseQuantity(product.id);
+                                decreaseQty(product.id);
                               }}
                               className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
                             >
@@ -151,7 +154,7 @@ export default function RecommendationSection() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                useCartStore.getState().increaseQuantity(product.id);
+                                increaseQty(product.id);
                                 toast.success("Added to cart 🛒");
                               }}
                               className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"

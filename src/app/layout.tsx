@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import LayoutClient from "./layout-client";
 import SkipLink from "@/components/ui/a11y/skip-link";
-import AnimatedBackground from "@/components/ui/client-only-background";
 import GroceryAssistant from "@/components/ui/grocery-assistant/grocery-assistant";
 import { env } from "@/lib/env";
 
@@ -69,7 +68,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`h-full antialiased ${inter.variable} font-sans`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[#f2f2f2] relative" suppressHydrationWarning>
-        <AnimatedBackground />
         <SkipLink />
         <LayoutClient>
           <ErrorBoundary>

@@ -7,7 +7,7 @@ import { products } from "@/data/products";
 import { categorySections } from "@/data/categories";
 import Navbar from "@/components/ui/navbar";
 import BottomNav from "@/components/ui/mobile/bottom-nav";
-import CategoryProductCard from "@/components/ui/products/category-product-card";
+import CategoryClient from "@/components/ui/category/category-client";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -91,21 +91,13 @@ export default async function CategoryPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Product grid */}
+        {/* Product grid with sorting & pagination */}
         <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <span className="text-5xl mb-4">📦</span>
-              <p className="text-base font-bold text-[#1a1a1a]">No products yet</p>
-              <p className="text-sm text-[#999] mt-1">Check back soon!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
-              {items.map((product) => (
-                <CategoryProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <CategoryClient
+            items={items}
+            categoryEmoji={section.emoji}
+            categoryLabel={section.label}
+          />
         </div>
       </div>
 

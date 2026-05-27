@@ -14,6 +14,7 @@ import type {
   PaginationState,
   ProductFormData,
 } from "@/types/products";
+import { refreshProductBridge } from "@/data/products";
 import {
   mockAdminProducts,
   mockCategories,
@@ -97,7 +98,7 @@ export const productService = {
     return mockAdminProducts.find((p) => p.id === id);
   },
 
-  async createProduct(data: ProductFormData): Promise<Product> {
+  async createProduct(data: Partial<ProductFormData>): Promise<Product> {
     await delay(400);
     const now = new Date().toISOString().split("T")[0];
     const newProduct: Product = {
@@ -117,6 +118,9 @@ export const productService = {
       stock: data.stock ?? 0,
       lowStockThreshold: data.lowStockThreshold ?? 10,
       status: (data.status || "draft") as ProductStatus,
+      isFeatured: data.isFeatured ?? false,
+      isFlashSale: data.isFlashSale ?? false,
+      discountPercent: data.discountPercent ?? 0,
       description: data.description || "",
       shortDescription: data.shortDescription || "",
       tags: data.tags || [],
@@ -129,23 +133,56 @@ export const productService = {
       createdAt: now,
       updatedAt: now,
     };
+    // Assign productId to uploaded media now that we have the generated ID
+    if (newProduct.media && newProduct.media.length > 0) {
+      newProduct.media = newProduct.media.map((m) => ({
+        ...m,
+        productId: newProduct.id,
+      }));
+    }
+
+    // Persist to mock array so it shows up in product list immediately
+    mockAdminProducts.unshift(newProduct);
+    // Sync frontend product views
+    refreshProductBridge();
     return newProduct;
   },
 
   async updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined> {
     await delay(300);
-    const product = mockAdminProducts.find((p) => p.id === id);
-    if (!product) return undefined;
-    return {
-      ...product,
+    const idx = mockAdminProducts.findIndex((p) => p.id === id);
+    if (idx === -1) return undefined;
+    const updated = {
+      ...mockAdminProducts[idx],
       ...data,
       updatedAt: new Date().toISOString().split("T")[0],
     };
+
+    // Assign productId to any newly uploaded media items
+    if (updated.media && updated.media.length > 0) {
+      updated.media = updated.media.map((m) => ({
+        ...m,
+        productId: m.productId || updated.id,
+      }));
+    }
+
+    // Persist to mock array so fetchProducts() returns updated data
+    mockAdminProducts[idx] = updated;
+    // Sync frontend product views
+    refreshProductBridge();
+    return updated;
   },
 
   async deleteProduct(id: string): Promise<boolean> {
     await delay(200);
-    return true;
+    const idx = (mockAdminProducts as Product[]).findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      (mockAdminProducts as Product[]).splice(idx, 1);
+      // Sync frontend product views
+      refreshProductBridge();
+      return true;
+    }
+    return false;
   },
 
   // ── Pricing ────────────────────────────────────────────

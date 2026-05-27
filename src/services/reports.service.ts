@@ -315,7 +315,47 @@ export const reportsService = {
     pageSize = 10
   ): Promise<{ data: SalesReportEntry[]; meta: ReportPageMeta }> {
     await delay(250);
-    let filtered = [...mockSalesReportEntries];
+    
+    // Merge live sales data
+    let localSales: SalesReportEntry[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const storage = localStorage.getItem("order-storage");
+        if (storage) {
+          const orders = JSON.parse(storage).state?.orders || [];
+          const grouped = orders.reduce((acc: any, o: any) => {
+            const date = new Date(o.date).toISOString().split("T")[0];
+            if (!acc[date]) {
+              acc[date] = {
+                id: `live-${date}`,
+                date,
+                grossRevenue: 0,
+                netRevenue: 0,
+                orders: 0,
+                avgOrderValue: 0,
+                discounts: 0,
+                refunds: 0,
+                promoCost: 0,
+                topCategory: "Groceries",
+                upiTransactions: 0,
+                cardTransactions: 0,
+                cashTransactions: 0,
+              };
+            }
+            acc[date].grossRevenue += o.total;
+            acc[date].netRevenue += o.total;
+            acc[date].orders += 1;
+            if (o.paymentMethod.toLowerCase().includes("upi")) acc[date].upiTransactions += 1;
+            else if (o.paymentMethod.toLowerCase().includes("card")) acc[date].cardTransactions += 1;
+            else acc[date].cashTransactions += 1;
+            return acc;
+          }, {});
+          localSales = Object.values(grouped).map((r: any) => ({ ...r, avgOrderValue: Math.round(r.grossRevenue / r.orders) }));
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    let filtered = [...localSales, ...mockSalesReportEntries];
     if (filters?.search) {
       filtered = applySearch(filtered, filters.search, ["date", "topCategory"] as (keyof SalesReportEntry)[]);
     }

@@ -1,47 +1,53 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
-  ChevronRight,
   Clock3,
-  Minus,
-  Plus,
+  ChevronRight,
+  Truck,
   ReceiptText,
+  Tag,
   ShieldCheck,
   ShoppingBag,
-  Tag,
-  Trash2,
-  Truck,
   Bookmark,
+  Trash2,
+  Minus,
+  Plus,
   Share2,
 } from "lucide-react";
-
-import Navbar from "@/components/ui/navbar";
-import Container from "@/components/ui/layout/container";
+import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
 import { useSavedItemsStore } from "@/store/saved-items-store";
 import { useShareCartStore } from "@/store/share-cart-store";
-import BillRow from "@/components/ui/a11y/bill-row";
+import Navbar from "@/components/ui/navbar";
 import PullToRefresh from "@/components/ui/mobile/pull-to-refresh";
+import Container from "@/components/ui/layout/container";
 import SwipeActions from "@/components/ui/mobile/swipe-actions";
 import SaveForLater from "@/components/ui/cart/save-for-later";
 import ShareCartModal from "@/components/ui/cart/share-cart-modal";
-import { toast } from "sonner";
-import { useCallback } from "react";
+import BillRow from "@/components/ui/a11y/bill-row";
 
 export default function CartPage() {
-  const { cart, removeFromCart, increaseQuantity, decreaseQuantity } =
+  const { cart, removeFromCart, increaseQuantity, decreaseQuantity, clearCart } =
     useCartStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // All hooks MUST be declared before any early return (Rules of Hooks)
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number} | null>(null);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const { addItem } = useSavedItemsStore();
   const { shareCart } = useShareCartStore();
 
+  // ALL hooks must be declared before any early return (Rules of Hooks)
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await new Promise((resolve) => setTimeout(resolve, 600));
@@ -49,6 +55,43 @@ export default function CartPage() {
     toast.success("Cart refreshed! ✓", { duration: 1500 });
   }, []);
 
+  const itemTotal = useMemo(
+    () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [cart]
+  );
+  const totalItems = useMemo(
+    () => cart.reduce((acc, item) => acc + item.quantity, 0),
+    [cart]
+  );
+  const deliveryFee = useMemo(
+    () => (itemTotal > 499 || itemTotal === 0 ? 0 : 25),
+    [itemTotal]
+  );
+  const handlingFee = useMemo(() => (itemTotal > 0 ? 5 : 0), [itemTotal]);
+  
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    return Math.round((itemTotal * appliedCoupon.discount) / 100);
+  }, [itemTotal, appliedCoupon]);
+
+  const total = useMemo(
+    () => Math.max(0, itemTotal + deliveryFee + handlingFee - discountAmount),
+    [itemTotal, deliveryFee, handlingFee, discountAmount]
+  );
+
+  // Early return when not hydrated — safe because all hooks are declared above
+  if (!isHydrated) {
+    return (
+      <main className="min-h-screen bg-[#f2f2f2]">
+        <Navbar />
+        <div className="pt-32 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0c831f]"></div>
+        </div>
+      </main>
+    );
+  }
+
+  // Regular functions (not hooks) — safe after early return
   const handleSaveForLater = (item: typeof cart[0]) => {
     if (item) {
       addItem({
@@ -78,24 +121,6 @@ export default function CartPage() {
     });
   };
 
-  const itemTotal = useMemo(
-    () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    [cart]
-  );
-  const totalItems = useMemo(
-    () => cart.reduce((acc, item) => acc + item.quantity, 0),
-    [cart]
-  );
-  const deliveryFee = useMemo(
-    () => (itemTotal > 499 || itemTotal === 0 ? 0 : 25),
-    [itemTotal]
-  );
-  const handlingFee = useMemo(() => (itemTotal > 0 ? 5 : 0), [itemTotal]);
-  const total = useMemo(
-    () => itemTotal + deliveryFee + handlingFee,
-    [itemTotal, deliveryFee, handlingFee]
-  );
-
   return (
     <PullToRefresh onRefresh={handleRefresh}>
     <main className="min-h-screen bg-[#f2f2f2] pb-36 md:pb-16">
@@ -109,11 +134,26 @@ export default function CartPage() {
                 <p className="text-xs font-bold uppercase tracking-wide text-[#0c831f]">
                   My Cart
                 </p>
-                <h1 className="text-2xl font-black text-[#1a1a1a]">
-                  {cart.length > 0
-                    ? `${totalItems} ${totalItems === 1 ? "item" : "items"} in your cart`
-                    : "Your cart is empty"}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black text-[#1a1a1a]">
+                    {cart.length > 0
+                      ? `${totalItems} ${totalItems === 1 ? "item" : "items"} in your cart`
+                      : "Your cart is empty"}
+                  </h1>
+                  {cart.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        if (confirm("Are you sure you want to clear your cart?")) {
+                          clearCart();
+                          toast.success("Cart cleared");
+                        }
+                      }}
+                      className="text-xs font-bold text-[#ff4f8b] hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 rounded-lg bg-[#e8f5e9] px-3 py-2 text-[#0c831f]">
@@ -224,7 +264,7 @@ export default function CartPage() {
                                   {item.name}
                                 </h3>
                                 <p className="mt-1 text-xs font-semibold text-[#999]">
-                                  500 g
+                                  {item.weight || "500 g"}
                                 </p>
                                 <span className="mt-2 inline-flex items-center gap-1 rounded bg-[#e8f5e9] px-2 py-0.5 text-[10px] font-black text-[#0c831f]">
                                   <Clock3 className="h-3 w-3" />
@@ -253,7 +293,7 @@ export default function CartPage() {
                             <div className="flex items-end justify-between gap-3">
                               <div>
                                 <p className="text-base font-black text-[#1a1a1a]">
-                                  &#8377;{item.price * item.quantity}
+                                  &#8377;{(item.price * item.quantity).toFixed(0)}
                                 </p>
                                 <p className="text-xs text-[#999]">
                                   &#8377;{item.price} each
@@ -262,7 +302,10 @@ export default function CartPage() {
 
                               <div className="flex min-h-[44px] h-9 items-center overflow-hidden rounded-lg border-2 border-[#0c831f] bg-[#0c831f] text-white">
                                 <button
-                                  onClick={() => decreaseQuantity(item.id)}
+                                  onClick={() => {
+                                    decreaseQuantity(item.id);
+                                    if (item.quantity > 1) toast.success(`Decreased ${item.name} quantity`, { duration: 1000 });
+                                  }}
                                   className="flex h-full min-w-[44px] w-9 items-center justify-center transition hover:bg-[#0a6e1a]"
                                   aria-label={`Decrease ${item.name}`}
                                 >
@@ -272,7 +315,10 @@ export default function CartPage() {
                                   {item.quantity}
                                 </span>
                                 <button
-                                  onClick={() => increaseQuantity(item.id)}
+                                  onClick={() => {
+                                    increaseQuantity(item.id);
+                                    toast.success(`Increased ${item.name} quantity`, { duration: 1000 });
+                                  }}
                                   className="flex h-full min-w-[44px] w-9 items-center justify-center transition hover:bg-[#0a6e1a]"
                                   aria-label={`Increase ${item.name}`}
                                 >
@@ -292,47 +338,69 @@ export default function CartPage() {
                 </section>
 
                 <aside className="space-y-3 lg:sticky lg:top-20 lg:h-fit">
-<button 
-                     onClick={() => {
-                       const validCoupons = ["SAVE20", "FIRST50", "WELCOME10"];
-                       if (validCoupons.includes(couponCode.toUpperCase())) {
-                         setAppliedCoupon(couponCode.toUpperCase());
-                         setCouponMessage("Coupon applied successfully!");
-                       } else {
-                         setCouponMessage("Invalid coupon code");
-                       }
-                     }}
-                     className="flex min-h-[44px] h-10 w-full items-center gap-3 rounded-xl border border-dashed border-[#ff4f8b] bg-white px-4 py-3 text-left transition hover-bg-pink-light"
-                   >
-                     <Tag className="h-4 w-4 text-[#ff4f8b]" />
-                     <div className="min-w-0 flex-1">
-                       <p className="text-sm font-black text-[#ff4f8b]">
-                         Apply coupon
-                       </p>
-                       <p className="text-xs text-[#666]">
-                         Save more on this quick order
-                       </p>
-                     </div>
-                     <ChevronRight className="h-4 w-4 text-[#ff4f8b]" />
-                   </button>
-                   
                    {appliedCoupon ? (
-                     <div className="rounded-xl border border-[#0c831f] bg-[#e8f5e9] p-3">
-                       <p className="text-xs font-bold text-[#0c831f]">
-                         Applied: {appliedCoupon}
-                       </p>
+                     <div className="rounded-xl border border-[#0c831f] bg-[#e8f5e9] p-3 flex items-center justify-between">
+                       <div>
+                        <p className="text-xs font-bold text-[#0c831f]">
+                          Coupon Applied: {appliedCoupon.code}
+                        </p>
+                        <p className="text-[10px] text-[#0c831f]">
+                          You saved &#8377;{discountAmount} on this order
+                        </p>
+                       </div>
+                       <button 
+                        onClick={() => {
+                          setAppliedCoupon(null);
+                          setCouponMessage(null);
+                          toast.info("Coupon removed");
+                        }}
+                        className="text-[10px] font-black text-[#ff4f8b] uppercase"
+                       >
+                        Remove
+                       </button>
                      </div>
                    ) : (
-                     <div className="flex gap-2">
-                       <input
-                         type="text"
-                         placeholder="Enter coupon code"
-                         value={couponCode}
-                         onChange={(e) => setCouponCode(e.target.value)}
-                         className="flex-1 rounded-lg border border-[#e8e8e8] px-3 py-2 text-sm outline-none focus:border-[#ff4f8b]"
-                       />
+                     <div className="flex flex-col gap-2">
+                       <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            placeholder="Enter coupon code"
+                            value={couponCode}
+                            onChange={(e) => {
+                              setCouponCode(e.target.value);
+                              setCouponMessage(null);
+                            }}
+                            className="w-full rounded-lg border border-[#e8e8e8] px-3 py-2 text-sm outline-none focus:border-[#ff4f8b] pr-10"
+                          />
+                          <Tag className="absolute right-3 top-2.5 h-4 w-4 text-[#999]" />
+                        </div>
+                        <button 
+                          onClick={() => {
+                            const coupons: Record<string, number> = {
+                              "SAVE20": 20,
+                              "FIRST50": 50,
+                              "WELCOME10": 10
+                            };
+                            const code = couponCode.toUpperCase();
+                            if (coupons[code]) {
+                              setAppliedCoupon({ code, discount: coupons[code] });
+                              setCouponMessage("Coupon applied!");
+                              toast.success(`Coupon ${code} applied!`);
+                            } else {
+                              setCouponMessage("Invalid code");
+                              toast.error("Invalid coupon code");
+                            }
+                          }}
+                          className="rounded-lg bg-[#ff4f8b] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#e63872]"
+                        >
+                          Apply
+                        </button>
+                       </div>
                        {couponMessage && (
-                         <p className="text-xs text-[#ff4f8b] self-center">{couponMessage}</p>
+                         <p className={`text-[10px] font-bold ${appliedCoupon ? "text-[#0c831f]" : "text-[#ff4f8b]"}`}>
+                           {couponMessage}
+                         </p>
                        )}
                      </div>
                    )}
@@ -354,6 +422,16 @@ export default function CartPage() {
                           </>
                         }
                       />
+                      {appliedCoupon && (
+                        <BillRow
+                          label="Coupon discount"
+                          value={
+                            <span className="text-[#0c831f]">
+                              -&#8377;{discountAmount}
+                            </span>
+                          }
+                        />
+                      )}
                       <BillRow
                         label="Delivery fee"
                         value={

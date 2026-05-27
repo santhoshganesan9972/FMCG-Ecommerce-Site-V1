@@ -4,10 +4,23 @@ import { useState, useEffect } from "react";
 import SidebarEnterprise from "@/components/ui/admin/sidebar-enterprise";
 import Topbar from "./topbar";
 import AdminFooter from "@/components/ui/admin/footer";
+import AdminGuard from "@/components/ui/admin/admin-guard";
 
 const STORAGE_KEY = "admin_sidebar_collapsed";
 
 export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AdminGuard>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </AdminGuard>
+  );
+}
+
+function DashboardLayoutInner({
   children,
 }: {
   children: React.ReactNode;

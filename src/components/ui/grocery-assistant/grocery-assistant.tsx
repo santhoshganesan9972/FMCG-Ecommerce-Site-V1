@@ -580,7 +580,7 @@ export default function GroceryAssistant() {
                       )}
 
                       {/* ── EYES — Big & Expressive ── */}
-                      <g transform={`translate(${lookDirection.x * 0.2}px, ${lookDirection.y * 0.2}px)`}>
+                      <g transform={`translate(${lookDirection.x * 0.2}, ${lookDirection.y * 0.2})`}>
                         <motion.g animate={getEyeStyle()} style={{ transformOrigin: "27px 24px" }}>
                           <ellipse cx="27" cy="24" rx="6" ry="6.5" fill="white" />
                           <ellipse cx="28" cy="24" rx="4" ry="4.5" fill="#5c3a1e" />
@@ -589,7 +589,7 @@ export default function GroceryAssistant() {
                         </motion.g>
                       </g>
 
-                      <g transform={`translate(${lookDirection.x * 0.2}px, ${lookDirection.y * 0.2}px)`}>
+                      <g transform={`translate(${lookDirection.x * 0.2}, ${lookDirection.y * 0.2})`}>
                         <motion.g animate={getEyeStyle()} style={{ transformOrigin: "45px 24px" }}>
                           <ellipse cx="45" cy="24" rx="6" ry="6.5" fill="white" />
                           <ellipse cx="46" cy="24" rx="4" ry="4.5" fill="#5c3a1e" />

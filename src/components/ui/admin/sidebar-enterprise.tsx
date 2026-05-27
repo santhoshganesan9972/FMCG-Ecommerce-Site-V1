@@ -7,6 +7,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { menuItems } from "@/data/admin/navigation";
+import { useAuthStore } from "@/store/auth-store";
 
 // ── Sidebar Component ─────────────────────────────────────
 
@@ -22,6 +23,14 @@ export default function SidebarEnterprise({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { user } = useAuthStore();
+
+  // Derive initials and display name from auth store
+  const adminInitials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || user.name[0].toUpperCase()
+    : "SA";
+  const adminName = user?.name || "Super Admin";
+  const adminEmail = user?.email || "admin@fmcg.com";
 
   // Snapshot navigation data at mount so server & client use the same reference.
   // Prevents hydration mismatches caused by Turbopack Hot Module Replacement
@@ -328,7 +337,7 @@ export default function SidebarEnterprise({
           }`}
         >
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#0c831f] text-xs font-bold text-white">
-            SA
+            {adminInitials}
           </div>
           <div
             className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
@@ -336,8 +345,8 @@ export default function SidebarEnterprise({
             }`}
           >
             <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-[#1a1a1a]">Super Admin</p>
-              <p className="truncate text-[10px] text-[#999]">admin@fmcg.com</p>
+              <p className="truncate text-xs font-bold text-[#1a1a1a]">{adminName}</p>
+              <p className="truncate text-[10px] text-[#999]">{adminEmail}</p>
             </div>
           </div>
         </div>

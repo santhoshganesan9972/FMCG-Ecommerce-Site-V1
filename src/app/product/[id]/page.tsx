@@ -1,11 +1,12 @@
 import { products } from "@/data/products";
 import { categorySections } from "@/data/categories";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { env } from "@/lib/env";
 import Navbar from "@/components/ui/navbar";
 import Link from "next/link";
-import Image from "next/image";
-import { Star, Clock, ShieldCheck, RotateCcw, ChevronRight, ThumbsUp, MessageSquare, User } from "lucide-react";
+import { SafeProductImage } from "@/components/ui/safe-image";
+import { Star, Clock, ShieldCheck, RotateCcw, ChevronRight } from "lucide-react";
 import CarouselRow from "@/components/ui/products/carousel-row";
 import ProductDetailActions from "@/components/ui/products/product-detail-actions";
 import ProductDetailWishlist from "@/components/ui/products/product-detail-wishlist";
@@ -58,15 +59,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = products.find((item) => item.id === Number(id));
 
   if (!product) {
-    return (
-      <main className="min-h-screen bg-[#f2f2f2] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-4xl mb-3">😕</p>
-          <h2 className="text-lg font-bold text-[#1a1a1a]">Product not found</h2>
-          <p className="text-sm text-[#999] mt-1">This item may no longer be available.</p>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   const discount = Math.round(
@@ -149,13 +142,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </span>
                 )}
                  <div className="relative w-full max-w-xs sm:max-w-sm h-80">
-                     <Image
+                     <SafeProductImage
                      src={product.image}
                      alt={product.name}
                      fill
                      className="w-full object-contain"
                      sizes="(max-width: 640px) 320px, 400px"
-                     priority={true}
                    />
                 </div>
               </div>

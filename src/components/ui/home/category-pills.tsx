@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Metadata } from "next";
+import { getCategorySlug } from "@/data/categories";
 
 const categories = [
   { label: "Groceries", emoji: "🛒" },
@@ -25,7 +25,7 @@ export default function CategoryPills() {
                 {categories.map((item) => (
                   <li key={item.label}>
                     <Link
-                      href={`/search?category=${encodeURIComponent(item.label)}`}
+                      href={`/category/${getCategorySlug(item.label)}`}
                       className="flex-shrink-0 flex flex-col items-center justify-center gap-1 min-w-[70px] sm:min-w-[80px] px-2 sm:px-4 py-3 sm:py-2 rounded-xl bg-[#f2f2f2] hover-bg-pink-light hover-border-pink border border-transparent transition-all group"
                       aria-label={`Browse ${item.label} category`}
                     >

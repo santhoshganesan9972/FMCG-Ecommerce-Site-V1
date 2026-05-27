@@ -29,8 +29,56 @@ import type { PaginationState } from "@/types/products";
 
 const delay = (ms = 300) => new Promise((res) => setTimeout(res, ms));
 
-const statusFlow = ["pending", "confirmed", "preparing", "out_for_delivery", "delivered"];
+function getLocalOrders(): Order[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const storage = localStorage.getItem("order-storage");
+    if (!storage) return [];
+    const parsed = JSON.parse(storage);
+    const orders = parsed.state?.orders || [];
+    
+    // Map user orders to admin order format
+    return orders.map((o: any) => ({
+      id: o.id,
+      customer: o.deliveryAddress.name,
+      email: "user@example.com", // Mock email for local orders
+      phone: o.deliveryAddress.phone,
+      items: o.items.map((item: any) => ({
+        product: item.name,
+        productId: String(item.id),
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      total: o.total,
+      status: mapUserStatusToAdminStatus(o.status),
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentMethod === "cod" ? "pending" : "paid",
+      deliveryAddress: `${o.deliveryAddress.address}, ${o.deliveryAddress.city} - ${o.deliveryAddress.pincode}`,
+      timeline: o.trackingSteps.map((s: any) => ({
+        status: s.id,
+        timestamp: new Date().toISOString(), // Mock timestamp
+        note: s.label,
+      })),
+      createdAt: new Date(o.date).toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+  } catch (e) {
+    console.error("Failed to load local orders", e);
+    return [];
+  }
+}
 
+function mapUserStatusToAdminStatus(status: string): Order["status"] {
+  switch (status) {
+    case "Processing": return "preparing";
+    case "Out for Delivery": return "out_for_delivery";
+    case "Delivered": return "delivered";
+    case "Cancelled": return "cancelled";
+    default: return "pending";
+  }
+}
+
+// ... (computeOrdersSummary same as before)
 function computeOrdersSummary(orders: Order[]) {
   return {
     total: orders.length,
@@ -56,9 +104,11 @@ export const orderService = {
   ): Promise<OrdersListResponse> {
     await delay(250);
 
-    let filtered = [...mockOrders];
+    const localOrders = getLocalOrders();
+    let filtered = [...localOrders, ...mockOrders];
 
     if (filters?.search) {
+// ...
       const q = filters.search.toLowerCase();
       filtered = filtered.filter(
         (o) =>
@@ -92,7 +142,9 @@ export const orderService = {
 
   async getOrderById(id: string): Promise<Order | undefined> {
     await delay(150);
-    return mockOrders.find((o) => o.id === id);
+    const localOrders = getLocalOrders();
+    const order = localOrders.find((o) => o.id === id) || mockOrders.find((o) => o.id === id);
+    return order;
   },
 
   async updateOrderStatus(id: string, newStatus: string, note?: string): Promise<Order | undefined> {

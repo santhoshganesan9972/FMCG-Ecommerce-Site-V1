@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { products } from "@/data/products";
 
 interface CartItem {
@@ -7,6 +8,7 @@ interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  weight?: string;
 }
 
 interface CartStore {
@@ -23,83 +25,88 @@ interface CartStore {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
-  
-  cart: [],
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      cart: [],
 
-  addToCart: (product) => {
-    const productInfo = products.find((p) => p.id === product.id);
-    
-    if (productInfo && productInfo.stock === "out_of_stock") {
-      console.warn(`Cannot add OOS product: ${product.name} (ID: ${product.id})`);
-      return;
-    }
+      addToCart: (product) => {
+        const productInfo = products.find((p) => p.id === product.id);
+        
+        if (productInfo && productInfo.stock === "out_of_stock") {
+          console.warn(`Cannot add OOS product: ${product.name} (ID: ${product.id})`);
+          return;
+        }
 
-    set((state) => {
-      const existing = state.cart.find(
-        (item) => item.id === product.id
-      );
+        set((state) => {
+          const existing = state.cart.find(
+            (item) => item.id === product.id
+          );
 
-      if (existing) {
-        return {
+          if (existing) {
+            return {
+              cart: state.cart.map((item) =>
+                item.id === product.id
+                  ? {
+                      ...item,
+                      quantity: item.quantity + 1,
+                    }
+                  : item
+              ),
+            };
+          }
+
+          return {
+            cart: [...state.cart, product],
+          };
+        });
+      },
+
+      removeFromCart: (id) =>
+        set((state) => ({
+          cart: state.cart.filter(
+            (item) => item.id !== id
+          ),
+        })),
+
+      increaseQuantity: (id) => {
+        const productInfo = products.find((p) => p.id === id);
+        
+        if (productInfo && productInfo.stock === "out_of_stock") {
+          console.warn(`Cannot increase quantity for OOS product (ID: ${id})`);
+          return;
+        }
+
+        set((state) => ({
           cart: state.cart.map((item) =>
-            item.id === product.id
+            item.id === id
               ? {
                   ...item,
                   quantity: item.quantity + 1,
                 }
               : item
           ),
-        };
-      }
+        }));
+      },
 
-      return {
-        cart: [...state.cart, product],
-      };
-    });
-  },
+      decreaseQuantity: (id) =>
+        set((state) => ({
+          cart: state.cart
+            .map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    quantity: item.quantity - 1,
+                  }
+                : item
+            )
+            .filter((item) => item.quantity > 0),
+        })),
 
-  removeFromCart: (id) =>
-    set((state) => ({
-      cart: state.cart.filter(
-        (item) => item.id !== id
-      ),
-    })),
-
-  increaseQuantity: (id) => {
-    const productInfo = products.find((p) => p.id === id);
-    
-    if (productInfo && productInfo.stock === "out_of_stock") {
-      console.warn(`Cannot increase quantity for OOS product (ID: ${id})`);
-      return;
+      clearCart: () => set({ cart: [] }),
+    }),
+    {
+      name: "fmcg-cart-storage",
     }
-
-    set((state) => ({
-      cart: state.cart.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-            }
-          : item
-      ),
-    }));
-  },
-
-  decreaseQuantity: (id) =>
-    set((state) => ({
-      cart: state.cart.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity:
-                item.quantity > 1
-                  ? item.quantity - 1
-                  : 1,
-            }
-          : item
-      ),
-    })),
-
-  clearCart: () => set({ cart: [] }),
-}));
+  )
+);

@@ -152,7 +152,7 @@ export function useProductForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createProduct = useCallback(async (data: ProductFormData): Promise<Product | null> => {
+  const createProduct = useCallback(async (data: Partial<ProductFormData>): Promise<Product | null> => {
     setSubmitting(true);
     setError(null);
     try {

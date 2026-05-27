@@ -12,6 +12,7 @@ interface StickyAddToCartProps {
     price: number;
     image: string;
     stock?: StockStatus;
+    weight?: string;
   };
 }
 
@@ -44,7 +45,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#e8e8e8] shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:hidden animate-slide-up">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#e8e8e8] shadow-[0_-8px_24px_rgba(0,0,0,0.08)] md:hidden animate-slide-up safe-area-bottom">
       <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center gap-3">
         {/* Price info */}
         <div className="flex-1 min-w-0">
@@ -62,6 +63,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
                 price: product.price,
                 image: product.image,
                 quantity: 1,
+                weight: product.weight,
               });
               toast.success("Added to cart 🛒");
             }}
@@ -83,10 +85,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
               {quantity}
             </span>
             <button
-              onClick={() => {
-                increaseQuantity(product.id);
-                toast.success("Added to cart 🛒");
-              }}
+              onClick={() => increaseQuantity(product.id)}
               className="w-12 h-full flex items-center justify-center text-white hover:bg-[#e63872] active:bg-[#e63872] transition-colors"
               aria-label="Increase quantity"
             >
