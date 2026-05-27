@@ -8,6 +8,13 @@ export default function OfflineIndicator() {
   const { isOnline, wasOffline } = useOfflineStore();
   const [dismissed, setDismissed] = useState(false);
   const [showReconnected, setShowReconnected] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Defer rendering until after hydration to avoid mismatches
+  // when navigator.onLine differs between server and client.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Show "Back online" toast briefly
   useEffect(() => {
@@ -24,6 +31,7 @@ export default function OfflineIndicator() {
     if (!isOnline) setDismissed(false);
   }, [isOnline]);
 
+  if (!mounted) return null;
   if (isOnline && !showReconnected) return null;
 
   return (
