@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { Bell, Search, Zap, PanelLeft, PanelLeftClose } from "lucide-react";
@@ -38,7 +38,7 @@ export default function Topbar({
         <MobileSidebar />
 
         <div className="hidden min-w-0 sm:block">
-          <p className="text-[10px] font-black uppercase tracking-wide text-[#0c831f]">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
             FMCG Admin
           </p>
           <p className="truncate text-sm font-black text-[#1a1a1a]">

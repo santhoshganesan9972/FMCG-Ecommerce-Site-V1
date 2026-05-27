@@ -38,10 +38,10 @@ export function WarehouseCards({ warehouses, isLoading }: WarehouseCardsProps) {
     return (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4">
+          <div key={i} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-3">
             <div className="skeleton-shimmer h-4 w-24 rounded-lg" />
-            <div className="mt-2 skeleton-shimmer h-3 w-32 rounded-lg" />
-            <div className="mt-3 skeleton-shimmer h-2 w-full rounded-full" />
+            <div className="mt-1.5 skeleton-shimmer h-3 w-32 rounded-lg" />
+            <div className="mt-2.5 skeleton-shimmer h-1.5 w-full rounded-full" />
           </div>
         ))}
       </div>
@@ -63,13 +63,13 @@ export function WarehouseCards({ warehouses, isLoading }: WarehouseCardsProps) {
         const pct = wh.utilization;
         const barColor = pct > 90 ? "bg-[#dc2626]" : pct > 75 ? "bg-[#d97706]" : "bg-[#0c831f]";
         return (
-          <div key={wh.id} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4 transition-all hover:shadow-sm">
+          <div key={wh.id} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-3 transition-all hover:shadow-sm">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-[#1a1a1a]">{wh.name}</p>
+              <p className="text-xs font-bold text-[#1a1a1a]">{wh.name}</p>
               <StatusBadge status={wh.status} size="sm" />
             </div>
-            <p className="mt-0.5 text-xs text-[#999]">{wh.location}</p>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-[#666]">
+            <p className="text-[10px] text-[#999]">{wh.location}</p>
+            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#666]">
               <Package className="h-3 w-3" />
               <span>{(wh.totalSkus || 0).toLocaleString()} SKUs</span>
               {wh.manager && (
@@ -79,14 +79,14 @@ export function WarehouseCards({ warehouses, isLoading }: WarehouseCardsProps) {
                 </>
               )}
             </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs">
+            <div className="mt-2.5">
+              <div className="flex items-center justify-between text-[10px]">
                 <span className="font-semibold text-[#666]">{pct.toFixed(0)}% used</span>
                 <span className="text-[#999]">
                   {wh.used.toLocaleString()} / {wh.capacity.toLocaleString()}
                 </span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#e8e8e8]">
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#e8e8e8]">
                 <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
               </div>
             </div>

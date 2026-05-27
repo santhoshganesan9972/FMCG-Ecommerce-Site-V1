@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -29,9 +29,9 @@ export default function DeliveryAnalyticsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Delivery Analytics</h1>
-              <p className="mt-2 text-sm text-[#666]">Comprehensive analytics on delivery operations, zones, and trends.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Delivery Analytics</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Comprehensive analytics on delivery operations, zones, and trends.</p>
             </div>
             <div className="flex items-center gap-2">
               <select
@@ -96,7 +96,7 @@ export default function DeliveryAnalyticsPage() {
 
             {/* Daily Trend Chart */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Trends</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Trends</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Daily Delivery Trend</h3>
               <PerformanceChart
                 data={analytics.dailyTrend.map((d) => ({
@@ -112,7 +112,7 @@ export default function DeliveryAnalyticsPage() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {/* Zone Performance */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Zones</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Zones</p>
                 <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Zone Performance</h3>
                 <div className="space-y-3">
                   {analytics.zonePerformance.map((zone) => (
@@ -159,7 +159,7 @@ export default function DeliveryAnalyticsPage() {
 
               {/* Hourly Distribution */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Timing</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Timing</p>
                 <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Hourly Delivery Distribution</h3>
                 <div className="relative" style={{ height: 220 }}>
                   <div className="flex h-full items-end gap-1.5">
@@ -202,7 +202,7 @@ export default function DeliveryAnalyticsPage() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {/* Status Distribution */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Status</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Status</p>
                 <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Delivery Status Distribution</h3>
                 <div className="space-y-3">
                   {analytics.statusDistribution.map((item) => {
@@ -228,7 +228,7 @@ export default function DeliveryAnalyticsPage() {
 
               {/* Vehicle Utilization */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Fleet</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Fleet</p>
                 <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Vehicle Utilization</h3>
                 <div className="space-y-4">
                   {analytics.vehicleUtilization.map((vehicle) => {
@@ -263,7 +263,7 @@ export default function DeliveryAnalyticsPage() {
 
             {/* Additional Metrics */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Metrics</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Metrics</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Operational Metrics</h3>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[

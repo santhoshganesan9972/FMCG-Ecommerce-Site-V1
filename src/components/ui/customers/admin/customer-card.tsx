@@ -4,7 +4,7 @@
 "use client";
 
 import StatusBadge from "../../admin/reusable-status-badge";
-import { ShoppingCart, Calendar, Edit3 } from "lucide-react";
+import { ShoppingCart, Calendar, Edit3, Mail } from "lucide-react";
 import type { Customer } from "@/types/customers";
 
 // ── Customer Card ────────────────────────────────────────
@@ -117,6 +117,7 @@ const actionIcons: Record<string, React.ReactNode> = {
   segment_changed: <div className="h-6 w-6 rounded-full bg-[#fff0f6] flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-[#ff4f8b]" /></div>,
   login: <div className="h-6 w-6 rounded-full bg-[#f6f7f6] flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-[#666]" /></div>,
   order_placed: <div className="h-6 w-6 rounded-full bg-[#f0fdf4] flex items-center justify-center"><div className="h-2 w-2 rounded-full bg-[#0c831f]" /></div>,
+  email_sent: <div className="h-6 w-6 rounded-full bg-[#e0f2fe] flex items-center justify-center"><Mail className="h-3 w-3 text-[#0284c7]" /></div>,
 };
 
 export function CustomerTimeline({ items, compact }: CustomerTimelineProps) {

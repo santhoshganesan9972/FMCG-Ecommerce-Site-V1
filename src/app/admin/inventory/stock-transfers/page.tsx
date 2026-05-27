@@ -6,17 +6,19 @@ import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
-import { ArrowRightLeft, Plus, Eye, Truck, CheckCircle, Clock, RefreshCw } from "lucide-react";
+import { ArrowRightLeft, Plus, Eye, Truck, CheckCircle, Clock, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { useStockTransfers, useWarehouses, useInventoryItems } from "@/hooks/use-inventory";
 import StockTransferForm from "@/components/ui/inventory/stock-transfer-form";
 import type { StockTransfer } from "@/types/inventory";
+import ReusableModal from "@/components/ui/admin/reusable-modal";
 
 export default function StockTransfersPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewTransfer, setViewTransfer] = useState<StockTransfer | null>(null);
 
   const { transfers, loading, pagination, refresh: refreshTransfers, createTransfer } = useStockTransfers({ page, pageSize, search });
   const { warehouses } = useWarehouses();
@@ -55,9 +57,9 @@ export default function StockTransfersPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Inventory</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Stock Transfers</h1>
-              <p className="mt-2 text-sm text-[#666]">Transfer stock between warehouses, track in-transit shipments, and manage inter-warehouse logistics.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Inventory</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Stock Transfers</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Transfer stock between warehouses, track in-transit shipments, and manage inter-warehouse logistics.</p>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => refreshTransfers()} className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-white px-4 py-2.5 text-sm font-bold text-[#1a1a1a] hover:bg-[#f6f7f6]">
@@ -101,7 +103,7 @@ export default function StockTransfersPage() {
           ]}
           actions={[
             { label: "Track", icon: <Truck className="h-3.5 w-3.5" />, onClick: (t: StockTransfer) => toast.info(`Tracking transfer ${t.id}`), variant: "success" },
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t: StockTransfer) => toast.info(`Viewing transfer ${t.id}`) },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (t: StockTransfer) => setViewTransfer(t) },
           ]}
         />
       </div>
@@ -113,6 +115,59 @@ export default function StockTransfersPage() {
         warehouses={warehouseList}
         products={productList}
       />
+
+      {/* View Modal */}
+      <ReusableModal
+        open={!!viewTransfer}
+        onClose={() => setViewTransfer(null)}
+        title="Stock Transfer Details"
+        subtitle={`Transfer ID: ${viewTransfer?.id || ""}`}
+        size="md"
+      >
+        {viewTransfer && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 rounded-xl bg-[#f9fafb] p-4">
+              <div>
+                <p className="text-[10px] text-[#999] font-bold uppercase">Product</p>
+                <p className="text-sm font-bold text-[#1a1a1a]">{viewTransfer.product}</p>
+                <p className="text-[10px] text-[#999]">{viewTransfer.sku}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-bold uppercase">Transfer Status</p>
+                <div className="mt-1">
+                  <StatusBadge status={viewTransfer.status} />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-[#e8e8e8] p-3">
+                <p className="text-[10px] text-[#666]">From Warehouse</p>
+                <p className="mt-1 text-xs font-bold text-[#1a1a1a]">{viewTransfer.fromWarehouse}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3">
+                <p className="text-[10px] text-[#666]">To Warehouse</p>
+                <p className="mt-1 text-xs font-bold text-[#0c831f]">{viewTransfer.toWarehouse}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3 text-center">
+                <p className="text-[10px] text-[#666]">Quantity</p>
+                <p className="mt-1 text-base font-black text-[#1a1a1a]">{viewTransfer.quantity}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-[#e8e8e8] p-3">
+                <p className="text-[10px] text-[#666]">Initiated Date</p>
+                <p className="mt-0.5 text-xs font-bold text-[#1a1a1a]">{viewTransfer.date}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3">
+                <p className="text-[10px] text-[#666]">Estimated Arrival (ETA)</p>
+                <p className="mt-0.5 text-xs font-bold text-[#1a1a1a]">{viewTransfer.eta || "—"}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
     </DashboardLayout>
   );
 }

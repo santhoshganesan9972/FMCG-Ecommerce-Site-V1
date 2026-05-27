@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -132,7 +132,7 @@ export default function AbandonedCartPage() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-[#666]">Abandoned At</p>
-                    <p className="mt-1 text-sm text-[#666]">{selectedCart.abandonedAt}</p>
+                    <p className="mt-1 text-xs text-[#666]">{selectedCart.abandonedAt}</p>
                   </div>
                   {selectedCart.recoveredAt && (
                     <div>

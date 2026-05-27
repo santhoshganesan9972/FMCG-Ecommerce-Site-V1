@@ -180,9 +180,9 @@ export function ReusableTable<T>({
       <div className="overflow-x-auto rounded-xl border border-[#e8e8e8] bg-white">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#f9fafb] text-left text-[10px] font-black uppercase tracking-wide text-[#666]">
+            <tr className="bg-[#f9fafb] text-left text-[9px] font-medium uppercase tracking-wider text-[#666]">
               {enableSelection && (
-                <th className="w-10 px-3 py-3">
+                <th className="w-10 px-3 py-2">
                   <input
                     type="checkbox"
                     checked={selectedIds.size === data.length && data.length > 0}
@@ -194,13 +194,19 @@ export function ReusableTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 ${col.hideOnMobile ? "hidden md:table-cell" : ""} ${
+                  className={`px-3 py-2 ${col.hideOnMobile ? "hidden md:table-cell" : ""} ${
                     col.sortable ? "cursor-pointer select-none hover:text-[#1a1a1a]" : ""
                   }`}
                   style={{ width: col.width, textAlign: col.align || "left" }}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className={`flex items-center gap-1 ${
+                    col.align === "right"
+                      ? "justify-end"
+                      : col.align === "center"
+                      ? "justify-center"
+                      : "justify-start"
+                  }`}>
                     {col.header}
                     {col.sortable && (
                       <span className="text-[#999]">
@@ -218,7 +224,7 @@ export function ReusableTable<T>({
                   </div>
                 </th>
               ))}
-              {actions && <th className="w-24 px-4 py-3 text-right">Actions</th>}
+              {actions && <th className="w-24 px-3 py-2 text-right">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#e8e8e8]">
@@ -228,7 +234,7 @@ export function ReusableTable<T>({
               return (
                 <tr
                   key={id}
-                  className={`text-sm transition-all duration-150 ${
+                  className={`text-xs font-normal text-[#334155] transition-all duration-150 ${
                     onRowClick ? "cursor-pointer" : ""
                   } ${
                     isSelected ? "bg-[#e8f5e9]/40" : "hover:bg-[#f9fafb]"
@@ -236,7 +242,7 @@ export function ReusableTable<T>({
                   onClick={() => onRowClick?.(item)}
                 >
                   {enableSelection && (
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -249,14 +255,14 @@ export function ReusableTable<T>({
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`px-4 py-3 ${col.hideOnMobile ? "hidden md:table-cell" : ""}`}
+                      className={`px-3 py-2 whitespace-nowrap ${col.hideOnMobile ? "hidden md:table-cell" : ""}`}
                       style={{ textAlign: col.align || "left" }}
                     >
                       {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? "")}
                     </td>
                   ))}
                   {actions && (
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         {actions
                           .filter((a) => !a.show || a.show(item))

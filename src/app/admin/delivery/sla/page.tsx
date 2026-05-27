@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -50,9 +50,9 @@ export default function SLADashboardPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">SLA Dashboard</h1>
-              <p className="mt-2 text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">SLA Dashboard</h1>
+              <p className="mt-1.5 text-xs text-[#666]">
                 Service Level Agreement monitoring and compliance tracking for delivery operations.
               </p>
             </div>
@@ -92,7 +92,7 @@ export default function SLADashboardPage() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
               {/* Health Card */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm lg:col-span-1">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f] mb-3">Health</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f] mb-3">Health</p>
                 {(() => {
                   const health = healthConfig[slaData.overallHealth] || healthConfig.fair;
                   const HealthIcon = health.icon;
@@ -109,11 +109,11 @@ export default function SLADashboardPage() {
 
                 <div className="mt-4 space-y-3">
                   <div className="rounded-xl bg-[#f9fafb] p-3 text-center">
-                    <p className="text-2xl font-black text-[#1a1a1a]">{slaData.slaComplianceRate.toFixed(1)}%</p>
+                    <p className="text-xl font-bold text-[#1a1a1a]">{slaData.slaComplianceRate.toFixed(1)}%</p>
                     <p className="text-[10px] font-bold text-[#666]">SLA Compliance Rate</p>
                   </div>
                   <div className="rounded-xl bg-[#fef2f2] p-3 text-center">
-                    <p className="text-2xl font-black text-[#dc2626]">{slaData.criticalDelays}</p>
+                    <p className="text-xl font-bold text-[#dc2626]">{slaData.criticalDelays}</p>
                     <p className="text-[10px] font-bold text-[#666]">Critical Delays</p>
                   </div>
                 </div>
@@ -121,7 +121,7 @@ export default function SLADashboardPage() {
 
               {/* Summary KPIs */}
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm lg:col-span-3">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f] mb-3">Summary</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f] mb-3">Summary</p>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {[
                     { label: "Total Orders", value: slaData.totalOrders.toLocaleString(), icon: <Activity className="h-4 w-4" />, color: "text-[#2563eb]", bg: "bg-[#eff6ff]" },
@@ -172,7 +172,7 @@ export default function SLADashboardPage() {
 
             {/* Daily Compliance Trend */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Trend</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Trend</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Daily SLA Compliance Rate</h3>
               <PerformanceChart
                 data={slaData.dailyCompliance.map((d) => ({
@@ -187,7 +187,7 @@ export default function SLADashboardPage() {
 
             {/* SLA Metrics Grid */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Metrics</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Metrics</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-4">SLA Metrics by Zone</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {slaData.metrics.map((metric) => (

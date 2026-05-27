@@ -1,4 +1,4 @@
-interface KpiCardProps {
+﻿interface KpiCardProps {
   title: string;
   value: React.ReactNode;
   growth: string;
@@ -14,7 +14,7 @@ export default function KpiCard({ title, value, growth, subtitle }: KpiCardProps
         {title}
       </p>
       
-      <h3 className="text-xl sm:text-2xl font-black text-[#1a1a1a] mt-1">
+      <h3 className="text-xl sm:text-xl font-bold text-[#1a1a1a] mt-1">
         {value}
       </h3>
       

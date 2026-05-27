@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -278,7 +278,7 @@ export default function VendorReportsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-[#f9fafb] p-3">
                   <p className="text-[10px] font-bold text-[#666]">Total Orders</p>
-                  <p className="mt-1 text-xl font-black text-[#1a1a1a]">{selectedVendor.totalOrders.toLocaleString()}</p>
+                  <p className="mt-1 text-xl font-bold text-[#1a1a1a]">{selectedVendor.totalOrders.toLocaleString()}</p>
                 </div>
                 <div className="rounded-lg bg-[#f9fafb] p-3">
                   <p className="text-[10px] font-bold text-[#666]">Active Products</p>

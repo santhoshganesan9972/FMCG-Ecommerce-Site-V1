@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -54,9 +54,9 @@ export default function SettingsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Settings</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Configuration</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Settings</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Configuration</h1>
+              <p className="mt-1.5 max-w-2xl text-xs text-[#666]">
                 Manage user permissions, payment settings, GST configuration, notifications, and feature flags.
               </p>
             </div>
@@ -93,7 +93,7 @@ export default function SettingsPage() {
           {activeTab === "general" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Store</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Store</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">General Settings</h3>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -128,7 +128,7 @@ export default function SettingsPage() {
           {activeTab === "payment" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Payments</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Payments</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">Payment Gateway Settings</h3>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -161,7 +161,7 @@ export default function SettingsPage() {
           {activeTab === "tax" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Tax</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Tax</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">GST Configuration</h3>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -189,7 +189,7 @@ export default function SettingsPage() {
           {activeTab === "notifications" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Alerts</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Alerts</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">Notification Channels</h3>
               </div>
               <div className="space-y-3">
@@ -219,7 +219,7 @@ export default function SettingsPage() {
           {activeTab === "features" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Features</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Features</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">Feature Flags</h3>
               </div>
               <div className="space-y-2">
@@ -253,7 +253,7 @@ export default function SettingsPage() {
           {activeTab === "users" && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Security</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Security</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">User Management & Roles</h3>
               </div>
               <div className="overflow-x-auto rounded-xl border border-[#e8e8e8]">

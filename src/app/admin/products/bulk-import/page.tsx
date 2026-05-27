@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -48,9 +48,9 @@ export default function BulkImportPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Products</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Bulk Import</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Products</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Bulk Import</h1>
+              <p className="mt-1.5 max-w-2xl text-xs text-[#666]">
                 Import products in bulk using CSV or Excel files. Download the template to get started. {records.length} previous imports.
               </p>
             </div>

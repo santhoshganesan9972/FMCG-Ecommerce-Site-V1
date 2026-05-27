@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import DashboardLayout from "../../dashboard-layout";
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
+import ReusableModal from "@/components/ui/admin/reusable-modal";
 import { RefreshCw, Eye, CheckCircle, XCircle, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useSubstitutions } from "@/hooks/use-orders";
@@ -18,6 +19,8 @@ export default function SubstitutionsPage() {
     pagination, decideSubstitution,
     setPage, setPageSize, fetchSubstitutions,
   } = useSubstitutions();
+
+  const [viewSubstitution, setViewSubstitution] = useState<Substitution | null>(null);
 
   const statusCounts = useMemo(() => ({
     total: substitutions.length,
@@ -41,9 +44,9 @@ export default function SubstitutionsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Substitutions</h1>
-              <p className="mt-2 text-sm text-[#666]">Manage product substitutions when ordered items are unavailable.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Substitutions</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Manage product substitutions when ordered items are unavailable.</p>
             </div>
             <div className="flex items-center gap-2">
               {statusFilter && (
@@ -104,7 +107,7 @@ export default function SubstitutionsPage() {
           actions={[
             { label: "Accept", icon: <CheckCircle className="h-3.5 w-3.5" />, onClick: (s: Substitution) => handleDecide(s, "accepted"), variant: "success", show: (s: Substitution) => s.status === "pending" },
             { label: "Reject", icon: <XCircle className="h-3.5 w-3.5" />, onClick: (s: Substitution) => handleDecide(s, "rejected"), variant: "danger", show: (s: Substitution) => s.status === "pending" },
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (s: Substitution) => toast.info(`Viewing substitution ${s.id}`) },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (s: Substitution) => setViewSubstitution(s) },
           ]}
         />
 
@@ -114,6 +117,67 @@ export default function SubstitutionsPage() {
           </div>
         )}
       </div>
+
+      {/* View Modal */}
+      <ReusableModal
+        open={!!viewSubstitution}
+        onClose={() => setViewSubstitution(null)}
+        title="Substitution Details"
+        subtitle={`Details for substitution ID ${viewSubstitution?.id}`}
+        size="md"
+      >
+        {viewSubstitution && (
+          <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 gap-3 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Substitution ID</p>
+                <p className="font-semibold text-[#1a1a1a]">{viewSubstitution.id}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Order ID</p>
+                <p className="font-semibold text-[#0c831f]">{viewSubstitution.orderId}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Original Item</p>
+                <p className="font-semibold text-[#dc2626]">{viewSubstitution.original}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Substituted With</p>
+                <p className="font-semibold text-[#0c831f]">{viewSubstitution.substitute}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Status</p>
+                <div className="mt-0.5"><StatusBadge status={viewSubstitution.status} /></div>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Amount</p>
+                <p className="font-semibold text-[#1a1a1a]">₹{viewSubstitution.amount}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Reason</p>
+                <p className="font-semibold text-[#666]">{viewSubstitution.reason || "—"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Decided By</p>
+                <p className="font-semibold text-[#666]">{viewSubstitution.decidedBy || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Decided At</p>
+                <p className="font-semibold text-[#666]">{viewSubstitution.decidedAt || "—"}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
     </DashboardLayout>
   );
 }

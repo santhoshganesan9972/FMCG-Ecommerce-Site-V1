@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -219,12 +219,12 @@ export default function ProfilePage() {
           <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-4 -mt-12 sm:-mt-16">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white bg-[#0c831f] text-2xl font-black text-white shadow-lg sm:h-24 sm:w-24 sm:text-3xl">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white bg-[#0c831f] text-xl font-bold text-white shadow-lg sm:h-24 sm:w-24 sm:text-3xl">
                   {profile.avatarInitials}
                 </div>
                 <div className="pb-1">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-black text-[#1a1a1a] sm:text-2xl">
+                    <h1 className="text-xl font-bold text-[#1a1a1a] sm:text-2xl">
                       {profile.name}
                     </h1>
                     <StatusBadge status={profile.status} size="sm" />
@@ -322,7 +322,7 @@ export default function ProfilePage() {
         {activeTab === "personal" && (
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-5">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                 Profile
               </p>
               <h3 className="text-sm font-black text-[#1a1a1a]">Personal Information</h3>
@@ -423,7 +423,7 @@ export default function ProfilePage() {
             {/* MFA */}
             <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
               <div className="mb-4">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                   Security
                 </p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">
@@ -555,7 +555,7 @@ export default function ProfilePage() {
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                   Devices
                 </p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">
@@ -636,7 +636,7 @@ export default function ProfilePage() {
         {activeTab === "activity" && (
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                 History
               </p>
               <h3 className="text-sm font-black text-[#1a1a1a]">
@@ -731,7 +731,7 @@ export default function ProfilePage() {
         {activeTab === "preferences" && (
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
             <div className="mb-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                 Preferences
               </p>
               <h3 className="text-sm font-black text-[#1a1a1a]">

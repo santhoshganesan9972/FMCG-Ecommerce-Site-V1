@@ -22,9 +22,9 @@ export default function AssignPartnerPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Assign Delivery Partner</h1>
-              <p className="mt-2 text-sm text-[#666]">Assign delivery partners to orders based on zone and availability.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Assign Delivery Partner</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Assign delivery partners to orders based on zone and availability.</p>
             </div>
             <button onClick={() => { fetchOrders(); fetchPartners(); }} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
@@ -51,7 +51,9 @@ export default function AssignPartnerPage() {
           onPageChange={setPage}
           columns={[
             { key: "id", header: "Order ID", width: "110px", render: (o) => <span className="font-bold text-[#0c831f]">{(o as Order).id}</span> },
-            { key: "customer", header: "Customer", sortable: true, render: (o) => <span className="font-bold text-[#1a1a1a]">{(o as Order).customer}</span> },
+            { key: "customer", header: "Customer", width: "150px", sortable: true, render: (o) => (
+              <span className="font-bold text-[#1a1a1a] block truncate max-w-[140px]">{(o as Order).customer}</span>
+            )},
             { key: "zone", header: "Zone", width: "130px", render: (o) => (o as Order).zone || "—" },
             { key: "status", header: "Status", width: "130px", render: (o) => <StatusBadge status={(o as Order).status} /> },
             { key: "deliveryPartner", header: "Partner", width: "130px", render: (o) => {

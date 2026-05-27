@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -19,9 +19,9 @@ export default function SegmentationPage() {
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Customers</p>
-          <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Segmentation</h1>
-          <p className="mt-2 text-sm text-[#666]">Customer segments based on buying behavior, order frequency, and lifetime value.</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Customers</p>
+          <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Segmentation</h1>
+          <p className="mt-1.5 text-xs text-[#666]">Customer segments based on buying behavior, order frequency, and lifetime value.</p>
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -44,7 +44,7 @@ export default function SegmentationPage() {
         </div>
 
         <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-          <div className="mb-4"><p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Analytics</p><h3 className="text-sm font-black text-[#1a1a1a]">Segment Breakdown</h3></div>
+          <div className="mb-4"><p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Analytics</p><h3 className="text-sm font-black text-[#1a1a1a]">Segment Breakdown</h3></div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import DashboardLayout from "../../dashboard-layout";
 import { ReusableTable } from "@/components/ui/admin/reusable-table";

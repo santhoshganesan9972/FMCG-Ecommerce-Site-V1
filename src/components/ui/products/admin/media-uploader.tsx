@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ImagePlus, Video, Trash2, Star, StarOff, Upload } from "lucide-react";
+import { ImagePlus, Video, Trash2, Star, StarOff, Upload, Eye, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface MediaItem {
@@ -33,6 +33,7 @@ export default function MediaUploader({
   maxFiles = 10,
 }: MediaUploaderProps) {
   const [dragOver, setDragOver] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -114,6 +115,13 @@ export default function MediaUploader({
                 )}
                 {/* Hover overlays */}
                 <div className="absolute inset-0 flex items-start justify-end gap-1 bg-black/0 p-2 transition-all group-hover:bg-black/20">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPreviewImage(item.url); }}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#666] opacity-0 shadow-sm transition-all hover:bg-white hover:text-[#0c831f] group-hover:opacity-100"
+                    title="Preview"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
                   {!item.isPrimary && onSetPrimary && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onSetPrimary(item.id); }}
@@ -183,6 +191,27 @@ export default function MediaUploader({
       {items.length === 0 && !canUpload && (
         <div className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-8 text-center">
           <p className="text-sm text-[#666]">Maximum {maxFiles} files reached</p>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>

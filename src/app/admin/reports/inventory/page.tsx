@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -299,7 +299,7 @@ export default function InventoryReportsPage() {
                 </div>
                 <div className="rounded-lg bg-[#f9fafb] p-3">
                   <p className="text-[10px] font-bold text-[#666]">Monthly Velocity</p>
-                  <p className="mt-1 text-xl font-black text-[#1a1a1a]">{selectedEntry.monthlyVelocity}</p>
+                  <p className="mt-1 text-xl font-bold text-[#1a1a1a]">{selectedEntry.monthlyVelocity}</p>
                 </div>
                 <div className="rounded-lg bg-[#f9fafb] p-3">
                   <p className="text-[10px] font-bold text-[#666]">Turnover Rate</p>

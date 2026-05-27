@@ -8,6 +8,7 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
+import ReusableModal from "@/components/ui/admin/reusable-modal";
 import {
   Clock,
   CheckCircle2,
@@ -16,6 +17,7 @@ import {
   AlertTriangle,
   Truck,
   Eye,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,10 +37,27 @@ export default function DeliveryStatusPage() {
     statusFilter, setStatusFilter,
     zoneFilter, setZoneFilter,
     pagination, setPage, setPageSize,
-    summary, refresh,
+    summary, refresh, updateStatus,
   } = useDeliveryStatuses();
 
-  const [selectedEntry, setSelectedEntry] = useState<string | null>(null);
+  const [showViewModal, setShowViewModal] = useState<any>(null);
+  const [editStatus, setEditStatus] = useState<any>(null);
+  const [editForm, setEditForm] = useState<any>({});
+
+  const handleSaveStatus = async () => {
+    if (!editStatus || !editForm.status) return;
+    const res = await updateStatus({
+      deliveryId: editStatus.id,
+      status: editForm.status,
+      note: editForm.note,
+    });
+    if (res) {
+      toast.success(`Successfully updated status for Order ${editStatus.orderId}`);
+      setEditStatus(null);
+    } else {
+      toast.error("Failed to update delivery status");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -47,9 +66,9 @@ export default function DeliveryStatusPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Delivery Status</h1>
-              <p className="mt-2 text-sm text-[#666]">Track and manage delivery status for all orders in real-time.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Delivery Status</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Track and manage delivery status for all orders in real-time.</p>
             </div>
             <ReusableExportButton onExport={(fmt) => toast.success(`Exporting as ${fmt.toUpperCase()}`)} />
           </div>
@@ -65,7 +84,7 @@ export default function DeliveryStatusPage() {
 
         {/* Status Breakdown */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Breakdown</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Breakdown</p>
           <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Current Status Distribution</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {[
@@ -80,7 +99,7 @@ export default function DeliveryStatusPage() {
                 <p className={`text-xl font-black ${item.color.replace("bg-", "text-")}`}>
                   {item.value}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold text-[#666]">{item.label}</p>
+                <p className="text-[10px] font-bold text-[#666]">{item.label}</p>
               </div>
             ))}
           </div>
@@ -88,30 +107,27 @@ export default function DeliveryStatusPage() {
 
         {/* Filters */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-4 shadow-sm">
-          <ReusableSearchBar
-            value={search}
-            onChange={(v) => { setSearch(v); setPage(1); }}
-            placeholder="Search by order ID, customer, or partner..."
-          />
+          <ReusableSearchBar value={search} onChange={(v) => setSearch(v)} placeholder="Search by Order ID, customer, or partner..." />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="h-10 rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none"
             >
-              <option value="all">All Status</option>
+              <option value="all">All Statuses</option>
               <option value="assigned">Assigned</option>
               <option value="picked_up">Picked Up</option>
               <option value="in_transit">In Transit</option>
-              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="out_for_delivery">Out For Delivery</option>
               <option value="delivered">Delivered</option>
               <option value="failed">Failed</option>
               <option value="cancelled">Cancelled</option>
               <option value="returned">Returned</option>
             </select>
+
             <select
               value={zoneFilter}
-              onChange={(e) => { setZoneFilter(e.target.value); setPage(1); }}
+              onChange={(e) => setZoneFilter(e.target.value)}
               className="h-10 rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none"
             >
               <option value="">All Zones</option>
@@ -127,12 +143,12 @@ export default function DeliveryStatusPage() {
         <ReusableTable
           data={entries}
           keyExtractor={(e) => e.id}
-          isLoading={loading}
           page={pagination.page}
           pageSize={pagination.pageSize}
           total={pagination.total}
+          isLoading={loading}
           onPageChange={setPage}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          onPageSizeChange={setPageSize}
           emptyMessage="No delivery entries found matching your filters"
           columns={[
             {
@@ -140,14 +156,9 @@ export default function DeliveryStatusPage() {
               header: "Order",
               sortable: true,
               render: (e) => (
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e8f5e9]">
-                    <Truck className="h-4 w-4 text-[#0c831f]" />
-                  </div>
-                  <div>
-                    <span className="font-bold text-[#1a1a1a]">{e.orderId}</span>
-                    <span className="block text-[10px] text-[#999]">{e.customer}</span>
-                  </div>
+                <div>
+                  <span className="font-black text-xs text-[#1a1a1a]">{e.orderId}</span>
+                  <span className="block text-[10px] text-[#999]">{e.customer}</span>
                 </div>
               ),
             },
@@ -155,7 +166,10 @@ export default function DeliveryStatusPage() {
               key: "partner",
               header: "Partner",
               render: (e) => (
-                <span className="font-bold text-[#666]">{e.partner || "—"}</span>
+                <div>
+                  <span className="font-bold text-[#1a1a1a]">{e.partner || "Unassigned"}</span>
+                  {e.zone && <span className="block text-[10px] text-[#999]">{e.zone}</span>}
+                </div>
               ),
             },
             {
@@ -167,7 +181,7 @@ export default function DeliveryStatusPage() {
             {
               key: "slaStatus",
               header: "SLA",
-              width: "80px",
+              width: "100px",
               render: (e) => (
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                   e.slaStatus === "on_time" ? "bg-[#e8f5e9] text-[#0c831f]" :
@@ -175,40 +189,17 @@ export default function DeliveryStatusPage() {
                   e.slaStatus === "critical" ? "bg-[#fef2f2] text-[#dc2626]" :
                   "bg-[#f6f7f6] text-[#666]"
                 }`}>
-                  {e.slaStatus === "on_time" ? <CheckCircle2 className="h-3 w-3" /> :
-                   e.slaStatus === "delayed" || e.slaStatus === "critical" ? <AlertTriangle className="h-3 w-3" /> :
-                   null}
-                  {e.slaStatus?.replace("_", " ") || "—"}
+                  {e.slaStatus?.replace("_", " ")}
                 </span>
               ),
-            },
-            {
-              key: "zone",
-              header: "Zone",
-              width: "120px",
-              hideOnMobile: true,
             },
             {
               key: "assignedAt",
               header: "Assigned",
               width: "100px",
-              hideOnMobile: true,
               render: (e) => (
                 <span className="text-xs text-[#666]">
                   {e.assignedAt ? new Date(e.assignedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}
-                </span>
-              ),
-            },
-            {
-              key: "delayMinutes",
-              header: "Delay",
-              width: "70px",
-              render: (e) => (
-                <span className={`font-bold text-xs ${
-                  e.delayMinutes === 0 ? "text-[#0c831f]" :
-                  e.delayMinutes > 15 ? "text-[#dc2626]" : "text-[#d97706]"
-                }`}>
-                  {e.delayMinutes > 0 ? `${e.delayMinutes} min` : "—"}
                 </span>
               ),
             },
@@ -217,19 +208,159 @@ export default function DeliveryStatusPage() {
             {
               label: "View Details",
               icon: <Eye className="h-3.5 w-3.5" />,
-              onClick: (e) => {
-                setSelectedEntry(e.id);
-                toast.info(`Viewing delivery ${e.orderId}`);
-              },
+              onClick: (e) => setShowViewModal(e),
             },
             {
               label: "Update Status",
               icon: <ArrowLeftRight className="h-3.5 w-3.5" />,
-              onClick: (e) => toast.success(`Status update initiated for ${e.orderId}`),
+              onClick: (e) => {
+                setEditStatus(e);
+                setEditForm({ ...e });
+              },
             },
           ]}
         />
       </div>
+
+      {/* View Details Modal */}
+      <ReusableModal
+        open={!!showViewModal}
+        onClose={() => setShowViewModal(null)}
+        title="Delivery Details"
+        subtitle={`Order: ${showViewModal?.orderId}`}
+        size="md"
+      >
+        {showViewModal && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 rounded-xl bg-[#f9fafb] p-4">
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Order ID</span>
+                <span className="text-sm font-black text-[#1a1a1a]">{showViewModal.orderId}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Customer</span>
+                <span className="text-sm font-bold text-[#1a1a1a]">{showViewModal.customer}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Partner</span>
+                <span className="text-sm font-bold text-[#1a1a1a]">{showViewModal.partner || "Unassigned"}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Zone</span>
+                <span className="text-sm font-bold text-[#1a1a1a]">{showViewModal.zone || "—"}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="mb-1 block text-[10px] font-bold text-[#666] uppercase">Status</span>
+                <StatusBadge status={showViewModal.status} />
+              </div>
+              <div>
+                <span className="mb-1 block text-[10px] font-bold text-[#666] uppercase">SLA Status</span>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  showViewModal.slaStatus === "on_time" ? "bg-[#e8f5e9] text-[#0c831f]" :
+                  showViewModal.slaStatus === "delayed" ? "bg-[#fffbeb] text-[#d97706]" :
+                  showViewModal.slaStatus === "critical" ? "bg-[#fef2f2] text-[#dc2626]" :
+                  "bg-[#f6f7f6] text-[#666]"
+                }`}>
+                  {showViewModal.slaStatus?.replace("_", " ") || "—"}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Assigned At</span>
+                <span className="text-xs text-[#1a1a1a]">
+                  {showViewModal.assignedAt ? new Date(showViewModal.assignedAt).toLocaleString("en-IN") : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Delay</span>
+                <span className="text-xs font-bold text-[#1a1a1a]">
+                  {showViewModal.delayMinutes > 0 ? `${showViewModal.delayMinutes} min` : "No delay"}
+                </span>
+              </div>
+            </div>
+
+            {showViewModal.note && (
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Notes</span>
+                <p className="mt-1 rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-800 font-medium">
+                  {showViewModal.note}
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setShowViewModal(null)}
+                className="rounded-xl border border-[#e8e8e8] bg-white px-4 py-2 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
+
+      {/* Update Delivery Status Modal */}
+      <ReusableModal
+        open={!!editStatus}
+        onClose={() => setEditStatus(null)}
+        title="Update Delivery Status"
+        subtitle={`Order: ${editStatus?.orderId}`}
+        size="md"
+      >
+        {editStatus && (
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Status</label>
+              <select
+                value={editForm.status || ""}
+                onChange={(e) => setEditForm((f: any) => ({ ...f, status: e.target.value as any }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              >
+                <option value="assigned">Assigned</option>
+                <option value="picked_up">Picked Up</option>
+                <option value="in_transit">In Transit</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="failed">Failed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="returned">Returned</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Note / Reason</label>
+              <textarea
+                value={editForm.note || ""}
+                onChange={(e) => setEditForm((f: any) => ({ ...f, note: e.target.value }))}
+                placeholder="Add status details or delay reasons here..."
+                rows={3}
+                className="w-full rounded-xl border border-[#e8e8e8] bg-white p-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f] resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setEditStatus(null)}
+                className="rounded-xl border border-[#e8e8e8] bg-white px-4 py-2 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveStatus}
+                className="rounded-xl bg-[#0c831f] px-4 py-2 text-xs font-bold text-white hover:bg-[#0a6a18]"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
     </DashboardLayout>
   );
 }

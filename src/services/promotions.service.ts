@@ -121,17 +121,21 @@ export const promotionService = {
 
   async updatePromotion(id: string, data: Partial<Promotion>): Promise<Promotion | undefined> {
     await delay(300);
-    const promo = mockPromotions.find((p) => p.id === id);
-    if (!promo) return undefined;
-    return {
-      ...promo,
+    const idx = mockPromotions.findIndex((p) => p.id === id);
+    if (idx === -1) return undefined;
+    mockPromotions[idx] = {
+      ...mockPromotions[idx],
       ...data,
       updatedAt: new Date().toISOString().split("T")[0],
     };
+    return mockPromotions[idx];
   },
 
   async deletePromotion(id: string): Promise<boolean> {
     await delay(200);
+    const idx = mockPromotions.findIndex((p) => p.id === id);
+    if (idx === -1) return false;
+    mockPromotions.splice(idx, 1);
     return true;
   },
 
@@ -194,18 +198,23 @@ export const promotionService = {
       createdBy: "Admin",
       createdAt: now,
     };
+    mockCoupons.unshift(newCoupon);
     return newCoupon;
   },
 
   async updateCoupon(id: string, data: Partial<Coupon>): Promise<Coupon | undefined> {
     await delay(300);
-    const coupon = mockCoupons.find((c) => c.id === id);
-    if (!coupon) return undefined;
-    return { ...coupon, ...data };
+    const idx = mockCoupons.findIndex((c) => c.id === id);
+    if (idx === -1) return undefined;
+    mockCoupons[idx] = { ...mockCoupons[idx], ...data };
+    return mockCoupons[idx];
   },
 
   async deleteCoupon(id: string): Promise<boolean> {
     await delay(200);
+    const idx = mockCoupons.findIndex((c) => c.id === id);
+    if (idx === -1) return false;
+    mockCoupons.splice(idx, 1);
     return true;
   },
 
@@ -230,12 +239,12 @@ export const promotionService = {
 
   async createFlashSale(data: Partial<FlashSale>): Promise<FlashSale> {
     await delay(400);
-    const now = new Date().toISOString();
-    return {
+    const now = new Date().toISOString().replace("T", " ").slice(0, 16);
+    const newFs: FlashSale = {
       id: `FS-${String(mockFlashSales.length + 1).padStart(3, "0")}`,
       name: data.name || "",
       description: data.description || "",
-      discount: data.discount || "",
+      discount: data.discount || `${data.discountValue}% Off`,
       discountType: data.discountType || "percentage",
       discountValue: data.discountValue ?? 0,
       productCount: data.productCount ?? 0,
@@ -248,6 +257,24 @@ export const promotionService = {
       createdBy: "Admin",
       createdAt: now,
     };
+    mockFlashSales.unshift(newFs);
+    return newFs;
+  },
+
+  async updateFlashSale(id: string, data: Partial<FlashSale>): Promise<FlashSale | undefined> {
+    await delay(300);
+    const idx = mockFlashSales.findIndex((f) => f.id === id);
+    if (idx === -1) return undefined;
+    mockFlashSales[idx] = { ...mockFlashSales[idx], ...data };
+    return mockFlashSales[idx];
+  },
+
+  async deleteFlashSale(id: string): Promise<boolean> {
+    await delay(200);
+    const idx = mockFlashSales.findIndex((f) => f.id === id);
+    if (idx === -1) return false;
+    mockFlashSales.splice(idx, 1);
+    return true;
   },
 
   // ── Campaigns ──────────────────────────────────────────
@@ -275,7 +302,7 @@ export const promotionService = {
   async createCampaign(data: Partial<Campaign>): Promise<Campaign> {
     await delay(400);
     const now = new Date().toISOString().split("T")[0];
-    return {
+    const newCamp: Campaign = {
       id: `CAMP-${String(mockCampaigns.length + 1).padStart(3, "0")}`,
       name: data.name || "",
       description: data.description || "",
@@ -292,13 +319,24 @@ export const promotionService = {
       createdBy: "Admin",
       createdAt: now,
     };
+    mockCampaigns.unshift(newCamp);
+    return newCamp;
   },
 
   async updateCampaign(id: string, data: Partial<Campaign>): Promise<Campaign | undefined> {
     await delay(300);
-    const camp = mockCampaigns.find((c) => c.id === id);
-    if (!camp) return undefined;
-    return { ...camp, ...data };
+    const idx = mockCampaigns.findIndex((c) => c.id === id);
+    if (idx === -1) return undefined;
+    mockCampaigns[idx] = { ...mockCampaigns[idx], ...data };
+    return mockCampaigns[idx];
+  },
+
+  async deleteCampaign(id: string): Promise<boolean> {
+    await delay(200);
+    const idx = mockCampaigns.findIndex((c) => c.id === id);
+    if (idx === -1) return false;
+    mockCampaigns.splice(idx, 1);
+    return true;
   },
 
   // ── Push Notifications ─────────────────────────────────
@@ -322,7 +360,7 @@ export const promotionService = {
   async createPushNotification(data: Partial<PushNotification>): Promise<PushNotification> {
     await delay(400);
     const now = new Date().toISOString().split("T")[0];
-    return {
+    const newNotif: PushNotification = {
       id: `PN-${String(mockPushNotifications.length + 1).padStart(3, "0")}`,
       title: data.title || "",
       body: data.body || "",
@@ -339,6 +377,24 @@ export const promotionService = {
       createdBy: "Admin",
       createdAt: now,
     };
+    mockPushNotifications.unshift(newNotif);
+    return newNotif;
+  },
+
+  async updatePushNotification(id: string, data: Partial<PushNotification>): Promise<PushNotification | undefined> {
+    await delay(300);
+    const idx = mockPushNotifications.findIndex((n) => n.id === id);
+    if (idx === -1) return undefined;
+    mockPushNotifications[idx] = { ...mockPushNotifications[idx], ...data };
+    return mockPushNotifications[idx];
+  },
+
+  async deletePushNotification(id: string): Promise<boolean> {
+    await delay(200);
+    const idx = mockPushNotifications.findIndex((n) => n.id === id);
+    if (idx === -1) return false;
+    mockPushNotifications.splice(idx, 1);
+    return true;
   },
 
   // ── A/B Tests ──────────────────────────────────────────
@@ -376,7 +432,7 @@ export const promotionService = {
   async createABTest(data: Partial<ABTest>): Promise<ABTest> {
     await delay(400);
     const now = new Date().toISOString().split("T")[0];
-    return {
+    const newTest: ABTest = {
       id: `AB-${String(mockABTests.length + 1).padStart(3, "0")}`,
       name: data.name || "",
       description: data.description || "",
@@ -392,6 +448,24 @@ export const promotionService = {
       createdBy: "Admin",
       createdAt: now,
     };
+    mockABTests.unshift(newTest);
+    return newTest;
+  },
+
+  async updateABTest(id: string, data: Partial<ABTest>): Promise<ABTest | undefined> {
+    await delay(300);
+    const idx = mockABTests.findIndex((t) => t.id === id);
+    if (idx === -1) return undefined;
+    mockABTests[idx] = { ...mockABTests[idx], ...data };
+    return mockABTests[idx];
+  },
+
+  async deleteABTest(id: string): Promise<boolean> {
+    await delay(200);
+    const idx = mockABTests.findIndex((t) => t.id === id);
+    if (idx === -1) return false;
+    mockABTests.splice(idx, 1);
+    return true;
   },
 
   // ── Campaign Analytics ─────────────────────────────────

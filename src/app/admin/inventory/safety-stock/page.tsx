@@ -6,10 +6,11 @@ import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
-import { AlertTriangle, Shield, TrendingUp, Edit3, RefreshCw } from "lucide-react";
+import { AlertTriangle, Shield, TrendingUp, Edit3, Eye, RefreshCw, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useSafetyStock } from "@/hooks/use-inventory";
 import type { SafetyStockRule } from "@/types/inventory";
+import ReusableModal from "@/components/ui/admin/reusable-modal";
 
 export default function SafetyStockPage() {
   const [search, setSearch] = useState("");
@@ -18,6 +19,25 @@ export default function SafetyStockPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const { rules, loading, refresh } = useSafetyStock(statusFilter !== "all" ? statusFilter : undefined);
+
+  const [viewRule, setViewRule] = useState<SafetyStockRule | null>(null);
+  const [editRule, setEditRule] = useState<SafetyStockRule | null>(null);
+  const [editForm, setEditForm] = useState<Partial<SafetyStockRule>>({});
+
+  const openEditDrawer = (rule: SafetyStockRule) => {
+    setEditRule(rule);
+    setEditForm({ ...rule });
+  };
+
+  const closeEditDrawer = () => {
+    setEditRule(null);
+    setEditForm({});
+  };
+
+  const handleEditSave = () => {
+    toast.success(`Safety stock configuration for "${editForm.product}" updated successfully`);
+    closeEditDrawer();
+  };
 
   const filtered = useMemo(
     () =>
@@ -53,9 +73,9 @@ export default function SafetyStockPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Inventory</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Safety Stock</h1>
-              <p className="mt-2 text-sm text-[#666]">Configure safety stock levels and reorder points to prevent stockouts.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Inventory</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Safety Stock</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Configure safety stock levels and reorder points to prevent stockouts.</p>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => refresh()} className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-white px-4 py-2.5 text-sm font-bold text-[#1a1a1a] hover:bg-[#f6f7f6]">
@@ -100,10 +120,171 @@ export default function SafetyStockPage() {
             { key: "status", header: "Status", width: "100px", render: (i: SafetyStockRule) => <StatusBadge status={i.status} /> },
           ]}
           actions={[
-            { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (i: SafetyStockRule) => toast.info(`Editing safety stock for ${i.product}`) },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (i: SafetyStockRule) => setViewRule(i) },
+            { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (i: SafetyStockRule) => openEditDrawer(i) },
           ]}
         />
       </div>
+      {/* View Modal */}
+      <ReusableModal
+        open={!!viewRule}
+        onClose={() => setViewRule(null)}
+        title="Safety Stock Details"
+        subtitle={`Information for ${viewRule?.product || ""}`}
+        size="md"
+      >
+        {viewRule && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 rounded-xl bg-[#f9fafb] p-4">
+              <div>
+                <p className="text-[10px] text-[#999] font-bold uppercase">SKU</p>
+                <p className="text-sm font-bold text-[#1a1a1a]">{viewRule.sku}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-bold uppercase">Status</p>
+                <div className="mt-1">
+                  <StatusBadge status={viewRule.status} />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              <div className="rounded-xl border border-[#e8e8e8] p-3 text-center">
+                <p className="text-[10px] text-[#666]">Current Stock</p>
+                <p className="mt-1 text-base font-black text-[#1a1a1a]">{viewRule.currentStock}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3 text-center">
+                <p className="text-[10px] text-[#666]">Safety Level</p>
+                <p className="mt-1 text-base font-black text-[#1a1a1a]">{viewRule.safetyLevel}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3 text-center">
+                <p className="text-[10px] text-[#666]">Reorder Point</p>
+                <p className="mt-1 text-base font-black text-[#0c831f]">{viewRule.reorderPoint}</p>
+              </div>
+              <div className="rounded-xl border border-[#e8e8e8] p-3 text-center">
+                <p className="text-[10px] text-[#666]">Lead Time</p>
+                <p className="mt-1 text-base font-black text-[#1a1a1a]">{viewRule.leadTime}d</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
+
+      {/* Edit Drawer */}
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${editRule ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        onClick={closeEditDrawer}
+      />
+
+      {/* Slide-in panel */}
+      <aside
+        className={`fixed right-0 top-0 z-[70] flex h-full w-[420px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${editRule ? "translate-x-0" : "translate-x-full"}`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between border-b border-[#e8e8e8] px-6 py-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
+              Edit Safety Stock
+            </p>
+            <h2 className="mt-0.5 text-base font-black text-[#1a1a1a] truncate max-w-xs">
+              {editRule?.product}
+            </h2>
+            <p className="text-[10px] text-[#999] mt-0.5">
+              SKU: {editRule?.sku}
+            </p>
+          </div>
+          <button
+            onClick={closeEditDrawer}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6] transition-all"
+            aria-label="Close edit panel"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Scrollable fields */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Product Name</label>
+            <input
+              type="text"
+              value={editForm.product ?? ""}
+              onChange={(e) => setEditForm((f) => ({ ...f, product: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">SKU</label>
+            <input
+              type="text"
+              value={editForm.sku ?? ""}
+              onChange={(e) => setEditForm((f) => ({ ...f, sku: e.target.value }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Current Stock</label>
+              <input
+                type="number"
+                value={editForm.currentStock ?? 0}
+                onChange={(e) => setEditForm((f) => ({ ...f, currentStock: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Safety Level</label>
+              <input
+                type="number"
+                value={editForm.safetyLevel ?? 0}
+                onChange={(e) => setEditForm((f) => ({ ...f, safetyLevel: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Reorder Point</label>
+              <input
+                type="number"
+                value={editForm.reorderPoint ?? 0}
+                onChange={(e) => setEditForm((f) => ({ ...f, reorderPoint: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Lead Time (days)</label>
+              <input
+                type="number"
+                value={editForm.leadTime ?? 0}
+                onChange={(e) => setEditForm((f) => ({ ...f, leadTime: Number(e.target.value) }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Drawer footer */}
+        <div className="flex items-center justify-end gap-3 border-t border-[#e8e8e8] bg-white px-6 py-4">
+          <button
+            onClick={closeEditDrawer}
+            className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6] transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleEditSave}
+            className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all"
+          >
+            <Save className="h-4 w-4" />
+            Save Changes
+          </button>
+        </div>
+      </aside>
     </DashboardLayout>
   );
 }

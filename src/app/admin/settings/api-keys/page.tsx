@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback } from "react";
 import { useApiKeys } from "@/hooks/use-settings";
@@ -223,7 +223,7 @@ export default function ApiKeysPage() {
           ) : loading ? (
             <div className="p-8 text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#0c831f] border-t-transparent" />
-              <p className="mt-2 text-sm text-[#666]">Loading API keys...</p>
+              <p className="mt-1.5 text-xs text-[#666]">Loading API keys...</p>
             </div>
           ) : keys.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center">

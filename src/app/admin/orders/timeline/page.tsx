@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -21,9 +21,9 @@ export default function TimelinePage() {
       <DashboardLayout>
         <div className="space-y-4 p-2 sm:p-4">
           <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-            <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Order Timeline</h1>
-            <p className="mt-2 text-sm text-[#666]">Loading timeline data...</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+            <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Order Timeline</h1>
+            <p className="mt-1.5 text-xs text-[#666]">Loading timeline data...</p>
           </section>
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -41,9 +41,9 @@ export default function TimelinePage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Order Timeline</h1>
-              <p className="mt-2 text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Order Timeline</h1>
+              <p className="mt-1.5 text-xs text-[#666]">
                 View the complete event timeline for each order from placement to delivery.
               </p>
             </div>

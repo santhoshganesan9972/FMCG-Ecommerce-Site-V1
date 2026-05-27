@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -30,9 +30,9 @@ export default function FleetDashboardPage() {
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-          <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Fleet Dashboard</h1>
-          <p className="mt-2 text-sm text-[#666]">Manage delivery vehicle fleet, track maintenance, and monitor vehicle health.</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+          <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Fleet Dashboard</h1>
+          <p className="mt-1.5 text-xs text-[#666]">Manage delivery vehicle fleet, track maintenance, and monitor vehicle health.</p>
         </section>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -42,7 +42,7 @@ export default function FleetDashboardPage() {
                 <s.icon className={`h-5 w-5 ${s.color}`} />
                 <span className="text-xs text-[#666]">{s.label}</span>
               </div>
-              <p className="mt-1 text-2xl font-black text-[#1a1a1a]">{s.value}</p>
+              <p className="mt-1 text-xl font-bold text-[#1a1a1a]">{s.value}</p>
             </div>
           ))}
         </div>

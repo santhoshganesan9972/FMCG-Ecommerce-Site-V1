@@ -98,11 +98,22 @@ export const deliveryService = {
   /**
    * Update partner status (online/offline/busy/available).
    */
+  /**
+   * Update partner status (online/offline/busy/available).
+   */
   async updatePartnerStatus(
     partnerId: string,
     status: string
   ): Promise<DeliveryApiResponse<boolean>> {
     await delay(250);
+    const partner = mockDeliveryPartners.find((p) => p.id === partnerId);
+    if (partner) {
+      partner.status = status as any;
+    }
+    const profile = mockPartnerProfiles.find((p) => p.id === partnerId);
+    if (profile) {
+      profile.status = status as any;
+    }
     return { success: true, data: true };
   },
 
@@ -281,7 +292,18 @@ export const deliveryService = {
     data: UpdateDeliveryStatusFormData
   ): Promise<DeliveryApiResponse<boolean>> {
     await delay(300);
-    return { success: true, data: true };
+    const idx = mockDeliveryStatusEntries.findIndex(
+      (e) => e.id === data.deliveryId || e.orderId === data.deliveryId
+    );
+    if (idx !== -1) {
+      mockDeliveryStatusEntries[idx] = {
+        ...mockDeliveryStatusEntries[idx],
+        status: data.status,
+        note: data.note || mockDeliveryStatusEntries[idx].note,
+      };
+      return { success: true, data: true };
+    }
+    return { success: false, data: false, error: "Delivery entry not found" };
   },
 
   /**
@@ -291,7 +313,17 @@ export const deliveryService = {
     data: AssignDeliveryFormData
   ): Promise<DeliveryApiResponse<boolean>> {
     await delay(350);
-    return { success: true, data: true };
+    const idx = mockDeliveryStatusEntries.findIndex((e) => e.orderId === data.orderId);
+    const partner = mockDeliveryPartners.find((p) => p.id === data.partnerId);
+    if (idx !== -1 && partner) {
+      mockDeliveryStatusEntries[idx] = {
+        ...mockDeliveryStatusEntries[idx],
+        partner: partner.name,
+        status: "assigned",
+      };
+      return { success: true, data: true };
+    }
+    return { success: false, data: false, error: "Order not found" };
   },
 
   // ═══════════════════════════════════════════════════════

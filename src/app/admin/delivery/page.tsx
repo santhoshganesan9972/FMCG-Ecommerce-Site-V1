@@ -7,7 +7,9 @@ import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
-import { Truck, MapPin, Eye, Star, Phone, Gauge, Users, DollarSign } from "lucide-react";
+import ReusableModal from "@/components/ui/admin/reusable-modal";
+import { ReusableDrawer } from "@/components/common/drawer";
+import { Truck, MapPin, Eye, Star, Phone, Gauge, Users, DollarSign, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Partner {
@@ -36,20 +38,34 @@ const mockPartners: Partner[] = [
 ];
 
 export default function DeliveryPage() {
+  const [partnersList, setPartnersList] = useState<Partner[]>(mockPartners);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const filtered = mockPartners.filter((p) => {
+  const [showViewModal, setShowViewModal] = useState<Partner | null>(null);
+  const [editPartner, setEditPartner] = useState<Partner | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Partner>>({});
+
+  const handleSaveEdit = () => {
+    if (!editPartner) return;
+    setPartnersList((prev) =>
+      prev.map((p) => (p.id === editPartner.id ? ({ ...p, ...editForm } as Partner) : p))
+    );
+    toast.success(`Successfully updated partner ${editForm.name}`);
+    setEditPartner(null);
+  };
+
+  const filtered = partnersList.filter((p) => {
     const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.zone.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const online = mockPartners.filter(p => p.status === "online").length;
-  const busy = mockPartners.filter(p => p.status === "busy").length;
-  const totalDeliveries = mockPartners.reduce((s, p) => s + p.totalDeliveries, 0);
+  const online = partnersList.filter(p => p.status === "online").length;
+  const busy = partnersList.filter(p => p.status === "busy").length;
+  const totalDeliveries = partnersList.reduce((s, p) => s + p.totalDeliveries, 0);
 
   return (
     <DashboardLayout>
@@ -57,9 +73,9 @@ export default function DeliveryPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Logistics & Fleet Management</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Logistics & Fleet Management</h1>
+              <p className="mt-1.5 max-w-2xl text-xs text-[#666]">
                 Manage delivery partners, track live orders, view fleet analytics, and optimize routes.
               </p>
             </div>
@@ -68,7 +84,7 @@ export default function DeliveryPage() {
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Delivery Partners" value={mockPartners.length} icon={<Users className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Delivery Partners" value={partnersList.length} icon={<Users className="h-4 w-4" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
           <ReusableCard title="Online Now" value={online} icon={<Truck className="h-4 w-4" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
           <ReusableCard title="On Delivery" value={busy} icon={<MapPin className="h-4 w-4" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
           <ReusableCard title="Total Deliveries" value={totalDeliveries.toLocaleString()} icon={<Gauge className="h-4 w-4" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
@@ -77,19 +93,19 @@ export default function DeliveryPage() {
         {/* Fleet Status Overview */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Fleet</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Fleet</p>
             <h3 className="text-sm font-black text-[#1a1a1a]">Real-time Fleet Overview</h3>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
               { label: "Available", count: online, color: "bg-[#0c831f]", icon: Truck },
               { label: "Busy", count: busy, color: "bg-[#d97706]", icon: MapPin },
-              { label: "Offline", count: mockPartners.filter(p => p.status === "offline").length, color: "bg-[#999]", icon: Phone },
-              { label: "Total", count: mockPartners.length, color: "bg-[#2563eb]", icon: Gauge },
+              { label: "Offline", count: partnersList.filter(p => p.status === "offline").length, color: "bg-[#999]", icon: Phone },
+              { label: "Total", count: partnersList.length, color: "bg-[#2563eb]", icon: Gauge },
             ].map((item) => (
               <div key={item.label} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4 text-center">
                 <item.icon className={`mx-auto h-5 w-5 ${item.color.replace("bg-", "text-")}`} />
-                <p className="mt-2 text-2xl font-black text-[#1a1a1a]">{item.count}</p>
+                <p className="mt-2 text-xl font-bold text-[#1a1a1a]">{item.count}</p>
                 <p className="text-xs font-bold text-[#666]">{item.label}</p>
               </div>
             ))}
@@ -99,12 +115,12 @@ export default function DeliveryPage() {
         {/* Zones */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Zones</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Zones</p>
             <h3 className="text-sm font-black text-[#1a1a1a]">Delivery Zones</h3>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {["Mumbai Metro", "Delhi NCR", "Pune City", "Bangalore Central"].map((zone) => {
-              const zonePartners = mockPartners.filter(p => p.zone === zone);
+              const zonePartners = partnersList.filter(p => p.zone === zone);
               const zoneOnline = zonePartners.filter(p => p.status === "online").length;
               return (
                 <div key={zone} className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4">
@@ -166,10 +182,186 @@ export default function DeliveryPage() {
           actions={[
             { label: "Track", icon: <MapPin className="h-3.5 w-3.5" />, onClick: (p) => toast.info(`Tracking ${p.name}`), variant: "success" },
             { label: "Call", icon: <Phone className="h-3.5 w-3.5" />, onClick: (p) => toast.success(`Calling ${p.phone}`) },
-            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (p) => toast.info(`Viewing ${p.name}`) },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (p) => setShowViewModal(p) },
+            { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (p) => { setEditPartner(p); setEditForm({ ...p }); } },
           ]}
         />
       </div>
+
+      {/* View Partner Modal */}
+      <ReusableModal
+        open={!!showViewModal}
+        onClose={() => setShowViewModal(null)}
+        title="Delivery Partner Details"
+        subtitle={`Partner ID: ${showViewModal?.id}`}
+        size="md"
+      >
+        {showViewModal && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 border-b border-[#e8e8e8] pb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0c831f]/10 text-lg font-black text-[#0c831f]">
+                {showViewModal.name.split(" ").map((n) => n[0]).join("")}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#1a1a1a]">{showViewModal.name}</h3>
+                <span className="text-xs text-[#999]">{showViewModal.phone}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Vehicle</span>
+                <span className="text-sm font-bold text-[#1a1a1a] capitalize">{showViewModal.vehicleType.replace("_", " ")}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Status</span>
+                <div className="mt-0.5"><StatusBadge status={showViewModal.status} /></div>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Zone</span>
+                <span className="text-sm font-bold text-[#1a1a1a]">{showViewModal.zone}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Rating</span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Star className="h-3 w-3 text-[#d97706] fill-current" />
+                  <span className="text-sm font-bold text-[#1a1a1a]">{showViewModal.rating}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 rounded-xl bg-[#f9fafb] p-3 text-center">
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Active Orders</span>
+                <span className="text-base font-bold text-[#1a1a1a]">{showViewModal.currentOrders}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Total Deliveries</span>
+                <span className="text-base font-bold text-[#1a1a1a]">{showViewModal.totalDeliveries.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-[#666] uppercase">Earnings</span>
+                <span className="text-base font-bold text-[#0c831f]">{showViewModal.earnings}</span>
+              </div>
+            </div>
+
+            <div>
+              <span className="block text-[10px] font-bold text-[#666] uppercase">Joined Date</span>
+              <span className="text-xs text-[#1a1a1a]">{new Date(showViewModal.joinedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</span>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setShowViewModal(null)}
+                className="rounded-xl border border-[#e8e8e8] bg-white px-4 py-2 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
+
+      {/* Edit Partner Drawer */}
+      <ReusableDrawer
+        open={!!editPartner}
+        onClose={() => setEditPartner(null)}
+        title="Edit Partner Profile"
+        subtitle={`Update details for ${editPartner?.name}`}
+        width="md"
+        footer={
+          <>
+            <button
+              onClick={() => setEditPartner(null)}
+              className="rounded-xl border border-[#e8e8e8] bg-white px-4 py-2 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              className="rounded-xl bg-[#0c831f] px-5 py-2 text-xs font-bold text-white hover:bg-[#0a6a18]"
+            >
+              Save Changes
+            </button>
+          </>
+        }
+      >
+        {editPartner && (
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Full Name</label>
+              <input
+                type="text"
+                value={editForm.name || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Phone Number</label>
+              <input
+                type="text"
+                value={editForm.phone || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Vehicle Type</label>
+              <select
+                value={editForm.vehicleType || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, vehicleType: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              >
+                <option value="bike">Bike</option>
+                <option value="scooter">Scooter</option>
+                <option value="cycle">Cycle</option>
+                <option value="van">Van</option>
+                <option value="ev_scooter">EV Scooter</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Zone</label>
+              <select
+                value={editForm.zone || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, zone: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              >
+                <option value="Mumbai Metro">Mumbai Metro</option>
+                <option value="Delhi NCR">Delhi NCR</option>
+                <option value="Pune City">Pune City</option>
+                <option value="Bangalore Central">Bangalore Central</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Status</label>
+              <select
+                value={editForm.status || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, status: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              >
+                <option value="online">Online</option>
+                <option value="busy">Busy</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Earnings</label>
+              <input
+                type="text"
+                value={editForm.earnings || ""}
+                onChange={(e) => setEditForm(f => ({ ...f, earnings: e.target.value }))}
+                className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+              />
+            </div>
+          </div>
+        )}
+      </ReusableDrawer>
     </DashboardLayout>
   );
 }

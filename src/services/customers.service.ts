@@ -9,6 +9,7 @@
 import type {
   Customer,
   CustomerActivity,
+  CustomerAction,
   CustomerFilters,
   CustomersListResponse,
   Segment,
@@ -177,6 +178,20 @@ export const customerService = {
   async getCustomerActivities(customerId: string): Promise<CustomerActivity[]> {
     await delay(200);
     return mockCustomerActivities.filter((a) => a.customerId === customerId);
+  },
+
+  async addCustomerActivity(customerId: string, action: CustomerAction, description: string, performedBy?: string): Promise<boolean> {
+    await delay(100);
+    const activity = {
+      id: `ACT-${Date.now()}`,
+      customerId,
+      action,
+      description,
+      performedBy,
+      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+    };
+    mockCustomerActivities.unshift(activity);
+    return true;
   },
 
   // ── Segments ──────────────────────────────────────────

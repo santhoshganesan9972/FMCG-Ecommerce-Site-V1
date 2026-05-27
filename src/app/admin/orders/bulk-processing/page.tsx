@@ -20,6 +20,7 @@ export default function BulkProcessingPage() {
   } = useBulkJobs();
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [actionType, setActionType] = useState("status_update");
+  const [viewJob, setViewJob] = useState<BulkJob | null>(null);
 
   const totalCompleted = jobs.filter((j) => j.status === "completed").length;
   const totalProcessing = jobs.filter((j) => j.status === "processing" || j.status === "pending").length;
@@ -43,9 +44,9 @@ export default function BulkProcessingPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Bulk Processing</h1>
-              <p className="mt-2 text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Bulk Processing</h1>
+              <p className="mt-1.5 text-xs text-[#666]">
                 Process multiple orders at once — status updates, partner assignments, and cancellations.
               </p>
             </div>
@@ -83,7 +84,11 @@ export default function BulkProcessingPage() {
           onPageSizeChange={setPageSize}
           columns={[
             { key: "id", header: "Batch ID", width: "100px", render: (b) => <span className="font-bold text-[#0c831f]">{(b as BulkJob).id}</span> },
-            { key: "type", header: "Action", sortable: true },
+            { key: "type", header: "Action", width: "140px", sortable: true, render: (b) => (
+              <span className="font-bold text-[#1a1a1a] block truncate max-w-[130px]">
+                {(b as BulkJob).type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+              </span>
+            ) },
             { key: "count", header: "Orders", width: "80px", align: "center" },
             { key: "success", header: "Success", width: "80px", align: "center", render: (b) => <span className="text-[#0c831f] font-bold">{(b as BulkJob).success ?? "—"}</span> },
             { key: "failed", header: "Failed", width: "70px", align: "center", render: (b) => <span className="text-[#dc2626] font-bold">{(b as BulkJob).failed ?? "—"}</span> },
@@ -92,7 +97,7 @@ export default function BulkProcessingPage() {
             { key: "processedBy", header: "By", width: "110px", hideOnMobile: true },
           ]}
           actions={[
-            { label: "View Details", icon: <Eye className="h-3.5 w-3.5" />, onClick: (b: BulkJob) => toast.info(`Viewing batch ${b.id}`) },
+            { label: "View Details", icon: <Eye className="h-3.5 w-3.5" />, onClick: (b: BulkJob) => setViewJob(b) },
           ]}
         />
 
@@ -143,6 +148,71 @@ export default function BulkProcessingPage() {
             </button>
           </div>
         </div>
+      </ReusableModal>
+
+      {/* View Batch Details Modal */}
+      <ReusableModal
+        open={!!viewJob}
+        onClose={() => setViewJob(null)}
+        title="Batch Details"
+        subtitle={`Fulfillment logs for Batch ID ${viewJob?.id}`}
+        size="md"
+      >
+        {viewJob && (
+          <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 gap-3 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Batch ID</p>
+                <p className="font-semibold text-[#1a1a1a]">{viewJob.id}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Processed By</p>
+                <p className="font-semibold text-[#666]">{viewJob.processedBy || "—"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Action Type</p>
+                <p className="font-semibold text-[#1a1a1a]">
+                  {viewJob.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Date Processed</p>
+                <p className="font-semibold text-[#666]">{viewJob.date}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 border-b border-[#e8e8e8] pb-3">
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Total Orders</p>
+                <p className="font-semibold text-[#1a1a1a]">{viewJob.count}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Success</p>
+                <p className="font-semibold text-[#0c831f]">{viewJob.success ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Failed</p>
+                <p className="font-semibold text-[#dc2626]">{viewJob.failed ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Status</p>
+                <div className="mt-0.5"><StatusBadge status={viewJob.status} /></div>
+              </div>
+            </div>
+
+            {viewJob.details && (
+              <div>
+                <p className="text-[10px] text-[#999] font-medium uppercase">Execution Log / Details</p>
+                <p className="mt-1 rounded-lg border border-[#e8e8e8] bg-[#f9fafb] p-2 font-mono text-[10px] text-[#666] whitespace-pre-wrap leading-relaxed">
+                  {viewJob.details}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </ReusableModal>
     </DashboardLayout>
   );

@@ -52,10 +52,32 @@ export function usePromotions(initialFilters?: Partial<PromotionFilters>) {
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
+  const updatePromotion = useCallback(async (id: string, data: Partial<Promotion>) => {
+    try {
+      const updated = await promotionService.updatePromotion(id, data);
+      await fetchPromotions();
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update promotion");
+      return null;
+    }
+  }, [fetchPromotions]);
+
+  const deletePromotion = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deletePromotion(id);
+      await fetchPromotions();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete promotion");
+      return false;
+    }
+  }, [fetchPromotions]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { promotions, summary, pagination, loading, error, filters, updateFilters, fetchPromotions, setPage, setPageSize };
+  return { promotions, summary, pagination, loading, error, filters, updateFilters, fetchPromotions, updatePromotion, deletePromotion, setPage, setPageSize };
 }
 
 // ── Coupons Hook ─────────────────────────────────────────
@@ -106,10 +128,32 @@ export function useCoupons(initialFilters?: Partial<CouponFilters>) {
     }
   }, [fetchCoupons]);
 
+  const updateCoupon = useCallback(async (id: string, data: Partial<Coupon>) => {
+    try {
+      const updated = await promotionService.updateCoupon(id, data);
+      await fetchCoupons();
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update coupon");
+      return null;
+    }
+  }, [fetchCoupons]);
+
+  const deleteCoupon = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deleteCoupon(id);
+      await fetchCoupons();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete coupon");
+      return false;
+    }
+  }, [fetchCoupons]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { coupons, summary, pagination, loading, error, filters, updateFilters, fetchCoupons, generateCoupon, setPage, setPageSize };
+  return { coupons, summary, pagination, loading, error, filters, updateFilters, fetchCoupons, generateCoupon, updateCoupon, deleteCoupon, setPage, setPageSize };
 }
 
 // ── Flash Sales Hook ─────────────────────────────────────
@@ -150,10 +194,32 @@ export function useFlashSales() {
     }
   }, [fetchFlashSales]);
 
+  const updateFlashSale = useCallback(async (id: string, data: Partial<FlashSale>) => {
+    try {
+      const updated = await promotionService.updateFlashSale(id, data);
+      await fetchFlashSales();
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update flash sale");
+      return null;
+    }
+  }, [fetchFlashSales]);
+
+  const deleteFlashSale = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deleteFlashSale(id);
+      await fetchFlashSales();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete flash sale");
+      return false;
+    }
+  }, [fetchFlashSales]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { flashSales, summary, pagination, loading, error, fetchFlashSales, createFlashSale, setPage, setPageSize };
+  return { flashSales, summary, pagination, loading, error, fetchFlashSales, createFlashSale, updateFlashSale, deleteFlashSale, setPage, setPageSize };
 }
 
 // ── Campaigns Hook ───────────────────────────────────────
@@ -205,10 +271,21 @@ export function useCampaigns() {
     }
   }, []);
 
+  const deleteCampaign = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deleteCampaign(id);
+      await fetchCampaigns();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete campaign");
+      return false;
+    }
+  }, [fetchCampaigns]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { campaigns, summary, pagination, loading, error, fetchCampaigns, createCampaign, updateCampaign, setPage, setPageSize };
+  return { campaigns, summary, pagination, loading, error, fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, setPage, setPageSize };
 }
 
 // ── Push Notifications Hook ──────────────────────────────
@@ -249,10 +326,32 @@ export function usePushNotifications() {
     }
   }, [fetchNotifications]);
 
+  const updateNotification = useCallback(async (id: string, data: Partial<PushNotification>) => {
+    try {
+      const updated = await promotionService.updatePushNotification(id, data);
+      await fetchNotifications();
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update notification");
+      return null;
+    }
+  }, [fetchNotifications]);
+
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deletePushNotification(id);
+      await fetchNotifications();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete notification");
+      return false;
+    }
+  }, [fetchNotifications]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { notifications, summary, pagination, loading, error, fetchNotifications, createNotification, setPage, setPageSize };
+  return { notifications, summary, pagination, loading, error, fetchNotifications, createNotification, updateNotification, deleteNotification, setPage, setPageSize };
 }
 
 // ── A/B Tests Hook ───────────────────────────────────────
@@ -301,10 +400,32 @@ export function useABTests(initialFilters?: Partial<ABTestFilters>) {
     }
   }, [fetchTests]);
 
+  const updateTest = useCallback(async (id: string, data: Partial<ABTest>) => {
+    try {
+      const updated = await promotionService.updateABTest(id, data);
+      await fetchTests();
+      return updated || null;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update A/B test");
+      return null;
+    }
+  }, [fetchTests]);
+
+  const deleteTest = useCallback(async (id: string) => {
+    try {
+      const success = await promotionService.deleteABTest(id);
+      await fetchTests();
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete A/B test");
+      return false;
+    }
+  }, [fetchTests]);
+
   const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
   const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
 
-  return { tests, summary, pagination, loading, error, filters, updateFilters, fetchTests, createTest, setPage, setPageSize };
+  return { tests, summary, pagination, loading, error, filters, updateFilters, fetchTests, createTest, updateTest, deleteTest, setPage, setPageSize };
 }
 
 // ── Campaign Analytics Hook ──────────────────────────────

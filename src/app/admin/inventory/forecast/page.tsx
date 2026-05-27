@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -29,9 +29,9 @@ export default function ForecastPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Inventory</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Demand Forecast</h1>
-              <p className="mt-2 text-sm text-[#666]">AI-powered demand forecasting for optimal stock planning and reorder scheduling.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Inventory</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Demand Forecast</h1>
+              <p className="mt-1.5 text-xs text-[#666]">AI-powered demand forecasting for optimal stock planning and reorder scheduling.</p>
             </div>
             <button onClick={() => refresh()} className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-white px-4 py-2.5 text-sm font-bold text-[#1a1a1a] hover:bg-[#f6f7f6]">
               <RefreshCw className="h-4 w-4" /> Refresh
@@ -48,7 +48,7 @@ export default function ForecastPage() {
 
         <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
           <div className="mb-4">
-            <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Forecast</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Forecast</p>
             <h3 className="text-sm font-black text-[#1a1a1a]">Predicted Demand vs Current Stock</h3>
           </div>
           <ForecastChart forecasts={forecasts} isLoading={loading} />

@@ -115,7 +115,9 @@ export default function SidebarEnterprise({
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ccc transparent" }}
       >
         {navItems.map((item) => {
-          const isActive = activeParent === item.label;
+          const isActiveSection = activeParent === item.label;
+          // Parent link only lights up on its exact href — not when a child is active
+          const isParentExactActive = pathname === item.href;
           const isExpanded = expandedSection === item.label;
           const hasSubmenu = item.submenu && item.submenu.length > 0;
 
@@ -137,12 +139,12 @@ export default function SidebarEnterprise({
                         ${
                           collapsed
                             ? `h-10 w-10 justify-center rounded-xl ${
-                                isActive
+                                isParentExactActive
                                   ? "bg-[#e8f5e9] text-[#0c831f]"
                                   : "text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                               }`
                             : `flex-1 rounded-l-xl px-3 py-2.5 gap-2.5 ${
-                                isActive
+                                isParentExactActive
                                   ? "bg-[#e8f5e9] text-[#0c831f]"
                                   : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                               }`
@@ -175,7 +177,7 @@ export default function SidebarEnterprise({
                           toggleSection(item.label);
                         }}
                         className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-r-xl transition-all duration-150 ${
-                          isActive
+                          isActiveSection
                             ? "bg-[#e8f5e9] text-[#0c831f]"
                             : "text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                         }`}
@@ -209,7 +211,7 @@ export default function SidebarEnterprise({
                   >
                       <div className="ml-3 mt-0.5 border-l-2 border-[#e8e8e8] pl-3 space-y-0.5">
                         {item.submenu!.map((sub) => {
-                          const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
+                          const isSubActive = pathname === sub.href;
                           return (
                             <Link
                               key={sub.href}
@@ -246,12 +248,12 @@ export default function SidebarEnterprise({
                       ${
                         collapsed
                           ? `h-10 w-10 justify-center rounded-xl ${
-                              isActive
+                              isActiveSection
                                 ? "bg-[#e8f5e9] text-[#0c831f]"
                                 : "text-[#999] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                             }`
                           : `w-full rounded-xl px-3 py-2.5 gap-2.5 ${
-                              isActive
+                              isActiveSection
                                 ? "bg-[#e8f5e9] text-[#0c831f]"
                                 : "text-[#666] hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
                             }`

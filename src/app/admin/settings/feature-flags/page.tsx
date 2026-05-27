@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -32,9 +32,9 @@ export default function FeatureFlagsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Settings</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Feature Flags</h1>
-              <p className="mt-2 text-sm text-[#666]">Enable or disable features across environments with rollback history.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Settings</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Feature Flags</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Enable or disable features across environments with rollback history.</p>
             </div>
             <button className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">
               <Plus className="h-4 w-4" /> New Flag

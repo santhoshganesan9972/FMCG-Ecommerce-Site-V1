@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import LayoutClient from "./layout-client";
 import SkipLink from "@/components/ui/a11y/skip-link";
-import AnimatedBackground from "@/components/ui/animated-background";
+import AnimatedBackground from "@/components/ui/client-only-background";
 import GroceryAssistant from "@/components/ui/grocery-assistant/grocery-assistant";
 import { env } from "@/lib/env";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "FMCG Commerce — Ultra-fast Grocery Delivery",
@@ -59,29 +67,20 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <>
-      <head>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <html lang="en" className="h-full antialiased">
-         <body className="min-h-full flex flex-col bg-[#f2f2f2] relative">
-           <AnimatedBackground />
-           <SkipLink />
-           <LayoutClient>
-             <ErrorBoundary>
-               <main id="main-content" tabIndex={-1} className="relative z-10">
-                 {children}
-               </main>
-             </ErrorBoundary>
-           </LayoutClient>
-           <GroceryAssistant />
-           <Toaster position="bottom-right" className="z-50" />
-         </body>
-       </html>
-    </>
+    <html lang="en" className={`h-full antialiased ${inter.variable} font-sans`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-[#f2f2f2] relative" suppressHydrationWarning>
+        <AnimatedBackground />
+        <SkipLink />
+        <LayoutClient>
+          <ErrorBoundary>
+            <main id="main-content" tabIndex={-1} className="relative z-10">
+              {children}
+            </main>
+          </ErrorBoundary>
+        </LayoutClient>
+        <GroceryAssistant />
+        <Toaster position="bottom-right" className="z-50" />
+      </body>
+    </html>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -44,9 +44,9 @@ export default function PartnerProfilePage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Partner Profile</h1>
-              <p className="mt-2 text-sm text-[#666]">View detailed partner information, documents, and performance.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Partner Profile</h1>
+              <p className="mt-1.5 text-xs text-[#666]">View detailed partner information, documents, and performance.</p>
             </div>
           </div>
         </section>
@@ -96,7 +96,7 @@ export default function PartnerProfilePage() {
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-6">
                 {/* Avatar */}
-                <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e8f5e9] text-3xl font-black text-[#0c831f]">
+                <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e8f5e9] text-2xl font-bold text-[#0c831f]">
                   {profile.name.charAt(0)}
                 </div>
 
@@ -104,7 +104,7 @@ export default function PartnerProfilePage() {
                 <div className="flex-1">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h2 className="text-xl font-black text-[#1a1a1a]">{profile.name}</h2>
+                      <h2 className="text-xl font-bold text-[#1a1a1a]">{profile.name}</h2>
                       <p className="text-sm text-[#999]">{profile.id}</p>
                     </div>
                     <span
@@ -183,7 +183,7 @@ export default function PartnerProfilePage() {
             {/* Documents & Verification */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
               <div className="mb-4">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Verification</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Verification</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">Documents & Background Check</h3>
               </div>
 
@@ -242,7 +242,7 @@ export default function PartnerProfilePage() {
             {/* Shifts */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
               <div className="mb-4">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Schedule</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Schedule</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">Working Shifts</h3>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">

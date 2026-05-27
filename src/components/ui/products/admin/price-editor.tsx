@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Save, X, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  Save, X, TrendingUp, TrendingDown, DollarSign,
+  Eye, Edit3, Trash2, ChevronUp, ChevronDown,
+  ChevronsUpDown, Filter, ChevronLeft, ChevronRight,
+} from "lucide-react";
 import { toast } from "sonner";
-import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 
 interface PricingItem {
   id: string;
@@ -22,213 +25,559 @@ interface PriceEditorProps {
   isLoading?: boolean;
 }
 
+type SortField = "name" | "price" | "mrp" | "cost" | "margin" | "tax";
+type SortDir = "asc" | "desc";
+type MarginFilter = "all" | "high" | "medium" | "low";
+
 export default function PriceEditor({ items, onUpdate, isLoading }: PriceEditorProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Record<string, { price: number; mrp: number; cost: number; tax: number }>>({});
-  const [savingId, setSavingId] = useState<string | null>(null);
+  // ── Sorting ──────────────────────────────────────────────
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  const startEdit = (item: PricingItem) => {
-    setEditingId(item.id);
-    setEditValues((prev) => ({
-      ...prev,
-      [item.id]: { price: item.price, mrp: item.mrp, cost: item.cost, tax: item.tax },
-    }));
+  // ── Filtering ────────────────────────────────────────────
+  const [marginFilter, setMarginFilter] = useState<MarginFilter>("all");
+  const [taxFilter, setTaxFilter] = useState<string>("all");
+
+  // ── Pagination ───────────────────────────────────────────
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const [viewItem, setViewItem] = useState<PricingItem | null>(null);
+
+  // ── Edit Drawer ──────────────────────────────────────────
+  const [editItem, setEditItem] = useState<PricingItem | null>(null);
+  const [editForm, setEditForm] = useState<{ price: number; mrp: number; cost: number; tax: number }>({
+    price: 0, mrp: 0, cost: 0, tax: 0,
+  });
+  const [saving, setSaving] = useState(false);
+
+  // ── Delete ───────────────────────────────────────────────
+  const deleteItem = (item: PricingItem) => {
+    toast.error(`Delete "${item.name}"?`, {
+      action: { label: "Confirm", onClick: () => toast.success(`${item.name} deleted`) },
+    });
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
+  const openEditDrawer = (item: PricingItem) => {
+    setEditItem(item);
+    setEditForm({ price: item.price, mrp: item.mrp, cost: item.cost, tax: item.tax });
   };
 
-  const saveEdit = async (item: PricingItem) => {
-    const vals = editValues[item.id];
-    if (!vals) return;
+  const closeEditDrawer = () => { setEditItem(null); };
 
-    setSavingId(item.id);
+  const handleSave = async () => {
+    if (!editItem || !onUpdate) return;
+    setSaving(true);
     try {
-      const success = await onUpdate?.(item.id, {
-        price: vals.price,
-        mrp: vals.mrp,
-        costPrice: vals.cost,
-        taxRate: vals.tax,
+      const ok = await onUpdate(editItem.id, {
+        price: editForm.price,
+        mrp: editForm.mrp,
+        costPrice: editForm.cost,
+        taxRate: editForm.tax,
       });
-      if (success) {
-        toast.success(`Pricing updated for ${item.name}`);
-        setEditingId(null);
+      if (ok) {
+        toast.success(`Pricing updated for ${editItem.name}`);
+        closeEditDrawer();
       }
     } finally {
-      setSavingId(null);
+      setSaving(false);
     }
   };
 
-  const handleChange = (id: string, field: "price" | "mrp" | "cost" | "tax", value: number) => {
-    setEditValues((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
+  // ── Sort handler ─────────────────────────────────────────
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
   };
 
+  // ── Unique tax values for filter ─────────────────────────
+  const taxValues = useMemo(
+    () => ["all", ...Array.from(new Set(items.map((i) => String(i.tax)))).sort()],
+    [items]
+  );
+
+  // ── Filtered + sorted + paginated data ──────────────────
+  const filteredSorted = useMemo(() => {
+    let data = [...items];
+    if (marginFilter !== "all") {
+      data = data.filter((i) =>
+        marginFilter === "high" ? i.margin >= 25 :
+        marginFilter === "medium" ? i.margin >= 10 && i.margin < 25 :
+        i.margin < 10
+      );
+    }
+    if (taxFilter !== "all") {
+      data = data.filter((i) => String(i.tax) === taxFilter);
+    }
+    data.sort((a, b) => {
+      const av = sortField === "name" ? a.name : a[sortField];
+      const bv = sortField === "name" ? b.name : b[sortField];
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return data;
+  }, [items, marginFilter, taxFilter, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSorted.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const displayItems = filteredSorted.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  // Reset to page 1 when filters change
+  const applyMarginFilter = (f: MarginFilter) => { setMarginFilter(f); setPage(1); };
+  const applyTaxFilter = (v: string) => { setTaxFilter(v); setPage(1); };
+
+
+  // ── Sort icon helper ─────────────────────────────────────
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ChevronsUpDown className="inline h-3 w-3 ml-1 text-[#ccc]" />;
+    return sortDir === "asc"
+      ? <ChevronUp className="inline h-3 w-3 ml-1 text-[#0c831f]" />
+      : <ChevronDown className="inline h-3 w-3 ml-1 text-[#0c831f]" />;
+  };
+
+  const thClass = "px-4 py-3 text-right cursor-pointer select-none hover:text-[#0c831f] transition-colors";
+
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#e8e8e8] bg-white">
-      <table className="w-full">
-        <thead>
-          <tr className="bg-[#f9fafb] text-left text-[10px] font-black uppercase tracking-wide text-[#666]">
-            <th className="px-4 py-3">Product</th>
-            <th className="px-4 py-3 text-right">Selling Price</th>
-            <th className="px-4 py-3 text-right">MRP</th>
-            <th className="px-4 py-3 text-right">Cost Price</th>
-            <th className="px-4 py-3 text-right">Margin</th>
-            <th className="px-4 py-3 text-right">Tax</th>
-            <th className="w-20 px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#e8e8e8]">
-          {items.map((item) => {
-            const isEditing = editingId === item.id;
-            const isSaving = savingId === item.id;
-            const vals = editValues[item.id];
-            const displayPrice = isEditing && vals ? vals.price : item.price;
-            const displayMrp = isEditing && vals ? vals.mrp : item.mrp;
-            const displayCost = isEditing && vals ? vals.cost : item.cost;
-            const displayTax = isEditing && vals ? vals.tax : item.tax;
-            const currentMargin = displayMrp > 0
-              ? Math.round(((displayMrp - displayCost) / displayMrp) * 1000) / 10
-              : 0;
+    <>
+      {/* ── Filter Bar ── */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e8e8e8] bg-white px-4 py-3">
+        <Filter className="h-4 w-4 text-[#999]" />
+        <span className="text-xs font-bold text-[#666]">Margin:</span>
+        {(["", "high", "medium", "low"] as MarginFilter[]).map((f) => (
+          <button
+            key={f || "all"}
+            onClick={() => applyMarginFilter((f || "all") as MarginFilter)}
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
+              marginFilter === (f || "all")
+                ? "bg-[#0c831f] text-white"
+                : "border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6]"
+            }`}
+          >
+            {!f ? "All" : f === "high" ? "High ≥25%" : f === "medium" ? "Mid 10–25%" : "Low <10%"}
+          </button>
+        ))}
 
-            const fieldClass =
-              "h-8 w-20 rounded-lg border border-[#e8e8e8] bg-white px-2 text-right text-xs outline-none transition focus:border-[#0c831f]";
+        <span className="ml-3 text-xs font-bold text-[#666]">Tax:</span>
+        <select
+          value={taxFilter}
+          onChange={(e) => applyTaxFilter(e.target.value)}
+          className="h-7 rounded-lg border border-[#e8e8e8] bg-white px-2 text-[11px] font-semibold text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+        >
+          {taxValues.map((t) => (
+            <option key={t} value={t}>{t === "all" ? "All Tax" : `${t}%`}</option>
+          ))}
+        </select>
 
-            return (
-              <tr key={item.id} className="text-sm transition hover:bg-[#f9fafb]">
-                <td className="px-4 py-3">
-                  <p className="font-bold text-[#1a1a1a]">{item.name}</p>
-                  <p className="text-[10px] text-[#999]">{item.sku}</p>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={vals?.price ?? item.price}
-                      onChange={(e) => handleChange(item.id, "price", Number(e.target.value))}
-                      className={fieldClass}
-                      min="0"
-                      step="0.01"
-                    />
-                  ) : (
-                    <span className="font-bold">₹{item.price}</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={vals?.mrp ?? item.mrp}
-                      onChange={(e) => handleChange(item.id, "mrp", Number(e.target.value))}
-                      className={fieldClass}
-                      min="0"
-                      step="0.01"
-                    />
-                  ) : (
-                    <span className="text-[#999] line-through">₹{item.mrp}</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={vals?.cost ?? item.cost}
-                      onChange={(e) => handleChange(item.id, "cost", Number(e.target.value))}
-                      className={fieldClass}
-                      min="0"
-                      step="0.01"
-                    />
-                  ) : (
-                    <span className="text-[#666]">₹{item.cost}</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <span
-                      className={`font-bold ${
-                        currentMargin >= 25
-                          ? "text-[#0c831f]"
-                          : currentMargin >= 10
-                          ? "text-[#d97706]"
-                          : "text-[#dc2626]"
-                      }`}
-                    >
-                      {currentMargin}%
-                    </span>
-                    {currentMargin >= 25 ? (
-                      <TrendingUp className="h-3 w-3 text-[#0c831f]" />
-                    ) : currentMargin < 10 ? (
-                      <TrendingDown className="h-3 w-3 text-[#dc2626]" />
-                    ) : null}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      value={vals?.tax ?? item.tax}
-                      onChange={(e) => handleChange(item.id, "tax", Number(e.target.value))}
-                      className="h-8 w-16 rounded-lg border border-[#e8e8e8] bg-white px-2 text-right text-xs outline-none transition focus:border-[#0c831f]"
-                      min="0"
-                      max="100"
-                    />
-                  ) : (
-                    <span>{item.tax}%</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {isEditing ? (
+        <span className="ml-auto text-[11px] text-[#999]">{filteredSorted.length} of {items.length} products</span>
+      </div>
+
+      {/* ── Table ── */}
+      <div className="overflow-x-auto rounded-xl border border-[#e8e8e8] bg-white">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-[#f9fafb] text-left text-[10px] font-semibold uppercase tracking-wide text-[#888]">
+              <th
+                className="px-4 py-3 cursor-pointer select-none hover:text-[#0c831f] transition-colors"
+                onClick={() => handleSort("name")}
+              >
+                Product <SortIcon field="name" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("price")}>
+                Selling Price <SortIcon field="price" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("mrp")}>
+                MRP <SortIcon field="mrp" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("cost")}>
+                Cost Price <SortIcon field="cost" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("margin")}>
+                Margin <SortIcon field="margin" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("tax")}>
+                Tax <SortIcon field="tax" />
+              </th>
+              <th className="w-28 px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#e8e8e8]">
+            {displayItems.map((item) => {
+              const marginColor =
+                item.margin >= 25 ? "text-[#0c831f]" :
+                item.margin >= 10 ? "text-[#d97706]" :
+                "text-[#dc2626]";
+
+              return (
+                <tr key={item.id} className="text-sm transition hover:bg-[#f9fafb]">
+                  <td className="px-4 py-3">
+                    <p className="font-bold text-[#1a1a1a]">{item.name}</p>
+                    <p className="text-[10px] text-[#999]">{item.sku}</p>
+                  </td>
+                  <td className="px-4 py-3 text-right font-bold">₹{item.price}</td>
+                  <td className="px-4 py-3 text-right text-[#999] line-through">₹{item.mrp}</td>
+                  <td className="px-4 py-3 text-right text-[#666]">₹{item.cost}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span className={`font-bold ${marginColor}`}>{item.margin}%</span>
+                      {item.margin >= 25 ? (
+                        <TrendingUp className="h-3 w-3 text-[#0c831f]" />
+                      ) : item.margin < 10 ? (
+                        <TrendingDown className="h-3 w-3 text-[#dc2626]" />
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">{item.tax}%</td>
+                  <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
-                        onClick={() => saveEdit(item)}
-                        disabled={isSaving}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#0c831f] transition hover:bg-[#e8f5e9] disabled:opacity-50"
+                        onClick={() => setViewItem(item)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#666] transition hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"
+                        title="View"
                       >
-                        <Save className="h-3.5 w-3.5" />
+                        <Eye className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={cancelEdit}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#666] transition hover:bg-[#f6f7f6]"
+                        onClick={() => openEditDrawer(item)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#666] transition hover:bg-[#e8f5e9] hover:text-[#0c831f]"
+                        title="Edit pricing"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <Edit3 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => deleteItem(item)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#666] transition hover:bg-[#fef2f2] hover:text-[#dc2626]"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                  ) : (
-                    <button
-                      onClick={() => startEdit(item)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-bold text-[#666] transition hover:bg-[#f6f7f6] hover:text-[#0c831f]"
-                    >
-                      Edit
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
 
-      {items.length === 0 && !isLoading && (
-        <div className="p-12 text-center">
-          <DollarSign className="mx-auto h-8 w-8 text-[#ccc]" />
-          <p className="mt-2 text-sm text-[#666]">No products found</p>
-        </div>
-      )}
+        {displayItems.length === 0 && !isLoading && (
+          <div className="p-10 text-center">
+            <DollarSign className="mx-auto h-7 w-7 text-[#ccc]" />
+            <p className="mt-2 text-xs text-[#999]">No products match the current filters</p>
+          </div>
+        )}
 
-      {isLoading && (
-        <div className="space-y-3 p-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex gap-4">
-              {Array.from({ length: 7 }).map((_, j) => (
-                <div key={j} className="h-8 flex-1 skeleton-shimmer rounded-lg" />
+        {isLoading && (
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                {Array.from({ length: 7 }).map((_, j) => (
+                  <div key={j} className="h-8 flex-1 skeleton-shimmer rounded-lg" />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Pagination ── */}
+      {filteredSorted.length > 0 && (
+        <div className="flex items-center justify-between border-t border-[#e8e8e8] px-4 py-3">
+          {/* Page size */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[#999]">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              className="h-7 rounded-lg border border-[#e8e8e8] bg-white px-2 text-[11px] font-semibold text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+            >
+              {[5, 10, 20, 50].map((s) => (
+                <option key={s} value={s}>{s}</option>
               ))}
-            </div>
-          ))}
+            </select>
+          </div>
+
+          {/* Page info + controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[#999]">
+              {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filteredSorted.length)} of {filteredSorted.length}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#e8e8e8] text-[#666] transition hover:bg-[#f6f7f6] disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            {/* Page number pills */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+              .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-[11px] text-[#999]">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold transition ${
+                      safePage === p
+                        ? "bg-[#0c831f] text-white"
+                        : "border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#e8e8e8] text-[#666] transition hover:bg-[#f6f7f6] disabled:opacity-40"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
-    </div>
+
+      {/* ── View Modal ── */}
+      {viewItem && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+            onClick={() => setViewItem(null)}
+          />
+          {/* Dialog */}
+          <div className="fixed left-1/2 top-1/2 z-[70] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#e8e8e8] px-6 py-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#0c831f]">Pricing Details</p>
+                <h2 className="mt-0.5 text-base font-black text-[#1a1a1a]">{viewItem.name}</h2>
+                <p className="text-[10px] text-[#999]">{viewItem.sku}</p>
+              </div>
+              <button
+                onClick={() => setViewItem(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6] transition-all"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Selling Price", value: `₹${viewItem.price}`, highlight: true },
+                  { label: "MRP", value: `₹${viewItem.mrp}` },
+                  { label: "Cost Price", value: `₹${viewItem.cost}` },
+                  { label: "Tax Rate", value: `${viewItem.tax}%` },
+                ].map((f) => (
+                  <div key={f.label} className="rounded-xl bg-[#f9fafb] px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">{f.label}</p>
+                    <p className={`mt-1 text-lg font-black ${f.highlight ? "text-[#0c831f]" : "text-[#1a1a1a]"}`}>
+                      {f.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {/* Margin bar */}
+              <div className="mt-4 rounded-xl bg-[#f9fafb] px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">Profit Margin</p>
+                  <span className={`text-lg font-black ${
+                    viewItem.margin >= 25 ? "text-[#0c831f]" :
+                    viewItem.margin >= 10 ? "text-[#d97706]" : "text-[#dc2626]"
+                  }`}>
+                    {viewItem.margin}%
+                  </span>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#e8e8e8]">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      viewItem.margin >= 25 ? "bg-[#0c831f]" :
+                      viewItem.margin >= 10 ? "bg-[#d97706]" : "bg-[#dc2626]"
+                    }`}
+                    style={{ width: `${Math.min(viewItem.margin, 100)}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[10px] text-[#999]">
+                  {viewItem.margin >= 25 ? "High margin product" :
+                   viewItem.margin >= 10 ? "Medium margin product" : "Low margin — review pricing"}
+                </p>
+              </div>
+            </div>
+            <div className="border-t border-[#e8e8e8] px-6 py-4 flex justify-end">
+              <button
+                onClick={() => { setViewItem(null); openEditDrawer(viewItem); }}
+                className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all"
+              >
+                <Edit3 className="h-4 w-4" /> Edit Pricing
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Edit Drawer ── */}
+      <div
+        className={`fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+          editItem ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeEditDrawer}
+      />
+      <aside
+        className={`fixed right-0 top-0 z-[70] flex h-full w-[400px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+          editItem ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between border-b border-[#e8e8e8] px-6 py-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wide text-[#0c831f]">Edit Pricing</p>
+            <h2 className="mt-0.5 text-base font-black text-[#1a1a1a] truncate max-w-[280px]">{editItem?.name}</h2>
+            <p className="text-[10px] text-[#999] mt-0.5">{editItem?.sku}</p>
+          </div>
+          <button
+            onClick={closeEditDrawer}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6] transition-all"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Inputs */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {/* Live margin preview */}
+          {editItem && (
+            <div className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">Live Margin Preview</p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className={`text-2xl font-black ${
+                  editForm.mrp > 0 && ((editForm.mrp - editForm.cost) / editForm.mrp) * 100 >= 25
+                    ? "text-[#0c831f]"
+                    : editForm.mrp > 0 && ((editForm.mrp - editForm.cost) / editForm.mrp) * 100 >= 10
+                    ? "text-[#d97706]"
+                    : "text-[#dc2626]"
+                }`}>
+                  {editForm.mrp > 0
+                    ? (((editForm.mrp - editForm.cost) / editForm.mrp) * 100).toFixed(1)
+                    : "0.0"}%
+                </span>
+                <span className="text-xs text-[#999]">margin on MRP</span>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Selling Price (₹)</label>
+            <input
+              type="number"
+              value={editForm.price}
+              onChange={(e) => setEditForm((f) => ({ ...f, price: Number(e.target.value) }))}
+              min="0"
+              step="0.01"
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm font-bold text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (₹)</label>
+            <input
+              type="number"
+              value={editForm.mrp}
+              onChange={(e) => setEditForm((f) => ({ ...f, mrp: Number(e.target.value) }))}
+              min="0"
+              step="0.01"
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm font-bold text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            />
+            {editForm.mrp > 0 && editForm.price > 0 && (
+              <p className="mt-1 text-[10px] text-[#0c831f]">
+                Discount: {(((editForm.mrp - editForm.price) / editForm.mrp) * 100).toFixed(1)}% off MRP
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Cost Price (₹)</label>
+            <input
+              type="number"
+              value={editForm.cost}
+              onChange={(e) => setEditForm((f) => ({ ...f, cost: Number(e.target.value) }))}
+              min="0"
+              step="0.01"
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] px-3 text-sm font-bold text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            />
+            {editForm.price > 0 && editForm.cost > 0 && (
+              <p className="mt-1 text-[10px] text-[#999]">
+                Gross profit: ₹{(editForm.price - editForm.cost).toFixed(2)} per unit
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Tax Rate (%)</label>
+            <select
+              value={editForm.tax}
+              onChange={(e) => setEditForm((f) => ({ ...f, tax: Number(e.target.value) }))}
+              className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm font-bold text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors"
+            >
+              {[0, 5, 12, 18, 28].map((t) => (
+                <option key={t} value={t}>{t}% GST</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Summary card */}
+          <div className="rounded-xl border border-[#e8e8e8] bg-[#f9fafb] p-4 space-y-2 text-xs">
+            <p className="font-black text-[#666] uppercase tracking-wide text-[10px]">Price Summary</p>
+            <div className="flex justify-between">
+              <span className="text-[#999]">Selling Price</span>
+              <span className="font-bold text-[#1a1a1a]">₹{editForm.price}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#999]">MRP</span>
+              <span className="font-bold text-[#1a1a1a]">₹{editForm.mrp}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#999]">Cost</span>
+              <span className="font-bold text-[#1a1a1a]">₹{editForm.cost}</span>
+            </div>
+            <div className="flex justify-between border-t border-[#e8e8e8] pt-2">
+              <span className="text-[#999]">Tax amount</span>
+              <span className="font-bold text-[#1a1a1a]">
+                ₹{((editForm.price * editForm.tax) / 100).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 border-t border-[#e8e8e8] bg-white px-6 py-4">
+          <button
+            onClick={closeEditDrawer}
+            className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6] transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

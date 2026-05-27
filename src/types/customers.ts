@@ -11,7 +11,7 @@ export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 export type TicketPriority = "low" | "medium" | "high" | "urgent";
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 export type FraudStatus = "monitoring" | "flagged" | "investigating" | "blocked" | "cleared";
-export type CustomerAction = "created" | "updated" | "blocked" | "suspended" | "note_added" | "segment_changed" | "login" | "order_placed";
+export type CustomerAction = "created" | "updated" | "blocked" | "suspended" | "note_added" | "segment_changed" | "login" | "order_placed" | "email_sent";
 export type ExportFormat = "csv" | "xlsx" | "pdf";
 export type ExportStatus = "pending" | "processing" | "completed" | "failed";
 
@@ -66,7 +66,7 @@ export type Customer = z.infer<typeof CustomerSchema>;
 export const CustomerActivitySchema = z.object({
   id: z.string(),
   customerId: z.string(),
-  action: z.enum(["created", "updated", "blocked", "suspended", "note_added", "segment_changed", "login", "order_placed"]),
+  action: z.enum(["created", "updated", "blocked", "suspended", "note_added", "segment_changed", "login", "order_placed", "email_sent"]),
   description: z.string(),
   performedBy: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),

@@ -59,10 +59,21 @@ export function useCustomers(initialFilters?: CustomerFilters) {
   const setPage = useCallback((p: number) => setPagination((prev) => ({ ...prev, page: p })), []);
   const setPageSize = useCallback((s: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize: s })), []);
 
+  const updateCustomer = useCallback(async (id: string, data: Partial<Customer>) => {
+    try {
+      const updated = await customerService.updateCustomer(id, data);
+      await fetchCustomers();
+      return updated || null;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update customer");
+      return null;
+    }
+  }, [fetchCustomers]);
+
   return {
     customers, loading, error, search, setSearch,
     segmentFilter, setSegmentFilter, statusFilter, setStatusFilter,
-    pagination, summary, setPage, setPageSize, fetchCustomers,
+    pagination, summary, setPage, setPageSize, fetchCustomers, updateCustomer,
   };
 }
 

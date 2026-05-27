@@ -9,12 +9,80 @@ import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
 import { usePromotions } from "@/hooks/use-promotions";
-import { Percent, Plus, Edit3, Copy, Trash2, Gift, Zap, Clock } from "lucide-react";
+import { promotionService } from "@/services/promotions.service";
+import type { Promotion } from "@/types/promotions";
+import { Percent, Plus, Edit3, Copy, Trash2, Gift, Zap, Clock, Eye, X, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PromotionsPage() {
-  const { promotions, summary, pagination, loading, error, filters, updateFilters, fetchPromotions, setPage, setPageSize } = usePromotions();
+  const { promotions, summary, pagination, loading, error, filters, updateFilters, fetchPromotions, updatePromotion, deletePromotion, setPage, setPageSize } = usePromotions();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState<Promotion | null>(null);
+  const [editPromotion, setEditPromotion] = useState<Promotion | null>(null);
+  
+  // Forms state
+  const [createForm, setCreateForm] = useState<Partial<Promotion>>({
+    name: "",
+    description: "",
+    type: "discount",
+    discountType: "percentage",
+    discountValue: 0,
+    minOrder: 0,
+    usageLimit: 1000,
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    status: "active",
+  });
+
+  const [editForm, setEditForm] = useState<Partial<Promotion>>({});
+
+  const handleCreate = async () => {
+    if (!createForm.name) {
+      toast.error("Promotion name is required");
+      return;
+    }
+    const res = await promotionService.createPromotion(createForm);
+    if (res) {
+      toast.success(`Promotion "${res.name}" created!`);
+      setShowCreateModal(false);
+      setCreateForm({
+        name: "",
+        description: "",
+        type: "discount",
+        discountType: "percentage",
+        discountValue: 0,
+        minOrder: 0,
+        usageLimit: 1000,
+        startDate: new Date().toISOString().split("T")[0],
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        status: "active",
+      });
+      fetchPromotions();
+    } else {
+      toast.error("Failed to create promotion");
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!editPromotion || !editForm.name) return;
+    const res = await updatePromotion(editPromotion.id, editForm);
+    if (res) {
+      toast.success(`Promotion "${editForm.name}" updated successfully`);
+      setEditPromotion(null);
+      setEditForm({});
+    } else {
+      toast.error("Failed to update promotion");
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    const success = await deletePromotion(id);
+    if (success) {
+      toast.success(`Deleted promotion "${name}"`);
+    } else {
+      toast.error("Failed to delete promotion");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -22,9 +90,9 @@ export default function PromotionsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Promotions</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Offers & Coupons</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Promotions</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Offers & Coupons</h1>
+              <p className="mt-1.5 max-w-2xl text-xs text-[#666]">
                 Manage coupons, flash sales, campaigns, and A/B testing for promotions.
               </p>
             </div>
@@ -107,9 +175,13 @@ export default function PromotionsPage() {
             { key: "endDate", header: "End", width: "110px", hideOnMobile: true },
           ]}
           actions={[
-            { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (p) => toast.info(`Editing ${p.name}`) },
-            { label: "Duplicate", icon: <Copy className="h-3.5 w-3.5" />, onClick: (p) => toast.success(`Duplicated ${p.name}`) },
-            { label: "Delete", icon: <Trash2 className="h-3.5 w-3.5" />, onClick: (p) => toast.error(`Deleted ${p.name}`), variant: "danger" },
+            { label: "View", icon: <Eye className="h-3.5 w-3.5" />, onClick: (p) => setShowViewModal(p) },
+            { label: "Edit", icon: <Edit3 className="h-3.5 w-3.5" />, onClick: (p) => { setEditPromotion(p); setEditForm({ ...p }); } },
+            { label: "Duplicate", icon: <Copy className="h-3.5 w-3.5" />, onClick: async (p) => {
+              const res = await promotionService.createPromotion({ ...p, id: undefined, name: `${p.name} (Copy)` });
+              if (res) { toast.success(`Duplicated "${p.name}"`); fetchPromotions(); }
+            }},
+            { label: "Delete", icon: <Trash2 className="h-3.5 w-3.5" />, onClick: (p) => handleDelete(p.id, p.name), variant: "danger" },
           ]}
         />
       </div>
@@ -117,34 +189,223 @@ export default function PromotionsPage() {
       {/* Create Promotion Modal */}
       <ReusableModal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Promotion" subtitle="Configure a new promotion, coupon, or flash sale" size="md">
         <div className="space-y-4">
-          {[
-            { label: "Promotion Name", placeholder: "Enter promotion name" },
-            { label: "Type", type: "select", options: ["coupon", "discount", "flash_sale", "buy_x_get_y"] },
-            { label: "Discount Type", type: "select", options: ["percentage", "fixed"] },
-            { label: "Discount Value", type: "number", placeholder: "0" },
-            { label: "Min Order (₹)", type: "number", placeholder: "0 (optional)" },
-            { label: "Max Uses", type: "number", placeholder: "Unlimited" },
-            { label: "Start Date", type: "date" },
-            { label: "End Date", type: "date" },
-          ].map((field) => (
-            <div key={field.label}>
-              <label className="mb-1.5 block text-xs font-bold text-[#666]">{field.label}</label>
-              {field.type === "select" ? (
-                <select className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
-                  <option value="">Select {field.label}</option>
-                  {(field.options as string[])?.map((opt) => <option key={opt} value={opt}>{opt.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>)}
-                </select>
-              ) : (
-                <input type={field.type || "text"} placeholder={field.placeholder} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
-              )}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Promotion Name</label>
+            <input type="text" value={createForm.name || ""} onChange={(e) => setCreateForm(f => ({ ...f, name: e.target.value }))} placeholder="Enter promotion name" className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Description</label>
+            <input type="text" value={createForm.description || ""} onChange={(e) => setCreateForm(f => ({ ...f, description: e.target.value }))} placeholder="Enter description" className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Type</label>
+              <select value={createForm.type || ""} onChange={(e) => setCreateForm(f => ({ ...f, type: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                <option value="discount">Discount</option>
+                <option value="coupon">Coupon</option>
+                <option value="flash_sale">Flash Sale</option>
+                <option value="buy_x_get_y">Buy X Get Y</option>
+              </select>
             </div>
-          ))}
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount Type</label>
+              <select value={createForm.discountType || ""} onChange={(e) => setCreateForm(f => ({ ...f, discountType: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+                <option value="bogo">BOGO</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount Value</label>
+              <input type="number" value={createForm.discountValue ?? ""} onChange={(e) => setCreateForm(f => ({ ...f, discountValue: Number(e.target.value) }))} placeholder="0" className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Min Order (₹)</label>
+              <input type="number" value={createForm.minOrder ?? ""} onChange={(e) => setCreateForm(f => ({ ...f, minOrder: Number(e.target.value) }))} placeholder="0 (optional)" className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Max Uses</label>
+              <input type="number" value={createForm.usageLimit ?? ""} onChange={(e) => setCreateForm(f => ({ ...f, usageLimit: Number(e.target.value) }))} placeholder="1000" className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none placeholder:text-[#999] focus:border-[#0c831f]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Start Date</label>
+              <input type="date" value={createForm.startDate || ""} onChange={(e) => setCreateForm(f => ({ ...f, startDate: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">End Date</label>
+              <input type="date" value={createForm.endDate || ""} onChange={(e) => setCreateForm(f => ({ ...f, endDate: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]" />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Status</label>
+            <select value={createForm.status || ""} onChange={(e) => setCreateForm(f => ({ ...f, status: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+              <option value="active">Active</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
         </div>
         <div className="mt-6 flex justify-end gap-3 border-t border-[#e8e8e8] pt-4">
           <button onClick={() => setShowCreateModal(false)} className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6]">Cancel</button>
-          <button onClick={() => { toast.success("Promotion created!"); setShowCreateModal(false); }} className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">Create Promotion</button>
+          <button onClick={handleCreate} className="rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18]">Create Promotion</button>
         </div>
       </ReusableModal>
+
+      {/* View Promotion Modal */}
+      <ReusableModal open={!!showViewModal} onClose={() => setShowViewModal(null)} title="Promotion Details" subtitle={showViewModal?.id} size="md">
+        {showViewModal && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-[#e8e8e8] pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#1a1a1a]">{showViewModal.name}</h3>
+                <p className="text-xs text-[#666]">{showViewModal.description || "No description provided."}</p>
+              </div>
+              <StatusBadge status={showViewModal.status} />
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">Type</span>
+                <span className="font-semibold text-[#1a1a1a]">{showViewModal.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">Discount</span>
+                <span className="font-semibold text-[#1a1a1a]">
+                  {showViewModal.discountType === "percentage" ? `${showViewModal.discountValue}% Off` : `₹${showViewModal.discountValue} Off`}
+                </span>
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">Min Order</span>
+                <span className="font-semibold text-[#1a1a1a]">₹{showViewModal.minOrder || 0}</span>
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">Usage</span>
+                <span className="font-semibold text-[#1a1a1a]">{showViewModal.usageCount.toLocaleString()} / {showViewModal.usageLimit.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">Start Date</span>
+                <span className="font-semibold text-[#1a1a1a]">{showViewModal.startDate}</span>
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-[#999] uppercase">End Date</span>
+                <span className="font-semibold text-[#1a1a1a]">{showViewModal.endDate}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </ReusableModal>
+
+      {/* Edit Promotion Drawer */}
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+          editPromotion ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setEditPromotion(null)}
+      />
+
+      {/* Slide-in panel */}
+      <aside
+        className={`fixed right-0 top-0 z-[70] flex h-full w-[480px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+          editPromotion ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between border-b border-[#e8e8e8] bg-white px-6 py-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
+              Edit Promotion
+            </p>
+            <h2 className="mt-0.5 text-base font-black text-[#1a1a1a] truncate max-w-xs">
+              {editPromotion?.name}
+            </h2>
+            <p className="text-[10px] text-[#999] mt-0.5">{editPromotion?.id}</p>
+          </div>
+          <button
+            onClick={() => setEditPromotion(null)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#e8e8e8] text-[#666] hover:bg-[#f6f7f6] transition-all"
+            aria-label="Close edit panel"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Scrollable fields */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Promotion Name</label>
+            <input type="text" value={editForm.name || ""} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Description</label>
+            <input type="text" value={editForm.description || ""} onChange={(e) => setEditForm(f => ({ ...f, description: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Type</label>
+              <select value={editForm.type || ""} onChange={(e) => setEditForm(f => ({ ...f, type: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                <option value="discount">Discount</option>
+                <option value="coupon">Coupon</option>
+                <option value="flash_sale">Flash Sale</option>
+                <option value="buy_x_get_y">Buy X Get Y</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount Type</label>
+              <select value={editForm.discountType || ""} onChange={(e) => setEditForm(f => ({ ...f, discountType: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+                <option value="bogo">BOGO</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Discount Value</label>
+              <input type="number" value={editForm.discountValue ?? ""} onChange={(e) => setEditForm(f => ({ ...f, discountValue: Number(e.target.value) }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Min Order (₹)</label>
+              <input type="number" value={editForm.minOrder ?? ""} onChange={(e) => setEditForm(f => ({ ...f, minOrder: Number(e.target.value) }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Max Uses</label>
+              <input type="number" value={editForm.usageLimit ?? ""} onChange={(e) => setEditForm(f => ({ ...f, usageLimit: Number(e.target.value) }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] transition-colors" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Start Date</label>
+              <input type="date" value={editForm.startDate || ""} onChange={(e) => setEditForm(f => ({ ...f, startDate: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">End Date</label>
+              <input type="date" value={editForm.endDate || ""} onChange={(e) => setEditForm(f => ({ ...f, endDate: e.target.value }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]" />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Status</label>
+            <select value={editForm.status || ""} onChange={(e) => setEditForm(f => ({ ...f, status: e.target.value as any }))} className="h-10 w-full rounded-xl border border-[#e8e8e8] bg-white px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]">
+              <option value="active">Active</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="paused">Paused</option>
+              <option value="expired">Expired</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Drawer footer */}
+        <div className="flex items-center justify-end gap-3 border-t border-[#e8e8e8] bg-white px-6 py-4">
+          <button onClick={() => setEditPromotion(null)} className="rounded-xl border border-[#e8e8e8] bg-white px-5 py-2.5 text-sm font-bold text-[#666] hover:bg-[#f6f7f6] transition-all">Cancel</button>
+          <button onClick={handleEditSave} className="flex items-center gap-2 rounded-xl bg-[#0c831f] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0a6a18] transition-all">
+            <Save className="h-4 w-4" />
+            Save Changes
+          </button>
+        </div>
+      </aside>
     </DashboardLayout>
   );
 }

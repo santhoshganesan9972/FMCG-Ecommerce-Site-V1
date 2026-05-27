@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -360,13 +360,13 @@ export default function NotificationsPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">
                 Notifications
               </p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">
                 Notification Center
               </h1>
-              <p className="mt-1 text-sm text-[#666]">
+              <p className="mt-1 text-xs text-[#666]">
                 Stay updated with orders, inventory, vendors, and system alerts
               </p>
             </div>
@@ -536,7 +536,7 @@ export default function NotificationsPage() {
               <ShieldAlert className="h-7 w-7 text-[#dc2626]" />
             </div>
             <p className="text-lg font-black text-[#1a1a1a]">Something went wrong</p>
-            <p className="mt-1 text-sm text-[#666]">{error}</p>
+            <p className="mt-1 text-xs text-[#666]">{error}</p>
             <button
               onClick={() => window.location.reload()}
               className="mt-4 rounded-xl bg-[#0c831f] px-5 py-2 text-sm font-bold text-white"
@@ -554,7 +554,7 @@ export default function NotificationsPage() {
                 ? "No notifications found"
                 : "All caught up!"}
             </p>
-            <p className="mt-1 text-sm text-[#666]">
+            <p className="mt-1 text-xs text-[#666]">
               {search
                 ? "Try a different search term"
                 : "You have no unread notifications"}

@@ -34,9 +34,9 @@ export default function OrdersPage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Orders</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Order Management</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[#666]">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Order Management</h1>
+              <p className="mt-1.5 max-w-2xl text-xs text-[#666]">
                 Track, manage, and fulfill orders. View order timelines, assign delivery partners, and process substitutions.
               </p>
             </div>
@@ -98,12 +98,12 @@ export default function OrdersPage() {
             onRowClick={(o: Order) => setShowDetailModal(o)}
             columns={[
               { key: "id", header: "Order ID", width: "110px", render: (o) => <span className="font-bold text-[#0c831f]">{(o as Order).id}</span> },
-              { key: "customer", header: "Customer", sortable: true, render: (o) => {
+              { key: "customer", header: "Customer", width: "150px", sortable: true, render: (o) => {
                 const ord = o as Order;
                 return (
-                  <div>
-                    <span className="font-bold text-[#1a1a1a]">{ord.customer}</span>
-                    <span className="block text-[10px] text-[#999]">{ord.email}</span>
+                  <div className="max-w-[140px] truncate">
+                    <span className="font-bold text-[#1a1a1a] truncate block">{ord.customer}</span>
+                    <span className="block text-[10px] text-[#999] truncate">{ord.email}</span>
                   </div>
                 );
               }},

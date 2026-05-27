@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -36,9 +36,9 @@ export default function PartnerPerformancePage() {
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Delivery</p>
-              <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Partner Performance</h1>
-              <p className="mt-2 text-sm text-[#666]">Analyze delivery partner performance metrics, trends, and ratings.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
+              <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Partner Performance</h1>
+              <p className="mt-1.5 text-xs text-[#666]">Analyze delivery partner performance metrics, trends, and ratings.</p>
             </div>
             <div className="flex items-center gap-2">
               <select
@@ -76,7 +76,7 @@ export default function PartnerPerformancePage() {
           <>
             {/* Top Performers */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Leaderboard</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Leaderboard</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Top Performing Partners</h3>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {topPerformers.map((perf, idx) => (
@@ -128,7 +128,7 @@ export default function PartnerPerformancePage() {
             {/* Selected Partner Performance Detail */}
             {selectedPerformance && (
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Detail</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Detail</p>
                 <h3 className="text-sm font-black text-[#1a1a1a]">{selectedPerformance.partnerName} — Performance</h3>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -183,7 +183,7 @@ export default function PartnerPerformancePage() {
 
             {/* All Partners Performance Table */}
             <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">All Partners</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">All Partners</p>
               <h3 className="text-sm font-black text-[#1a1a1a] mb-3">Performance Summary</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">

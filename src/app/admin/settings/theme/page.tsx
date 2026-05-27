@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useThemeSettings } from "@/hooks/use-settings";
@@ -107,7 +107,7 @@ export default function ThemeSettingsPage() {
                 <p className="text-xs font-black uppercase tracking-wide" style={{ color: localTheme.primaryColor }}>
                   Theme Preview
                 </p>
-                <h2 className="mt-1 text-xl font-black text-[#1a1a1a]">Live Preview</h2>
+                <h2 className="mt-1 text-xl font-bold text-[#1a1a1a]">Live Preview</h2>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-[#f6f7f6] px-3 py-1 text-xs font-bold text-[#666]">

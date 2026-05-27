@@ -18,9 +18,9 @@ export default function CustomerAnalyticsPage() {
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-xs font-black uppercase tracking-wide text-[#0c831f]">Customers</p>
-          <h1 className="mt-1 text-2xl font-black text-[#1a1a1a] sm:text-3xl">Customer Analytics</h1>
-          <p className="mt-2 text-sm text-[#666]">Deep-dive analytics on customer behavior, lifetime value, and engagement metrics.</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Customers</p>
+          <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Customer Analytics</h1>
+          <p className="mt-1.5 text-xs text-[#666]">Deep-dive analytics on customer behavior, lifetime value, and engagement metrics.</p>
         </section>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -32,7 +32,7 @@ export default function CustomerAnalyticsPage() {
                   <span className="text-[10px] font-black uppercase tracking-wide text-[#666]">{m.label}</span>
                   <m.icon className={`h-4 w-4 ${m.color}`} />
                 </div>
-                <p className="mt-2 text-xl font-black text-[#1a1a1a]">{m.value}</p>
+                <p className="mt-2 text-xl font-bold text-[#1a1a1a]">{m.value}</p>
                 <div className="mt-1 flex items-center gap-1">
                   <TrendIcon className={`h-3 w-3 ${m.trend === "up" ? "text-[#0c831f]" : "text-[#ff4f8b]"}`} />
                   <span className={`text-xs font-bold ${m.trend === "up" ? "text-[#0c831f]" : "text-[#ff4f8b]"}`}>{m.change}</span>
@@ -44,9 +44,9 @@ export default function CustomerAnalyticsPage() {
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-            <p className="mb-3 text-xs font-black uppercase tracking-wide text-[#0c831f]">Cohorts</p>
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Cohorts</p>
             <h3 className="text-sm font-black text-[#1a1a1a]">Customer Acquisition by Month</h3>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 space-y-4">
               {["May 2026", "Apr 2026", "Mar 2026", "Feb 2026", "Jan 2026"].map((month, i) => {
                 const count = [890, 720, 650, 580, 620][i];
                 const max = 890;
@@ -64,9 +64,9 @@ export default function CustomerAnalyticsPage() {
           </div>
 
           <div className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
-            <p className="mb-3 text-xs font-black uppercase tracking-wide text-[#0c831f]">Retention</p>
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Retention</p>
             <h3 className="text-sm font-black text-[#1a1a1a]">Cohort Retention Rates</h3>
-            <div className="mt-4 space-y-2">
+            <div className="mt-4 space-y-4">
               {["Month 1", "Month 2", "Month 3", "Month 4", "Month 5"].map((m, i) => {
                 const rate = [100, 68, 52, 41, 35][i];
                 return (
