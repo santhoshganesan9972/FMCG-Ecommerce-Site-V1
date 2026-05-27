@@ -159,8 +159,6 @@ export default function CategoryTable() {
     if (!dragging) return;
 
     // In a real app, we would update the order in the database
-    // For now, we'll just log the action
-    console.log(`Moving category ${dragging} to position after ${categoryId}`);
     setDragging(null);
   };
 
