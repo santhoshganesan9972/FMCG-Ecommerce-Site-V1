@@ -47,7 +47,8 @@ export default function InventoryReportsPage() {
 
   const [selectedEntry, setSelectedEntry] = useState<InventoryReportEntry | null>(null);
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Inventory Reports"
@@ -318,5 +319,9 @@ export default function InventoryReportsPage() {
             </div>
           </div>
         )}
-      </ReusableDrawer>  );
+      </ReusableDrawer>
+       </>
+
+
+  );
 }

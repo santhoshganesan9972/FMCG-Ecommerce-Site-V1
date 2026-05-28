@@ -49,7 +49,8 @@ export default function TaxReportsPage() {
 
   const [selectedReport, setSelectedReport] = useState<TaxReportEntry | null>(null);
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Tax Reports"
@@ -327,5 +328,9 @@ export default function TaxReportsPage() {
             </div>
           </div>
         )}
-      </ReusableDrawer>  );
+      </ReusableDrawer>
+       </>
+
+
+  );
 }

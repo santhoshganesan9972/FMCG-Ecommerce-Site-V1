@@ -47,7 +47,8 @@ export default function VendorReportsPage() {
 
   const [selectedVendor, setSelectedVendor] = useState<VendorReportEntry | null>(null);
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Vendor Reports"
@@ -305,5 +306,9 @@ export default function VendorReportsPage() {
             </div>
           </div>
         )}
-      </ReusableDrawer>  );
+      </ReusableDrawer>
+       </>
+
+
+  );
 }

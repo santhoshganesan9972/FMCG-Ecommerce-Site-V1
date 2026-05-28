@@ -186,23 +186,27 @@ export default function ProfilePage() {
     } finally {
       setRotatingKey(false);
     }
-  };
-
-  if (loading) {
-    return (        <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
-        </div>    );
+  };  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
+      </div>
+    );
   }
 
   if (error || !profile) {
-    return (        <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
-          <AlertTriangle className="h-10 w-10 text-[#dc2626]" />
-          <p className="mt-4 text-lg font-black text-[#1a1a1a]">Failed to load profile</p>
-          <p className="text-sm text-[#666]">{error}</p>
-        </div>    );
+    return (
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
+        <AlertTriangle className="h-10 w-10 text-[#dc2626]" />
+        <p className="mt-4 text-lg font-black text-[#1a1a1a]">Failed to load profile</p>
+        <p className="text-sm text-[#666]">{error}</p>
+      </div>
+    );
   }
 
-  return (      <div className="space-y-4 p-2 sm:p-4">
+  return (
+    <>
+      <div className="space-y-4 p-2 sm:p-4">
         {/* -- Header / Profile Card ------------------------- */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white shadow-sm">
           <div className="relative h-24 rounded-t-2xl bg-gradient-to-r from-[#0c831f] to-[#0a6a18] sm:h-32" />
@@ -1008,5 +1012,8 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-      </ReusableModal>  );
+      </ReusableModal>
+       </>
+
+    );
 }

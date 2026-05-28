@@ -16,7 +16,8 @@ export default function AssignPartnerPage() {
   const { partners, onlineCount, zones, fetchPartners } = useDeliveryPartners();
   const [showAssignModal, setShowAssignModal] = useState<Order | null>(null);
 
-  return (      <div className="space-y-4 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -71,5 +72,9 @@ export default function AssignPartnerPage() {
         onClose={() => setShowAssignModal(null)}
         order={showAssignModal}
         onAssigned={() => { fetchOrders(); fetchPartners(); }}
-      />  );
+      />
+       </>
+
+
+  );
 }

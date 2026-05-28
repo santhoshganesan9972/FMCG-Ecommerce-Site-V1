@@ -67,7 +67,8 @@ export default function VendorOnboardingPage() {
     }
   };
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Vendors"
           title="Vendor Onboarding"
@@ -316,5 +317,9 @@ export default function VendorOnboardingPage() {
             </button>
           </div>
         </div>
-      </ReusableModal>  );
+      </ReusableModal>
+       </>
+
+
+  );
 }

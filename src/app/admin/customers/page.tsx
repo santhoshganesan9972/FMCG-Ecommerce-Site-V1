@@ -193,7 +193,8 @@ export default function CustomersPage() {
     }
   }, [showDetailModal]);
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -873,5 +874,9 @@ export default function CustomersPage() {
             Save Changes
           </button>
         </div>
-      </aside>  );
+      </aside>
+       </>
+
+
+  );
 }

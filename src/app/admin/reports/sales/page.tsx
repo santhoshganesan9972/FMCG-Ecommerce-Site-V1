@@ -48,7 +48,8 @@ export default function SalesReportsPage() {
     .map((r) => ({ label: r.date.slice(5), value: r.grossRevenue }));
   const maxChart = Math.max(...chartData.map((d) => d.value), 1);
 
-  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Sales Reports"
@@ -338,5 +339,9 @@ export default function SalesReportsPage() {
             </div>
           </div>
         )}
-      </ReusableDrawer>  );
+      </ReusableDrawer>
+       </>
+
+
+  );
 }
