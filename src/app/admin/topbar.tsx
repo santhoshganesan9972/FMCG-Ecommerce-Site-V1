@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { Bell, Search, Zap, PanelLeft, PanelLeftClose } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Topbar({
       } ${className || ""}`}
     >
       <div className="flex h-full items-center justify-between gap-2 px-2 sm:px-4 md:px-5">
-        {/* ── Sidebar toggle — always visible on desktop ── */}
+        {/* -- Sidebar toggle - always visible on desktop -- */}
         <button
           onClick={onToggleSidebar}
           className="hidden md:flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-[#e8e8e8] text-[#666] transition-all duration-200 hover:bg-[#f6f7f6] hover:text-[#1a1a1a]"

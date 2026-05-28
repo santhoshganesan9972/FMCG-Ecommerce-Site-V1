@@ -80,7 +80,7 @@ export const usePushNotificationStore = create<PushSubscriptionState>()(
             try {
               sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as Uint8Array<ArrayBuffer>,
               });
             } catch {
               console.warn("[Push] VAPID key invalid — simulating subscription for demo");

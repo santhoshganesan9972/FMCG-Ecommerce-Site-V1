@@ -142,7 +142,7 @@ export default function HomeClient() {
         <Navbar />
 
         {/* Offset for fixed navbar */}
-        <div className="pt-16">
+        <div className="pt-[72px] sm:pt-20">
           <Hero />
           <CategoryPills />
           <PromoBanner />

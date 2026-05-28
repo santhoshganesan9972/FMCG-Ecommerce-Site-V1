@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -17,7 +17,7 @@ export default function BulkImportPage() {
     if (file) {
       const result = await uploadFile(file);
       if (result) {
-        toast.success(`Import started — Job ID: ${result.jobId}`);
+        toast.success(`Import started � Job ID: ${result.jobId}`);
       } else {
         toast.error("Upload failed");
       }
@@ -33,7 +33,7 @@ export default function BulkImportPage() {
       if (file) {
         const result = await uploadFile(file);
         if (result) {
-          toast.success(`Import started — Job ID: ${result.jobId}`);
+          toast.success(`Import started � Job ID: ${result.jobId}`);
         } else {
           toast.error("Upload failed");
         }
@@ -153,7 +153,7 @@ export default function BulkImportPage() {
                       <div>
                         <p className="text-sm font-bold text-[#1a1a1a]">{imp.fileName}</p>
                         <p className="text-xs text-[#999]">
-                          {imp.rows} rows · {imp.success} success · {imp.failed} failed
+                          {imp.rows} rows � {imp.success} success � {imp.failed} failed
                         </p>
                       </div>
                       <span
@@ -166,10 +166,10 @@ export default function BulkImportPage() {
                         }`}
                       >
                         {imp.status === "completed"
-                          ? "✓ Completed"
+                          ? "? Completed"
                           : imp.status === "processing"
-                          ? "⟳ Processing"
-                          : "✗ Failed"}
+                          ? "? Processing"
+                          : "? Failed"}
                       </span>
                     </div>
                   ))}

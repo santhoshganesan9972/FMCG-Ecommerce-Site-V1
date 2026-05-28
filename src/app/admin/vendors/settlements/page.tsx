@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -32,7 +32,7 @@ export default function VendorSettlementsPage() {
     setPayLoading(true);
     try {
       await processSettlement(settlement.id);
-      toast.success(`Payment of ₹${settlement.netPayable.toLocaleString()} initiated for ${settlement.vendorName}`);
+      toast.success(`Payment of ?${settlement.netPayable.toLocaleString()} initiated for ${settlement.vendorName}`);
       setPayModal(null);
       setSelectedSettlement(null);
     } catch {
@@ -67,20 +67,20 @@ export default function VendorSettlementsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard
             title="Total Net Payable"
-            value={summary ? `₹${(summary.totalNetPayable / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.totalNetPayable / 100000).toFixed(1)}L` : "�"}
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]" bgColor="bg-[#e8f5e9]"
           />
           <ReusableCard
             title="Pending Amount"
-            value={summary ? `₹${(summary.pendingAmount / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.pendingAmount / 100000).toFixed(1)}L` : "�"}
             icon={<Clock className="h-5 w-5" />}
             color="text-[#d97706]" bgColor="bg-[#fffbeb]"
             subtitle={summary ? `${summary.pendingCount} settlements` : undefined}
           />
           <ReusableCard
             title="Total Commission"
-            value={summary ? `₹${(summary.totalCommission / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.totalCommission / 100000).toFixed(1)}L` : "�"}
             icon={<Banknote className="h-5 w-5" />}
             color="text-[#9333ea]" bgColor="bg-[#f3e8ff]"
           />
@@ -148,15 +148,15 @@ export default function VendorSettlementsPage() {
             { key: "totalOrders", header: "Orders", width: "70px", align: "center" },
             {
               key: "grossSales", header: "Gross Sales", width: "110px", align: "right", sortable: true,
-              render: (s) => <span className="font-bold">₹{(s.grossSales / 1000).toFixed(1)}K</span>,
+              render: (s) => <span className="font-bold">?{(s.grossSales / 1000).toFixed(1)}K</span>,
             },
             {
               key: "commission", header: "Commission", width: "110px", align: "right",
-              render: (s) => <span className="text-[#ff4f8b]">-₹{(s.commission / 1000).toFixed(1)}K</span>,
+              render: (s) => <span className="text-[#ff4f8b]">-?{(s.commission / 1000).toFixed(1)}K</span>,
             },
             {
               key: "netPayable", header: "Net Payable", width: "110px", align: "right", sortable: true,
-              render: (s) => <span className="font-bold text-[#0c831f]">₹{(s.netPayable / 1000).toFixed(1)}K</span>,
+              render: (s) => <span className="font-bold text-[#0c831f]">?{(s.netPayable / 1000).toFixed(1)}K</span>,
             },
             { key: "status", header: "Status", width: "110px", render: (s) => <StatusBadge status={s.status} /> },
             {
@@ -215,7 +215,7 @@ export default function VendorSettlementsPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#999]">Period</p>
-                  <p className="mt-0.5 text-sm font-bold text-[#1a1a1a]">{selectedSettlement.periodStart} → {selectedSettlement.periodEnd}</p>
+                  <p className="mt-0.5 text-sm font-bold text-[#1a1a1a]">{selectedSettlement.periodStart} ? {selectedSettlement.periodEnd}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-[#999]">Due Date</p>
@@ -229,13 +229,13 @@ export default function VendorSettlementsPage() {
               <h4 className="mb-3 text-xs font-black uppercase tracking-wide text-[#666]">Financial Breakdown</h4>
               <div className="space-y-2.5">
                 {[
-                  { label: "Gross Sales", value: `₹${(selectedSettlement.grossSales / 1000).toFixed(2)}K` },
-                  { label: "Returns", value: `-₹${(selectedSettlement.returns / 1000).toFixed(2)}K` },
-                  { label: "Net Sales", value: `₹${(selectedSettlement.netSales / 1000).toFixed(2)}K` },
-                  { label: `Commission (${selectedSettlement.commissionRate}%)`, value: `-₹${(selectedSettlement.commission / 1000).toFixed(2)}K` },
-                  { label: "Tax (GST)", value: `-₹${(selectedSettlement.tax / 1000).toFixed(2)}K` },
-                  { label: "Adjustments", value: selectedSettlement.adjustments !== 0 ? `₹${(selectedSettlement.adjustments / 1000).toFixed(2)}K` : "—" },
-                  { label: "Net Payable", value: `₹${(selectedSettlement.netPayable / 1000).toFixed(2)}K`, highlight: true },
+                  { label: "Gross Sales", value: `?${(selectedSettlement.grossSales / 1000).toFixed(2)}K` },
+                  { label: "Returns", value: `-?${(selectedSettlement.returns / 1000).toFixed(2)}K` },
+                  { label: "Net Sales", value: `?${(selectedSettlement.netSales / 1000).toFixed(2)}K` },
+                  { label: `Commission (${selectedSettlement.commissionRate}%)`, value: `-?${(selectedSettlement.commission / 1000).toFixed(2)}K` },
+                  { label: "Tax (GST)", value: `-?${(selectedSettlement.tax / 1000).toFixed(2)}K` },
+                  { label: "Adjustments", value: selectedSettlement.adjustments !== 0 ? `?${(selectedSettlement.adjustments / 1000).toFixed(2)}K` : "�" },
+                  { label: "Net Payable", value: `?${(selectedSettlement.netPayable / 1000).toFixed(2)}K`, highlight: true },
                 ].map((item) => (
                   <div key={item.label} className={`flex justify-between py-1 ${item.highlight ? "border-t border-[#e8e8e8] pt-2.5" : ""}`}>
                     <span className="text-sm text-[#666]">{item.label}</span>
@@ -318,7 +318,7 @@ export default function VendorSettlementsPage() {
               ))}
               <div className="flex justify-between border-t border-[#e8e8e8] pt-2 text-base">
                 <span className="text-[#666]">Amount:</span>
-                <span className="font-black text-[#0c831f]">₹{payModal.netPayable.toLocaleString()}</span>
+                <span className="font-black text-[#0c831f]">?{payModal.netPayable.toLocaleString()}</span>
               </div>
             </div>
             <p className="text-xs text-[#999]">Amount will be transferred via NEFT/IMPS to the vendor's registered bank account.</p>

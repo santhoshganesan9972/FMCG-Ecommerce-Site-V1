@@ -1,4 +1,4 @@
-﻿interface KpiCardProps {
+interface KpiCardProps {
   title: string;
   value: React.ReactNode;
   growth: string;

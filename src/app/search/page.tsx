@@ -24,9 +24,6 @@ import { products } from "@/data/products";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import EmptyState from "@/components/ui/empty-state";
-import ComparisonDrawer from "@/components/ui/products/comparison-drawer";
-import { BarChart3 } from "lucide-react";
-import { useComparisonStore } from "@/store/comparison-store";
 import type { ProductSortOption } from "@/lib/types";
 
 const filterCategories = [
@@ -109,9 +106,6 @@ export default function SearchPage() {
   const [activeFilters, setActiveFilters] = useState<FilterState>({
     ...defaultFilterState,
   });
-
-  const [showComparison, setShowComparison] = useState(false);
-  const comparisonCount = useComparisonStore((s) => s.comparison.length);
 
   const activeFilterCount = getActiveFilterCount(activeFilters);
 
@@ -220,7 +214,7 @@ export default function SearchPage() {
     <main className="min-h-screen bg-[#f2f2f2] pb-20 md:pb-0">
       <Navbar />
 
-      <div className="pt-16">
+      <div className="pt-[72px] sm:pt-20">
         {/* Search Bar */}
         <div className="bg-white border-b border-[#e8e8e8] px-3 sm:px-4 md:px-6 py-3">
           <div className="max-w-[1400px] mx-auto">
@@ -443,24 +437,6 @@ export default function SearchPage() {
       </div>
 
       <BottomNav />
-
-      {/* ─── Comparison Floating Button ─── */}
-      {comparisonCount > 0 && (
-        <button
-          onClick={() => setShowComparison(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 z-30 min-w-[44px] min-h-[44px] h-12 px-4 rounded-full bg-[#0c831f] text-white shadow-lg flex items-center gap-2 hover:bg-[#0a6e1a] active:scale-95 transition-all duration-200"
-          aria-label={`Compare ${comparisonCount} products`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          <span className="text-xs font-bold">Compare ({comparisonCount})</span>
-        </button>
-      )}
-
-      {/* ─── Comparison Drawer ─── */}
-      <ComparisonDrawer
-        open={showComparison}
-        onClose={() => setShowComparison(false)}
-      />
 
       {/* ─── Advanced Filters ─── */}
       <AdvancedFilters

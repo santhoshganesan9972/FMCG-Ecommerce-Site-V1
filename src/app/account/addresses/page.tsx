@@ -56,6 +56,10 @@ export default function AddressesPage() {
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!/^\+?91\s?\d{10}$|^\d{10}$/.test(form.phone.trim())) {
+      toast.error("Please enter a valid 10-digit phone number");
+      return;
+    }
     if (editingId) {
       updateAddress(editingId, form);
       toast.success("Address updated successfully!");
@@ -142,20 +146,20 @@ export default function AddressesPage() {
               placeholder="Full Name *"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full h-11 rounded-xl border border-[#e8e8e8] px-4 text-sm outline-none focus:border-[#ff4f8b] transition-colors"
+              className="w-full h-12 rounded-xl border border-[#e8e8e8] px-4 text-sm font-medium outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 bg-[#f9f9f9] placeholder:text-[#999]"
             />
             <input
               placeholder="Address (Street, Area, Landmark) *"
               value={form.address}
               onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-              className="w-full h-11 rounded-xl border border-[#e8e8e8] px-4 text-sm outline-none focus:border-[#ff4f8b] transition-colors"
+              className="w-full h-12 rounded-xl border border-[#e8e8e8] px-4 text-sm font-medium outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 bg-[#f9f9f9] placeholder:text-[#999]"
             />
             <div className="grid grid-cols-2 gap-3">
               <input
                 placeholder="City *"
                 value={form.city}
                 onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                className="h-11 rounded-xl border border-[#e8e8e8] px-4 text-sm outline-none focus:border-[#ff4f8b] transition-colors"
+                className="h-12 rounded-xl border border-[#e8e8e8] px-4 text-sm font-medium outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 bg-[#f9f9f9] placeholder:text-[#999]"
               />
               <input
                 placeholder="Pincode *"
@@ -163,7 +167,7 @@ export default function AddressesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
                 inputMode="numeric"
                 pattern="[0-9]{6}"
-                className="h-11 rounded-xl border border-[#e8e8e8] px-4 text-sm outline-none focus:border-[#ff4f8b] transition-colors"
+                className="h-12 rounded-xl border border-[#e8e8e8] px-4 text-sm font-medium outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 bg-[#f9f9f9] placeholder:text-[#999]"
               />
             </div>
             <input
@@ -171,7 +175,7 @@ export default function AddressesPage() {
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               type="tel"
-              className="w-full h-11 rounded-xl border border-[#e8e8e8] px-4 text-sm outline-none focus:border-[#ff4f8b] transition-colors"
+              className="w-full h-12 rounded-xl border border-[#e8e8e8] px-4 text-sm font-medium outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 bg-[#f9f9f9] placeholder:text-[#999]"
             />
 
             <label className="flex items-center gap-2.5 cursor-pointer py-1">

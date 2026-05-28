@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -51,7 +51,7 @@ export default function ProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [showViewModal, setShowViewModal] = useState<string | null>(null);
 
-  // ── Edit Drawer ──────────────────────────────────────────
+  // -- Edit Drawer ------------------------------------------
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [editForm, setEditForm] = useState<Partial<Product>>({});
 
@@ -106,7 +106,7 @@ export default function ProductsPage() {
     setAddFiles([]);
   };
 
-  // ── Image handling helpers ────────────────────────────────
+  // -- Image handling helpers --------------------------------
   function filesToMedia(files: UploadedFile[], productName: string): ProductMedia[] {
     return files.map((f, i) => ({
       id: f.id,
@@ -271,7 +271,7 @@ export default function ProductsPage() {
               width: "100px",
               align: "right",
               sortable: true,
-              render: (p) => <span className="font-bold">₹{p.price}</span>,
+              render: (p) => <span className="font-bold">?{p.price}</span>,
             },
             {
               key: "stock",
@@ -385,7 +385,7 @@ export default function ProductsPage() {
           </div>
           {/* Price */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[#666]">Price (₹)</label>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">Price (?)</label>
             <input
               type="number"
               placeholder="0"
@@ -396,7 +396,7 @@ export default function ProductsPage() {
           </div>
           {/* MRP */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (₹)</label>
+            <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (?)</label>
             <input
               type="number"
               placeholder="0"
@@ -548,12 +548,12 @@ export default function ProductsPage() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "Brand", value: selectedProduct.brand },
-                { label: "Price", value: `₹${selectedProduct.price}` },
-                { label: "MRP", value: `₹${selectedProduct.mrp}` },
-                { label: "Cost Price", value: `₹${selectedProduct.costPrice}` },
-                { label: "Featured", value: selectedProduct.isFeatured ? "Yes ✓" : "No" },
-                { label: "Flash Sale", value: selectedProduct.isFlashSale ? "Yes ⚡" : "No" },
-                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "—" },
+                { label: "Price", value: `?${selectedProduct.price}` },
+                { label: "MRP", value: `?${selectedProduct.mrp}` },
+                { label: "Cost Price", value: `?${selectedProduct.costPrice}` },
+                { label: "Featured", value: selectedProduct.isFeatured ? "Yes ?" : "No" },
+                { label: "Flash Sale", value: selectedProduct.isFlashSale ? "Yes ?" : "No" },
+                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "�" },
                 { label: "Stock", value: selectedProduct.stock.toString() },
                 { label: "Status", value: selectedProduct.status },
                 { label: "Warehouse", value: selectedProduct.warehouse },
@@ -591,7 +591,7 @@ export default function ProductsPage() {
                   {selectedProduct.variants.map((v) => (
                     <div key={v.id} className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-1.5">
                       <span className="text-sm font-medium text-[#1a1a1a]">{v.name}</span>
-                      <span className="text-xs text-[#666]">₹{v.price} · Stock: {v.stock}</span>
+                      <span className="text-xs text-[#666]">?{v.price} � Stock: {v.stock}</span>
                     </div>
                   ))}
                 </div>
@@ -625,7 +625,7 @@ export default function ProductsPage() {
         </div>
       </ReusableModal>
 
-      {/* ── Edit Product Drawer ── */}
+      {/* -- Edit Product Drawer -- */}
       {/* Overlay */}
       <div
         className={`fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
@@ -724,7 +724,7 @@ export default function ProductsPage() {
           {/* Price / MRP / Cost Price */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[#666]">Price (₹)</label>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Price (?)</label>
               <input
                 type="number"
                 value={editForm.price ?? ""}
@@ -733,7 +733,7 @@ export default function ProductsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (₹)</label>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">MRP (?)</label>
               <input
                 type="number"
                 value={editForm.mrp ?? ""}
@@ -742,7 +742,7 @@ export default function ProductsPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-[#666]">Cost (₹)</label>
+              <label className="mb-1.5 block text-xs font-bold text-[#666]">Cost (?)</label>
               <input
                 type="number"
                 value={editForm.costPrice ?? ""}

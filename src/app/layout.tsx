@@ -66,7 +66,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${inter.variable} font-sans`} suppressHydrationWarning>
+    <html lang="en" className={`h-full antialiased ${inter.variable} font-sans`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-[#f2f2f2] relative" suppressHydrationWarning>
         <SkipLink />
         <LayoutClient>

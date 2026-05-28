@@ -64,7 +64,7 @@ const SEED_PRODUCTS: Product[] = [
 
   // ── Vegetables ────────────────────────────────────────────
   { id: 37, name: "Fresh Tomatoes (1 kg)",             category: "Vegetables", price: 49,   oldPrice: 69,   rating: 4.7, stock: "in_stock",       image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea", isFlashSale: true, weight: "1 kg" },
-  { id: 38, name: "Potatoes (1 kg)",                   category: "Vegetables", price: 39,   oldPrice: 55,   rating: 4.6, stock: "in_stock",       image: "https://images.unsplash.com/photo-1518977676601-b53f82eda655", isFlashSale: true, weight: "1 kg" },
+  { id: 38, name: "Potatoes (1 kg)",                   category: "Vegetables", price: 39,   oldPrice: 55,   rating: 4.6, stock: "in_stock",       image: "https://images.unsplash.com/photo-1542838132-92c53300491e", isFlashSale: true, weight: "1 kg" },
   { id: 39, name: "Onions (1 kg)",                     category: "Vegetables", price: 45,   oldPrice: 60,   rating: 4.5, stock: "in_stock",       image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb", weight: "1 kg" },
   { id: 40, name: "Fresh Spinach (250 g)",             category: "Vegetables", price: 29,   oldPrice: 39,   rating: 4.8, stock: "in_stock",       image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb", weight: "250 g" },
   { id: 41, name: "Carrots (500 g)",                   category: "Vegetables", price: 35,   oldPrice: 49,   rating: 4.6, stock: "low_stock",      image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37", weight: "500 g" },
@@ -82,7 +82,7 @@ const SEED_PRODUCTS: Product[] = [
   { id: 4,  name: "Natural Honey",                 category: "Health",     price: 349,  oldPrice: 449,  rating: 4.7, stock: "in_stock",       image: "https://images.unsplash.com/photo-1587049352851-8d4e89133924", isFeatured: true, weight: "500 g" },
   { id: 26, name: "Whey Protein Powder (1 kg)",    category: "Health",     price: 1299, oldPrice: 1599, rating: 4.8, stock: "in_stock",       image: "https://images.unsplash.com/photo-1593095948071-474c5cc2989d", isFeatured: true, weight: "1 kg" },
   { id: 27, name: "Apple Cider Vinegar (500 ml)",  category: "Health",     price: 299,  oldPrice: 369,  rating: 4.6, stock: "low_stock",      image: "https://images.unsplash.com/photo-1576671081837-49000212a370", weight: "500 ml" },
-  { id: 28, name: "Chia Seeds (250 g)",            category: "Health",     price: 199,  oldPrice: 249,  rating: 4.5, stock: "in_stock",       image: "https://images.unsplash.com/photo-1514733670139-4d660d9d1a5b", weight: "250 g" },
+  { id: 28, name: "Chia Seeds (250 g)",            category: "Health",     price: 199,  oldPrice: 249,  rating: 4.5, stock: "in_stock",       image: "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b", weight: "250 g" },
   { id: 29, name: "Multivitamin Gummies (60 pcs)", category: "Health",     price: 449,  oldPrice: 549,  rating: 4.7, stock: "in_stock",       image: "https://images.unsplash.com/photo-1550572017-edd951b55104", weight: "60 pcs" },
   { id: 30, name: "Flaxseed Oil Capsules",         category: "Health",     price: 379,  oldPrice: 459,  rating: 4.4, stock: "out_of_stock",   image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae", weight: "90 pcs" },
 

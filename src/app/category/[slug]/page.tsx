@@ -69,9 +69,9 @@ export default async function CategoryPage({ params }: PageProps) {
       />
       <Navbar />
 
-      <div className="pt-16">
+      <div className="pt-[72px] sm:pt-20">
         {/* Page header */}
-        <div className="bg-white border-b border-[#e8e8e8] sticky top-16 z-10">
+        <div className="bg-white border-b border-[#e8e8e8] sticky top-[72px] sm:top-20 z-10">
           <div className="max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 py-3 flex items-center gap-3">
             <Link
               href="/"

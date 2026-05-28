@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Hero() {
   return (
     <section
-      className="w-full bg-white pt-16"
+      className="w-full bg-white"
       aria-label="Featured promotions"
       itemScope
       itemType="https://schema.org/OfferCatalog"
@@ -34,7 +34,7 @@ export default function Hero() {
             <p className="mt-2 mb-4 text-sm text-white/90 sm:text-base">
               On daily essentials & groceries
             </p>
-            <span className="inline-flex min-h-[44px] h-10 items-center rounded-lg bg-white px-5 text-sm font-black text-[#dc2626] transition hover:bg-white/95 sm:h-11 sm:px-6 shadow-lg cursor-pointer">
+            <span className="inline-flex h-8 sm:h-9 items-center rounded-lg bg-white px-4 text-xs sm:text-sm font-black text-[#dc2626] transition hover:bg-white/95 sm:px-5 shadow-sm cursor-pointer">
               Shop Now
             </span>
           </div>
