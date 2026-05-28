@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import DashboardLayout from "../dashboard-layout";
+
 import { useDashboard } from "@/hooks/use-dashboard";
 import {
   KpiGrid,
@@ -153,25 +153,17 @@ export default function AdminDashboardPage() {
   }, [overview]);
 
   if (!isHydrated || loading) {
-    return (
-      <DashboardLayout>
-        <DashboardSkeleton />
-      </DashboardLayout>
-    );
+    return (        <DashboardSkeleton />    );
   }
 
   // -- Error state ----------------------------------------
 
   if (error) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-5 sm:space-y-6">
+    return (        <div className="space-y-5 sm:space-y-6">
           {/* Header */}
           <DashboardHeader onRefresh={handleRefresh} />
           <DashboardError error={error} onRetry={handleRefresh} />
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
   // -- Empty state ----------------------------------------
@@ -183,9 +175,7 @@ export default function AdminDashboardPage() {
   const { kpiData, chartsData, donutData, deliveryData, sidePanelData, custData, invData, topProdCatData, funnelData } =
     sections;
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-5 sm:space-y-6">
+  return (      <div className="space-y-5 sm:space-y-6">
         {/* --- Header --- */}
         <DashboardHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
 
@@ -220,9 +210,7 @@ export default function AdminDashboardPage() {
 
         {/* --- Inventory Health --- */}
         <InventoryHealth {...invData} />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }
 
 // -- Header Section ---------------------------------------

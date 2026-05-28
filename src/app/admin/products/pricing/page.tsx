@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import PriceEditor from "@/components/ui/products/admin/price-editor";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import { usePricing } from "@/hooks/use-products";
@@ -18,9 +18,7 @@ export default function PricingPage() {
       )
     : pricingData;
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -53,7 +51,5 @@ export default function PricingPage() {
         )}
 
         <PriceEditor items={filtered} onUpdate={updatePricing} isLoading={loading} />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

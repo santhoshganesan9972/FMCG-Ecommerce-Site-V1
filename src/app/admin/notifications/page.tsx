@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import type { AdminNotification } from "@/types/admin-notifications";
@@ -353,9 +353,7 @@ export default function NotificationsPage() {
 
   const totalPages = feed ? Math.ceil(feed.totalCount / feed.pageSize) : 0;
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         {/* -- Header -------------------------------------- */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -600,7 +598,7 @@ export default function NotificationsPage() {
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e8e8e8] bg-white px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-2 text-xs text-[#666]">
                   <span>
-                    Showing {(feed.page - 1) * feed.pageSize + 1}–
+                    Showing {(feed.page - 1) * feed.pageSize + 1}ï¿½
                     {Math.min(feed.page * feed.pageSize, feed.totalCount)} of{" "}
                     {feed.totalCount} notifications
                   </span>
@@ -653,7 +651,5 @@ export default function NotificationsPage() {
 
         {/* -- Empty spacer -------------------------------- */}
         <div className="h-8" />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

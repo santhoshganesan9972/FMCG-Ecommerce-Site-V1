@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useThemeSettings } from "@/hooks/use-settings";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ThemeSelector } from "@/components/settings/theme-selector";
 import { ReusablePageHeader } from "@/components/common";
 import { Palette, Monitor, Sun, Moon, Save, Loader2 } from "lucide-react";
@@ -45,34 +45,24 @@ export default function ThemeSettingsPage() {
   }, [localTheme, updateTheme]);
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center p-12">
+    return (        <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
   if (error) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center p-12 text-center">
+    return (        <div className="flex flex-col items-center justify-center p-12 text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
             <Palette className="h-6 w-6 text-red-500" />
           </div>
           <p className="text-sm font-bold text-red-600">Failed to load theme settings</p>
           <p className="mt-1 text-xs text-red-400">{error}</p>
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
   if (!localTheme) return null;
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Settings"
           title="Theme Settings"
@@ -359,7 +349,5 @@ export default function ThemeSettingsPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

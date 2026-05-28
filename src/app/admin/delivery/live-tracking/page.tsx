@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import { MapPin, Truck, Clock, Package, CheckCircle, Navigation } from "lucide-react";
@@ -14,9 +14,7 @@ const liveOrders = [
 ];
 
 export default function LiveTrackingPage() {
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Delivery</p>
           <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Live Tracking</h1>
@@ -70,7 +68,5 @@ export default function LiveTrackingPage() {
             </div>
           ))}
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

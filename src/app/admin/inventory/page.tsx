@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableExportButton from "@/components/ui/admin/reusable-export";
@@ -73,9 +73,7 @@ export default function InventoryPage() {
     [createTransfer],
   );
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -325,7 +323,5 @@ export default function InventoryPage() {
             Save Changes
           </button>
         </div>
-      </aside>
-    </DashboardLayout>
-  );
+      </aside>  );
 }

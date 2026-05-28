@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -41,9 +41,7 @@ export default function PromotionROIPage() {
     free_shipping: "bg-[#d97706]",
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Promotion ROI Reports"
@@ -66,9 +64,9 @@ export default function PromotionROIPage() {
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard title="Total Promotions" value={summary?.totalPromotions ?? 0} icon={<Percent className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Total Cost" value={summary ? `?${(summary.totalCost / 100000).toFixed(1)}L` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
-          <ReusableCard title="Revenue Generated" value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "—"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Avg ROI" value={summary ? `${summary.avgROI}%` : "—"} icon={<Target className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" subtitle={summary ? `Best: ${summary.bestPromotion}` : undefined} />
+          <ReusableCard title="Total Cost" value={summary ? `?${(summary.totalCost / 100000).toFixed(1)}L` : "ï¿½"} icon={<DollarSign className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
+          <ReusableCard title="Revenue Generated" value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "ï¿½"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Avg ROI" value={summary ? `${summary.avgROI}%` : "ï¿½"} icon={<Target className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" subtitle={summary ? `Best: ${summary.bestPromotion}` : undefined} />
         </div>
 
         <ReusableChart title="ROI by Promotion" subtitle="Return on investment percentage per campaign" height={260}>
@@ -147,7 +145,5 @@ export default function PromotionROIPage() {
             { label: "Download", icon: <Download className="h-3.5 w-3.5" />, onClick: (r) => toast.success(`Downloading ${r.promotionName} report`), variant: "success" },
           ]}
         />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

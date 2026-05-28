@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { useAdminProfile } from "@/hooks/use-admin-profile";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -63,7 +63,7 @@ function DeviceIcon({ type }: { type: string }) {
 
 function truncateKey(key: string): string {
   if (key.length <= 16) return key;
-  return `${key.slice(0, 12)}…${key.slice(-4)}`;
+  return `${key.slice(0, 12)}ï¿½${key.slice(-4)}`;
 }
 
 // -- Main Page ---------------------------------------------
@@ -189,30 +189,20 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center p-12">
+    return (        <div className="flex items-center justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
   if (error || !profile) {
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
+    return (        <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
           <AlertTriangle className="h-10 w-10 text-[#dc2626]" />
           <p className="mt-4 text-lg font-black text-[#1a1a1a]">Failed to load profile</p>
           <p className="text-sm text-[#666]">{error}</p>
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         {/* -- Header / Profile Card ------------------------- */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white shadow-sm">
           <div className="relative h-24 rounded-t-2xl bg-gradient-to-r from-[#0c831f] to-[#0a6a18] sm:h-32" />
@@ -235,13 +225,13 @@ export default function ProfilePage() {
                     </span>
                     {profile.team && (
                       <>
-                        <span className="text-[#ccc]">·</span>
+                        <span className="text-[#ccc]">ï¿½</span>
                         <span>{profile.team}</span>
                       </>
                     )}
                     {profile.location && (
                       <>
-                        <span className="text-[#ccc]">·</span>
+                        <span className="text-[#ccc]">ï¿½</span>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {profile.location}
@@ -363,7 +353,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-3 py-2.5">
                   <Phone className="h-4 w-4 text-[#999]" />
                   <span className="text-sm font-semibold text-[#1a1a1a]">
-                    {profile.phone || "—"}
+                    {profile.phone || "ï¿½"}
                   </span>
                 </div>
               </div>
@@ -387,7 +377,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-3 py-2.5">
                   <MapPin className="h-4 w-4 text-[#999]" />
                   <span className="text-sm font-semibold text-[#1a1a1a]">
-                    {profile.location || "—"}
+                    {profile.location || "ï¿½"}
                   </span>
                 </div>
               </div>
@@ -486,7 +476,7 @@ export default function ProfilePage() {
                       })
                     : "Never"}
                   {security?.passwordExpiresAt && (
-                    <> · Expires: {new Date(security.passwordExpiresAt).toLocaleDateString("en-IN")}</>
+                    <> ï¿½ Expires: {new Date(security.passwordExpiresAt).toLocaleDateString("en-IN")}</>
                   )}
                 </p>
               </div>
@@ -606,10 +596,10 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <p className="text-xs text-[#666]">
-                          {session.browser} · {session.os}
+                          {session.browser} ï¿½ {session.os}
                         </p>
                         <p className="text-xs text-[#999]">
-                          {session.location} · IP: {session.ip}
+                          {session.location} ï¿½ IP: {session.ip}
                         </p>
                         <p className="mt-1 text-[10px] text-[#999]">
                           Last active: {new Date(session.lastActiveAt).toLocaleString("en-IN")}
@@ -690,13 +680,13 @@ export default function ProfilePage() {
                           </span>
                           {entry.ip && (
                             <>
-                              <span>·</span>
+                              <span>ï¿½</span>
                               <span>IP: {entry.ip}</span>
                             </>
                           )}
                           {entry.resource && (
                             <>
-                              <span>·</span>
+                              <span>ï¿½</span>
                               <span>{entry.resource}</span>
                             </>
                           )}
@@ -1018,7 +1008,5 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-      </ReusableModal>
-    </DashboardLayout>
-  );
+      </ReusableModal>  );
 }

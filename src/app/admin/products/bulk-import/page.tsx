@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { Upload, Download, FileSpreadsheet, AlertTriangle, CheckCircle, RefreshCw, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useBulkUpload } from "@/hooks/use-products";
@@ -17,7 +17,7 @@ export default function BulkImportPage() {
     if (file) {
       const result = await uploadFile(file);
       if (result) {
-        toast.success(`Import started — Job ID: ${result.jobId}`);
+        toast.success(`Import started ï¿½ Job ID: ${result.jobId}`);
       } else {
         toast.error("Upload failed");
       }
@@ -33,7 +33,7 @@ export default function BulkImportPage() {
       if (file) {
         const result = await uploadFile(file);
         if (result) {
-          toast.success(`Import started — Job ID: ${result.jobId}`);
+          toast.success(`Import started ï¿½ Job ID: ${result.jobId}`);
         } else {
           toast.error("Upload failed");
         }
@@ -42,9 +42,7 @@ export default function BulkImportPage() {
     input.click();
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -153,7 +151,7 @@ export default function BulkImportPage() {
                       <div>
                         <p className="text-sm font-bold text-[#1a1a1a]">{imp.fileName}</p>
                         <p className="text-xs text-[#999]">
-                          {imp.rows} rows · {imp.success} success · {imp.failed} failed
+                          {imp.rows} rows ï¿½ {imp.success} success ï¿½ {imp.failed} failed
                         </p>
                       </div>
                       <span
@@ -178,7 +176,5 @@ export default function BulkImportPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -40,10 +40,8 @@ export default function VendorSettlementsPage() {
     } finally {
       setPayLoading(false);
     }
-  };
-
-  return (
-    <DashboardLayout>
+  };  return (
+    <>
       <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Vendors"
@@ -67,20 +65,20 @@ export default function VendorSettlementsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard
             title="Total Net Payable"
-            value={summary ? `?${(summary.totalNetPayable / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.totalNetPayable / 100000).toFixed(1)}L` : "ï¿½"}
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]" bgColor="bg-[#e8f5e9]"
           />
           <ReusableCard
             title="Pending Amount"
-            value={summary ? `?${(summary.pendingAmount / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.pendingAmount / 100000).toFixed(1)}L` : "ï¿½"}
             icon={<Clock className="h-5 w-5" />}
             color="text-[#d97706]" bgColor="bg-[#fffbeb]"
             subtitle={summary ? `${summary.pendingCount} settlements` : undefined}
           />
           <ReusableCard
             title="Total Commission"
-            value={summary ? `?${(summary.totalCommission / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.totalCommission / 100000).toFixed(1)}L` : "ï¿½"}
             icon={<Banknote className="h-5 w-5" />}
             color="text-[#9333ea]" bgColor="bg-[#f3e8ff]"
           />
@@ -234,7 +232,7 @@ export default function VendorSettlementsPage() {
                   { label: "Net Sales", value: `?${(selectedSettlement.netSales / 1000).toFixed(2)}K` },
                   { label: `Commission (${selectedSettlement.commissionRate}%)`, value: `-?${(selectedSettlement.commission / 1000).toFixed(2)}K` },
                   { label: "Tax (GST)", value: `-?${(selectedSettlement.tax / 1000).toFixed(2)}K` },
-                  { label: "Adjustments", value: selectedSettlement.adjustments !== 0 ? `?${(selectedSettlement.adjustments / 1000).toFixed(2)}K` : "—" },
+                  { label: "Adjustments", value: selectedSettlement.adjustments !== 0 ? `?${(selectedSettlement.adjustments / 1000).toFixed(2)}K` : "ï¿½" },
                   { label: "Net Payable", value: `?${(selectedSettlement.netPayable / 1000).toFixed(2)}K`, highlight: true },
                 ].map((item) => (
                   <div key={item.label} className={`flex justify-between py-1 ${item.highlight ? "border-t border-[#e8e8e8] pt-2.5" : ""}`}>
@@ -336,8 +334,7 @@ export default function VendorSettlementsPage() {
               </button>
             </div>
           </div>
-        )}
-      </ReusableModal>
-    </DashboardLayout>
+        )}      </ReusableModal>
+    </>
   );
 }

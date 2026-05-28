@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import { Flag, Plus, Power, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -9,12 +9,12 @@ import { toast } from "sonner";
 const featureFlags = [
   { id: "FF-001", name: "live-order-tracking", description: "Real-time order tracking for customers", enabled: true, environment: "production", owner: "Product Team", rollback: "2026-04-15" },
   { id: "FF-002", name: "ai-product-recommendations", description: "AI-powered product recommendations on homepage", enabled: true, environment: "production", owner: "ML Team", rollback: "2026-05-01" },
-  { id: "FF-003", name: "vendor-self-onboarding", description: "Allow vendors to self-register", enabled: false, environment: "staging", owner: "Vendor Team", rollback: "—" },
+  { id: "FF-003", name: "vendor-self-onboarding", description: "Allow vendors to self-register", enabled: false, environment: "staging", owner: "Vendor Team", rollback: "ï¿½" },
   { id: "FF-004", name: "dark-mode-admin", description: "Dark mode support for admin panel", enabled: true, environment: "staging", owner: "UI Team", rollback: "2026-05-10" },
   { id: "FF-005", name: "wallet-cashback", description: "Wallet cashback and rewards system", enabled: true, environment: "production", owner: "Finance Team", rollback: "2026-04-20" },
-  { id: "FF-006", name: "subscription-box", description: "Weekly subscription box feature", enabled: false, environment: "development", owner: "Product Team", rollback: "—" },
+  { id: "FF-006", name: "subscription-box", description: "Weekly subscription box feature", enabled: false, environment: "development", owner: "Product Team", rollback: "ï¿½" },
   { id: "FF-007", name: "bulk-order-processing", description: "Bulk order status update and processing", enabled: true, environment: "production", owner: "Ops Team", rollback: "2026-05-14" },
-  { id: "FF-008", name: "fraud-detection-engine", description: "AI-based fraud detection for orders", enabled: false, environment: "staging", owner: "Security Team", rollback: "—" },
+  { id: "FF-008", name: "fraud-detection-engine", description: "AI-based fraud detection for orders", enabled: false, environment: "staging", owner: "Security Team", rollback: "ï¿½" },
 ];
 
 export default function FeatureFlagsPage() {
@@ -26,9 +26,7 @@ export default function FeatureFlagsPage() {
     toast.success(`${flag?.name} ${flag?.enabled ? "disabled" : "enabled"} (${flag?.environment})`);
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -59,7 +57,7 @@ export default function FeatureFlagsPage() {
                   <div className="mt-1 flex items-center gap-3 text-[10px] text-[#999]">
                     <span>Env: <span className="font-semibold">{flag.environment}</span></span>
                     <span>Owner: <span className="font-semibold">{flag.owner}</span></span>
-                    {flag.rollback !== "—" && <span>Rollback: {flag.rollback}</span>}
+                    {flag.rollback !== "ï¿½" && <span>Rollback: {flag.rollback}</span>}
                   </div>
                 </div>
               </div>
@@ -80,7 +78,5 @@ export default function FeatureFlagsPage() {
             </div>
           ))}
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

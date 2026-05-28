@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { usePartnerPerformance } from "@/hooks/use-delivery";
 import { PerformanceChart } from "@/components/delivery/performance-chart";
 import {
@@ -29,9 +29,7 @@ export default function PartnerPerformancePage() {
     refresh,
   } = usePartnerPerformance(selectedPartnerId);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -107,7 +105,7 @@ export default function PartnerPerformancePage() {
                             <Star className="h-3 w-3 text-[#d97706] fill-current" />
                             {perf.avgRating.toFixed(1)}
                           </span>
-                          <span>·</span>
+                          <span>ï¿½</span>
                           <span>{perf.totalDeliveries} deliveries</span>
                         </div>
                       </div>
@@ -129,7 +127,7 @@ export default function PartnerPerformancePage() {
             {selectedPerformance && (
               <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Detail</p>
-                <h3 className="text-sm font-black text-[#1a1a1a]">{selectedPerformance.partnerName} — Performance</h3>
+                <h3 className="text-sm font-black text-[#1a1a1a]">{selectedPerformance.partnerName} ï¿½ Performance</h3>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {[
@@ -239,7 +237,7 @@ export default function PartnerPerformancePage() {
                           }`}>
                             {perf.trend === "up" ? <TrendingUp className="h-3.5 w-3.5" /> :
                              perf.trend === "down" ? <TrendingDown className="h-3.5 w-3.5" /> :
-                             <span className="h-3.5 w-3.5 flex items-center justify-center">—</span>}
+                             <span className="h-3.5 w-3.5 flex items-center justify-center">ï¿½</span>}
                             {perf.trend}
                           </span>
                         </td>
@@ -256,7 +254,5 @@ export default function PartnerPerformancePage() {
             </section>
           </>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

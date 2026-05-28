@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
 import { Landmark, FileText, Plus, Download, Edit3, Eye } from "lucide-react";
@@ -19,15 +19,13 @@ const gstReturns = [
   { period: "Apr 2026", status: "filed", dueDate: "2026-05-11", filedOn: "2026-05-10", amount: "?1,24,560" },
   { period: "Mar 2026", status: "filed", dueDate: "2026-04-11", filedOn: "2026-04-09", amount: "?1,12,340" },
   { period: "Feb 2026", status: "filed", dueDate: "2026-03-11", filedOn: "2026-03-08", amount: "?1,08,920" },
-  { period: "May 2026", status: "pending", dueDate: "2026-06-11", filedOn: "—", amount: "?1,32,450" },
+  { period: "May 2026", status: "pending", dueDate: "2026-06-11", filedOn: "ï¿½", amount: "?1,32,450" },
 ];
 
 export default function GSTSettingsPage() {
   const [showAddTax, setShowAddTax] = useState(false);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -139,7 +137,5 @@ export default function GSTSettingsPage() {
             </div>
           </ReusableModal>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import { ReusablePageHeader, ReusableChart } from "@/components/common";
@@ -20,9 +20,7 @@ export default function RevenueAnalyticsPage() {
 
   const maxChartValue = Math.max(...chartData.map((d) => d.value));
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Revenue Analytics"
@@ -36,10 +34,10 @@ export default function RevenueAnalyticsPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Total Revenue" value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" trend={summary ? { value: `${summary.revenueGrowth}%`, direction: summary.revenueGrowth >= 0 ? "up" : "down" } : undefined} />
-          <ReusableCard title="Gross Profit" value={summary ? `?${(summary.totalGrossProfit / 10000000).toFixed(2)}Cr` : "—"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Avg Gross Margin" value={summary ? `${summary.avgGrossMargin}%` : "—"} icon={<BarChart3 className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Net Profit" value={summary ? `?${(summary.totalNetProfit / 10000000).toFixed(2)}Cr` : "—"} icon={<PiggyBank className="h-5 w-5" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Total Revenue" value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "ï¿½"} icon={<DollarSign className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" trend={summary ? { value: `${summary.revenueGrowth}%`, direction: summary.revenueGrowth >= 0 ? "up" : "down" } : undefined} />
+          <ReusableCard title="Gross Profit" value={summary ? `?${(summary.totalGrossProfit / 10000000).toFixed(2)}Cr` : "ï¿½"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Avg Gross Margin" value={summary ? `${summary.avgGrossMargin}%` : "ï¿½"} icon={<BarChart3 className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Net Profit" value={summary ? `?${(summary.totalNetProfit / 10000000).toFixed(2)}Cr` : "ï¿½"} icon={<PiggyBank className="h-5 w-5" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
         </div>
 
         <ReusableChart
@@ -118,7 +116,5 @@ export default function RevenueAnalyticsPage() {
             { label: "Export", icon: <Download className="h-3.5 w-3.5" />, onClick: (r) => toast.success(`Exporting ${r.month} data`), variant: "success" },
           ]}
         />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -67,9 +67,7 @@ export default function VendorOnboardingPage() {
     }
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Vendors"
           title="Vendor Onboarding"
@@ -137,7 +135,7 @@ export default function VendorOnboardingPage() {
               render: (a) => (
                 <div>
                   <span className="font-bold text-[#1a1a1a]">{a.company}</span>
-                  <span className="block text-[10px] text-[#999]">{a.id} · {a.owner}</span>
+                  <span className="block text-[10px] text-[#999]">{a.id} ï¿½ {a.owner}</span>
                 </div>
               ),
             },
@@ -209,7 +207,7 @@ export default function VendorOnboardingPage() {
                   { label: "Phone", value: selectedApp.phone },
                   { label: "Category", value: selectedApp.category },
                   { label: "City", value: `${selectedApp.city}, ${selectedApp.state}` },
-                  { label: "Expected Volume", value: selectedApp.expectedMonthlyVolume ? `?${(selectedApp.expectedMonthlyVolume / 1000).toFixed(0)}K/mo` : "—" },
+                  { label: "Expected Volume", value: selectedApp.expectedMonthlyVolume ? `?${(selectedApp.expectedMonthlyVolume / 1000).toFixed(0)}K/mo` : "ï¿½" },
                 ].map((f) => (
                   <div key={f.label}>
                     <p className="text-[10px] font-bold uppercase tracking-wide text-[#999]">{f.label}</p>
@@ -318,7 +316,5 @@ export default function VendorOnboardingPage() {
             </button>
           </div>
         </div>
-      </ReusableModal>
-    </DashboardLayout>
-  );
+      </ReusableModal>  );
 }

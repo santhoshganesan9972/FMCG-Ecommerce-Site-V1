@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -28,9 +28,7 @@ export default function AbandonedCartPage() {
   } = useAbandonedCart();
   const [selectedCart, setSelectedCart] = useState<AbandonedCartEntry | null>(null);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Abandoned Cart Reports"
@@ -54,8 +52,8 @@ export default function AbandonedCartPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard title="Total Abandoned" value={summary?.totalAbandoned ?? 0} icon={<ShoppingCart className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
           <ReusableCard title="Recovered" value={summary?.totalRecovered ?? 0} icon={<RefreshCw className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" subtitle={`${summary?.recoveryRate ?? 0}% recovery rate`} />
-          <ReusableCard title="Lost Revenue" value={summary ? `?${(summary.lostRevenue / 1000).toFixed(1)}K` : "—"} icon={<TrendingDown className="h-5 w-5" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" />
-          <ReusableCard title="Recovered Revenue" value={summary ? `?${(summary.recoveredRevenue / 1000).toFixed(1)}K` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Lost Revenue" value={summary ? `?${(summary.lostRevenue / 1000).toFixed(1)}K` : "ï¿½"} icon={<TrendingDown className="h-5 w-5" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" />
+          <ReusableCard title="Recovered Revenue" value={summary ? `?${(summary.recoveredRevenue / 1000).toFixed(1)}K` : "ï¿½"} icon={<DollarSign className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
         </div>
 
         <div className="flex items-center gap-3">
@@ -95,7 +93,7 @@ export default function AbandonedCartPage() {
               <StatusBadge status={r.status === "recovered" ? "Recovered" : r.status === "abandoned" ? "Abandoned" : "Lost"} />
             )},
             { key: "abandonedAt", header: "Abandoned", width: "140px", hideOnMobile: true },
-            { key: "recoveryMethod", header: "Recovery", width: "110px", hideOnMobile: true, render: (r) => r.recoveryMethod ? <span className="text-xs font-medium text-[#666]">{r.recoveryMethod}</span> : <span className="text-[#ccc]">—</span> },
+            { key: "recoveryMethod", header: "Recovery", width: "110px", hideOnMobile: true, render: (r) => r.recoveryMethod ? <span className="text-xs font-medium text-[#666]">{r.recoveryMethod}</span> : <span className="text-[#ccc]">ï¿½</span> },
           ]}
           actions={[
             { label: "View Items", icon: <Eye className="h-3.5 w-3.5" />, onClick: (r) => setSelectedCart(r) },
@@ -166,7 +164,5 @@ export default function AbandonedCartPage() {
             </div>
           )}
         </ReusableDrawer>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

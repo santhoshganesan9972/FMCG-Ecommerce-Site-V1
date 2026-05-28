@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -48,9 +48,7 @@ export default function SalesReportsPage() {
     .map((r) => ({ label: r.date.slice(5), value: r.grossRevenue }));
   const maxChart = Math.max(...chartData.map((d) => d.value), 1);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Sales Reports"
@@ -75,7 +73,7 @@ export default function SalesReportsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard
             title="Total Revenue (MTD)"
-            value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "—"}
+            value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "ï¿½"}
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]"
             bgColor="bg-[#e8f5e9]"
@@ -83,7 +81,7 @@ export default function SalesReportsPage() {
           />
           <ReusableCard
             title="Total Orders (MTD)"
-            value={summary ? summary.totalOrders.toLocaleString() : "—"}
+            value={summary ? summary.totalOrders.toLocaleString() : "ï¿½"}
             icon={<ShoppingCart className="h-5 w-5" />}
             color="text-[#2563eb]"
             bgColor="bg-[#eff6ff]"
@@ -91,14 +89,14 @@ export default function SalesReportsPage() {
           />
           <ReusableCard
             title="Avg Order Value"
-            value={summary ? `?${summary.avgOrderValue.toLocaleString()}` : "—"}
+            value={summary ? `?${summary.avgOrderValue.toLocaleString()}` : "ï¿½"}
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#9333ea]"
             bgColor="bg-[#f3e8ff]"
           />
           <ReusableCard
             title="Total Refunds"
-            value={summary ? `?${(summary.totalRefunds / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.totalRefunds / 100000).toFixed(1)}L` : "ï¿½"}
             icon={<RefreshCw className="h-5 w-5" />}
             color="text-[#d97706]"
             bgColor="bg-[#fffbeb]"
@@ -301,7 +299,7 @@ export default function SalesReportsPage() {
                  </div>
                  <div className="rounded-lg bg-[#f9fafb] p-3">
                    <p className="text-[10px] font-bold text-[#666]">Top Category</p>
-                   <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory ?? "—"}</p>
+                   <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory ?? "ï¿½"}</p>
                  </div>
               </div>
             </div>
@@ -340,7 +338,5 @@ export default function SalesReportsPage() {
             </div>
           </div>
         )}
-      </ReusableDrawer>
-    </DashboardLayout>
-  );
+      </ReusableDrawer>  );
 }

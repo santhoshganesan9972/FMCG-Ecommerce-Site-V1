@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -150,9 +150,7 @@ export default function ProductsPage() {
 
   const selectedProduct = products.find((p) => p.id === showViewModal);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -540,7 +538,7 @@ export default function ProductsPage() {
         open={!!showViewModal}
         onClose={() => setShowViewModal(null)}
         title={selectedProduct?.name || "Product Details"}
-        subtitle={`SKU: ${selectedProduct?.sku || ""} · ${selectedProduct?.category || ""}`}
+        subtitle={`SKU: ${selectedProduct?.sku || ""} � ${selectedProduct?.category || ""}`}
         size="lg"
       >
         {selectedProduct && (
@@ -553,7 +551,11 @@ export default function ProductsPage() {
                 { label: "Cost Price", value: `?${selectedProduct.costPrice}` },
                 { label: "Featured", value: selectedProduct.isFeatured ? "Yes ?" : "No" },
                 { label: "Flash Sale", value: selectedProduct.isFlashSale ? "Yes ?" : "No" },
+<<<<<<< HEAD
                 { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "�" },
+=======
+                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "�" },
+>>>>>>> f8de1c2a4ba2448eff9511d0418141cd3f61ee86
                 { label: "Stock", value: selectedProduct.stock.toString() },
                 { label: "Status", value: selectedProduct.status },
                 { label: "Warehouse", value: selectedProduct.warehouse },
@@ -591,7 +593,11 @@ export default function ProductsPage() {
                   {selectedProduct.variants.map((v) => (
                     <div key={v.id} className="flex items-center justify-between rounded-lg bg-[#f9fafb] px-3 py-1.5">
                       <span className="text-sm font-medium text-[#1a1a1a]">{v.name}</span>
+<<<<<<< HEAD
                       <span className="text-xs text-[#666]">?{v.price} � Stock: {v.stock}</span>
+=======
+                      <span className="text-xs text-[#666]">?{v.price} � Stock: {v.stock}</span>
+>>>>>>> f8de1c2a4ba2448eff9511d0418141cd3f61ee86
                     </div>
                   ))}
                 </div>
@@ -954,7 +960,5 @@ export default function ProductsPage() {
             {submitting ? "Saving..." : "Save Changes"}
           </button>
         </div>
-      </aside>
-    </DashboardLayout>
-  );
+      </aside>  );
 }

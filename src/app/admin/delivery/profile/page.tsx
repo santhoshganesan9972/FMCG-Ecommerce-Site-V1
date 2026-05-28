@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { usePartnerProfile } from "@/hooks/use-delivery";
 import {
   Phone,
@@ -37,9 +37,7 @@ export default function PartnerProfilePage() {
     }
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -140,11 +138,11 @@ export default function PartnerProfilePage() {
                     )}
                     <div className="flex items-center gap-2 text-sm text-[#666]">
                       <MapPin className="h-4 w-4 text-[#d97706]" />
-                      {profile.city} · {profile.zone}
+                      {profile.city} ï¿½ {profile.zone}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-[#666]">
                       <Truck className="h-4 w-4 text-[#0c831f]" />
-                      {profile.vehicleType.replace("_", " ")} · {profile.vehicleReg || "N/A"}
+                      {profile.vehicleType.replace("_", " ")} ï¿½ {profile.vehicleReg || "N/A"}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-[#666]">
                       <Calendar className="h-4 w-4 text-[#2563eb]" />
@@ -152,7 +150,7 @@ export default function PartnerProfilePage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-[#666]">
                       <Star className="h-4 w-4 text-[#d97706] fill-current" />
-                      {profile.rating.toFixed(1)} rating · {profile.totalDeliveries.toLocaleString()} deliveries
+                      {profile.rating.toFixed(1)} rating ï¿½ {profile.totalDeliveries.toLocaleString()} deliveries
                     </div>
                   </div>
 
@@ -230,7 +228,7 @@ export default function PartnerProfilePage() {
                           </span>
                         </td>
                         <td className="py-2.5 text-xs text-[#666]">
-                          {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString("en-IN") : "—"}
+                          {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString("en-IN") : "ï¿½"}
                         </td>
                       </tr>
                     ))}
@@ -253,7 +251,7 @@ export default function PartnerProfilePage() {
                   >
                     <span className="text-sm font-bold text-[#1a1a1a]">{shift.day}</span>
                     <span className="text-xs font-bold text-[#666]">
-                      {shift.start} — {shift.end}
+                      {shift.start} ï¿½ {shift.end}
                     </span>
                   </div>
                 ))}
@@ -281,7 +279,5 @@ export default function PartnerProfilePage() {
             <p className="mt-3 text-sm font-bold text-[#999]">Enter a partner ID to view their profile</p>
           </div>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

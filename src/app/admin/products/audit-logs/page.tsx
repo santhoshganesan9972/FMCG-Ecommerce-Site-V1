@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardLayout from "../../dashboard-layout";
+
 import AuditTimeline from "@/components/ui/products/admin/audit-timeline";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import { useAuditLogs } from "@/hooks/use-products";
@@ -23,9 +23,7 @@ export default function AuditLogsPage() {
 
   const filteredLogs = logs;
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -100,7 +98,5 @@ export default function AuditLogsPage() {
             </div>
           </div>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

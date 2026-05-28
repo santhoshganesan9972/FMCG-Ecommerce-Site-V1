@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import DashboardLayout from "../dashboard-layout";
+
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import { ReusablePageHeader } from "@/components/common";
 import {
@@ -85,7 +85,7 @@ const reportSections = [
     href: "/admin/reports/cohort",
     icon: Group,
     title: "Cohort Analysis",
-    description: "User retention cohorts — track how customer groups engage over time.",
+    description: "User retention cohorts ï¿½ track how customer groups engage over time.",
     color: "text-[#2563eb]",
     bg: "bg-[#eff6ff]",
     badge: "12 cohorts",
@@ -131,13 +131,11 @@ const topKPIs = [
 ];
 
 export default function ReportsPage() {
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Admin"
           title="Reports & Analytics"
-          subtitle="Comprehensive analytics hub — sales, inventory, vendor, customer, tax, and financial reports."
+          subtitle="Comprehensive analytics hub ï¿½ sales, inventory, vendor, customer, tax, and financial reports."
         />
 
         {/* Top KPI Strip */}
@@ -226,7 +224,5 @@ export default function ReportsPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

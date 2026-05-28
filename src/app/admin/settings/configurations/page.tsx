@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useSystemConfigs } from "@/hooks/use-settings";
-import DashboardLayout from "../../dashboard-layout";
+
 import ConfigForm from "@/components/settings/config-form";
 import { ReusablePageHeader } from "@/components/common";
 import type { UpdateConfigFormData } from "@/types/settings";
@@ -27,9 +27,7 @@ export default function SystemConfigurationsPage() {
     [updateConfig]
   );
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Settings"
           title="System Configurations"
@@ -57,7 +55,5 @@ export default function SystemConfigurationsPage() {
           search={search}
           onSearchChange={setSearch}
         />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

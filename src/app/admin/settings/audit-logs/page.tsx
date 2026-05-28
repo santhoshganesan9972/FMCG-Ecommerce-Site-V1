@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuditLogs } from "@/hooks/use-settings";
-import DashboardLayout from "../../dashboard-layout";
+
 import AuditLogTable from "@/components/settings/audit-log-table";
 import { ReusablePageHeader } from "@/components/common";
 import { History, RefreshCw, Download } from "lucide-react";
@@ -30,9 +30,7 @@ export default function AuditLogsPage() {
     toast.success("Audit log export started. You will receive an email when ready.");
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Settings"
           title="Audit Logs"
@@ -119,7 +117,5 @@ export default function AuditLogsPage() {
           uniqueActions={uniqueActions}
           uniqueEntities={uniqueEntities}
         />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

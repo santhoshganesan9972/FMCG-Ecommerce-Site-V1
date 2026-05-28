@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { setAuthCookies, clearAuthCookies } from "@/lib/auth/token-utils";
 
 export interface UserProfile {
   id: string;
@@ -88,6 +89,7 @@ export const useAuthStore = create<AuthState>()(
       isGuest: false,
 
       login: (user, phone) => {
+        setAuthCookies(user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: phone ?? null,
@@ -96,14 +98,16 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      logout: () =>
+      logout: () => {
+        clearAuthCookies();
         set({
           isLoggedIn: false,
           phoneNumber: null,
           user: null,
           linkedSocials: [],
           isGuest: false,
-        }),
+        });
+      },
 
       /** Rehydrate and validate token expiry on app startup */
       hydrate: () => {
@@ -119,7 +123,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      setUser: (user) => set({ user, isLoggedIn: true, isGuest: false }),
+      setUser: (user) => {
+        setAuthCookies(user.token, user.role, user.expiresAt);
+        set({ user, isLoggedIn: true, isGuest: false });
+      },
 
       /** Guest login — creates a temporary session that expires in 24h */
       guestLogin: () => {
@@ -131,6 +138,7 @@ export const useAuthStore = create<AuthState>()(
           token: generateToken(),
           expiresAt: createExpiry(1), // 24 hours
         };
+        setAuthCookies(user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: null,
@@ -159,6 +167,7 @@ export const useAuthStore = create<AuthState>()(
           expiresAt: createExpiry(30), // 30 days
         };
 
+        setAuthCookies(user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: null,
@@ -194,6 +203,7 @@ export const useAuthStore = create<AuthState>()(
           role: "user",
           expiresAt: createExpiry(30),
         };
+        setAuthCookies(user.token, user.role, user.expiresAt);
         set({
           user,
           isGuest: false,
@@ -209,5 +219,11 @@ export const useAuthStore = create<AuthState>()(
 
 /** Auto-hydrate the store (validate token expiry) on initial module load */
 if (typeof window !== "undefined") {
-  useAuthStore.getState().hydrate();
+  const state = useAuthStore.getState();
+  state.hydrate();
+  // Sync cookies after hydration
+  const { user } = useAuthStore.getState();
+  if (user) {
+    setAuthCookies(user.token, user.role, user.expiresAt);
+  }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import { Navigation, MapPin, Clock, Fuel, TrendingDown, Zap, RefreshCw } from "lucide-react";
@@ -10,9 +10,9 @@ import { toast } from "sonner";
 const routes = [
   { zone: "North Zone", deliveries: 28, distance: "45 km", time: "3.2 hrs", fuel: "2.1 L", status: "optimized", savings: "12%" },
   { zone: "South Zone", deliveries: 22, distance: "38 km", time: "2.8 hrs", fuel: "1.8 L", status: "optimized", savings: "8%" },
-  { zone: "East Zone", deliveries: 35, distance: "52 km", time: "4.1 hrs", fuel: "2.6 L", status: "pending", savings: "—" },
+  { zone: "East Zone", deliveries: 35, distance: "52 km", time: "4.1 hrs", fuel: "2.6 L", status: "pending", savings: "ï¿½" },
   { zone: "West Zone", deliveries: 18, distance: "32 km", time: "2.2 hrs", fuel: "1.5 L", status: "optimized", savings: "15%" },
-  { zone: "Central Zone", deliveries: 15, distance: "28 km", time: "1.9 hrs", fuel: "1.3 L", status: "pending", savings: "—" },
+  { zone: "Central Zone", deliveries: 15, distance: "28 km", time: "1.9 hrs", fuel: "1.3 L", status: "pending", savings: "ï¿½" },
 ];
 
 export default function RouteOptimizationPage() {
@@ -26,9 +26,7 @@ export default function RouteOptimizationPage() {
     }, 2000);
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -64,7 +62,7 @@ export default function RouteOptimizationPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[#1a1a1a]">{r.zone}</p>
-                    <p className="text-xs text-[#666]">{r.deliveries} deliveries · {r.distance}</p>
+                    <p className="text-xs text-[#666]">{r.deliveries} deliveries ï¿½ {r.distance}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -82,15 +80,13 @@ export default function RouteOptimizationPage() {
                 </div>
                 <div>
                   <p className="text-[10px] text-[#999]">Savings</p>
-                  <p className={`flex items-center gap-1 text-xs font-bold ${r.savings !== "—" ? "text-[#0c831f]" : "text-[#999]"}`}>
-                    <TrendingDown className="h-3 w-3" /> {r.savings !== "—" ? r.savings : "N/A"}
+                  <p className={`flex items-center gap-1 text-xs font-bold ${r.savings !== "ï¿½" ? "text-[#0c831f]" : "text-[#999]"}`}>
+                    <TrendingDown className="h-3 w-3" /> {r.savings !== "ï¿½" ? r.savings : "N/A"}
                   </p>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

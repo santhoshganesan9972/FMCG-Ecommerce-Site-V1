@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { useDeliveryAnalytics } from "@/hooks/use-delivery";
 import { PerformanceChart } from "@/components/delivery/performance-chart";
 import {
@@ -22,9 +22,7 @@ export default function DeliveryAnalyticsPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const { analytics, loading, error, period, setPeriod, refresh } = useDeliveryAnalytics();
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -193,7 +191,7 @@ export default function DeliveryAnalyticsPage() {
                       item.deliveries > max.deliveries ? item : max
                     ).hour}
                   </span>
-                  {" · "}
+                  {" ï¿½ "}
                   {analytics.hourlyDistribution.reduce((sum, item) => sum + item.deliveries, 0).toLocaleString()} total
                 </p>
               </section>
@@ -284,7 +282,5 @@ export default function DeliveryAnalyticsPage() {
             </section>
           </>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

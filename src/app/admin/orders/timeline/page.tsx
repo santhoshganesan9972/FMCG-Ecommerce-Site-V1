@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import { OrderTimelineCard } from "@/components/ui/orders/admin";
@@ -17,9 +17,7 @@ export default function TimelinePage() {
   );
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-4 p-2 sm:p-4">
+    return (        <div className="space-y-4 p-2 sm:p-4">
           <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Orders</p>
             <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Order Timeline</h1>
@@ -30,14 +28,10 @@ export default function TimelinePage() {
               <div key={i} className="h-48 animate-pulse rounded-2xl bg-[#f6f7f6]" />
             ))}
           </div>
-        </div>
-      </DashboardLayout>
-    );
+        </div>    );
   }
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -80,7 +74,5 @@ export default function TimelinePage() {
             ))
           )}
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

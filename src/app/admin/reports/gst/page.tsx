@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -28,9 +28,7 @@ export default function GSTReportsPage() {
   } = useGSTReports();
   const [selectedReport, setSelectedReport] = useState<GSTReportEntry | null>(null);
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="GST Reports"
@@ -52,9 +50,9 @@ export default function GSTReportsPage() {
         )}
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ReusableCard title="Total Tax Liability" value={summary ? `?${(summary.totalLiability / 100000).toFixed(1)}L` : "—"} icon={<Landmark className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
-          <ReusableCard title="Input Credit" value={summary ? `?${(summary.totalInputCredit / 100000).toFixed(1)}L` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Net Payable" value={summary ? `?${(summary.netPayable / 100000).toFixed(1)}L` : "—"} icon={<ArrowUpRight className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
+          <ReusableCard title="Total Tax Liability" value={summary ? `?${(summary.totalLiability / 100000).toFixed(1)}L` : "ï¿½"} icon={<Landmark className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
+          <ReusableCard title="Input Credit" value={summary ? `?${(summary.totalInputCredit / 100000).toFixed(1)}L` : "ï¿½"} icon={<DollarSign className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Net Payable" value={summary ? `?${(summary.netPayable / 100000).toFixed(1)}L` : "ï¿½"} icon={<ArrowUpRight className="h-5 w-5" />} color="text-[#d97706]" bgColor="bg-[#fffbeb]" />
           <div className="rounded-xl border border-[#e8e8e8] bg-white p-4">
             <div className="flex items-center gap-2.5">
               <span className="text-[10px] font-black uppercase tracking-wide text-[#666]">Filing Status</span>
@@ -62,7 +60,7 @@ export default function GSTReportsPage() {
             <div className="mt-2 flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="h-3.5 w-3.5 text-[#0c831f]" />
-                <span className="text-xs font-bold text-[#1a1a1a]">{summary ? `${mockTotalFiled(summary)} Filed` : "—"}</span>
+                <span className="text-xs font-bold text-[#1a1a1a]">{summary ? `${mockTotalFiled(summary)} Filed` : "ï¿½"}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-amber-500" />
@@ -187,9 +185,7 @@ export default function GSTReportsPage() {
             </div>
           )}
         </ReusableDrawer>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }
 
 function mockTotalFiled(summary: { pendingReturns: number; overdueReturns: number }): number {

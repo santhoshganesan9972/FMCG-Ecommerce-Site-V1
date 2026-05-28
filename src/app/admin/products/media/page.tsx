@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import MediaUploader from "@/components/ui/products/admin/media-uploader";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import { useProductMedia } from "@/hooks/use-products";
@@ -17,9 +17,7 @@ export default function MediaPage() {
     fetchMedia(value);
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -60,7 +58,5 @@ export default function MediaPage() {
           onUpload={(files) => toast.success(`${files.length} file(s) queued for upload`)}
           isLoading={loading}
         />
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }

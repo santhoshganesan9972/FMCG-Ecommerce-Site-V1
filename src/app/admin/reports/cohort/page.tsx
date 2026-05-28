@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import { ReusablePageHeader, ReusableChart } from "@/components/common";
 import { useCohortData } from "@/hooks/use-reports";
@@ -39,13 +39,11 @@ export default function CohortAnalysisPage() {
     [data]
   );
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+  return (      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Cohort Analysis"
-          subtitle="User retention cohorts — track how different customer groups engage over time."
+          subtitle="User retention cohorts ï¿½ track how different customer groups engage over time."
         />
 
         {error && (
@@ -57,8 +55,8 @@ export default function CohortAnalysisPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard title="Total Cohorts" value={summary?.totalCohorts ?? 0} icon={<Users className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" />
           <ReusableCard title="Total Users" value={(summary?.totalUsers ?? 0).toLocaleString()} icon={<Activity className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Avg Retention (W1)" value={summary ? `${summary.avgRetentionWeek1}%` : "—"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
-          <ReusableCard title="Avg Retention (W4)" value={summary ? `${summary.avgRetentionWeek4}%` : "—"} icon={<Target className="h-5 w-5" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
+          <ReusableCard title="Avg Retention (W1)" value={summary ? `${summary.avgRetentionWeek1}%` : "ï¿½"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Avg Retention (W4)" value={summary ? `${summary.avgRetentionWeek4}%` : "ï¿½"} icon={<Target className="h-5 w-5" />} color="text-[#ff4f8b]" bgColor="bg-[#fff0f6]" />
         </div>
 
         <ReusableChart title="Cohort Retention Table" subtitle="Weekly retention rates by cohort group (%)" height={420}>
@@ -104,7 +102,7 @@ export default function CohortAnalysisPage() {
                                 <span className={`font-bold ${val >= 20 ? "text-[#1a1a1a]" : "text-[#999]"}`}>{val}%</span>
                               </div>
                             ) : (
-                              <span className="text-[#ccc]">—</span>
+                              <span className="text-[#ccc]">ï¿½</span>
                             )}
                           </td>
                         ))}
@@ -120,7 +118,7 @@ export default function CohortAnalysisPage() {
         {selectedCohortData && (
           <div className="rounded-xl border border-[#e8e8e8] bg-white p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-black text-[#1a1a1a]">{selectedCohortData.cohort} — Retention Detail</h3>
+              <h3 className="text-sm font-black text-[#1a1a1a]">{selectedCohortData.cohort} ï¿½ Retention Detail</h3>
               <div className="flex items-center gap-1 text-[10px] text-[#999]">
                 <Info className="h-3 w-3" />
                 <span>{selectedCohortData.users} users in cohort</span>
@@ -134,7 +132,7 @@ export default function CohortAnalysisPage() {
                   <div key={label} className={`rounded-lg p-3 text-center ${getRetentionBg(val)}`}>
                     <p className="text-[10px] font-bold text-[#666]">{label}</p>
                     <p className={`mt-1 text-lg font-black ${val >= 20 ? "text-[#1a1a1a]" : "text-[#999]"}`}>
-                      {val > 0 ? `${val}%` : "—"}
+                      {val > 0 ? `${val}%` : "ï¿½"}
                     </p>
                   </div>
                 );
@@ -167,7 +165,5 @@ export default function CohortAnalysisPage() {
             </div>
           </div>
         )}
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }
