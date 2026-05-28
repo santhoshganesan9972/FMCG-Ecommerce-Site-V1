@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setAuthCookies, clearAuthCookies } from "@/lib/auth/token-utils";
+import { getJwtExpiry, getJwtRole } from "@/lib/auth/token-utils";
 
 export interface UserProfile {
   id: string;
@@ -26,15 +27,21 @@ interface AuthState {
   isLoggedIn: boolean;
   phoneNumber: string | null;
   user: UserProfile | null;
+  /** Access token (for API calls via interceptor) */
+  accessToken: string | null;
   /** Linked social accounts */
   linkedSocials: SocialProfile[];
   /** Guest session flag */
   isGuest: boolean;
 
   login: (user: UserProfile, phone?: string) => void;
+  /** Real API login handler — stores user and token separately */
+  setAuth: (user: Omit<UserProfile, "token" | "expiresAt">, accessToken: string, refreshToken?: string) => void;
   logout: () => void;
   hydrate: () => void;
   setUser: (user: UserProfile) => void;
+  /** Update the stored access token (called by refresh interceptor) */
+  setAccessToken: (token: string) => void;
 
   /** Guest login — create a temporary guest session */
   guestLogin: () => void;
@@ -85,15 +92,46 @@ export const useAuthStore = create<AuthState>()(
       isLoggedIn: false,
       phoneNumber: null,
       user: null,
+      accessToken: null,
       linkedSocials: [],
       isGuest: false,
 
       login: (user, phone) => {
-        setAuthCookies(user.token, user.role, user.expiresAt);
+        storeAuth(user, user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: phone ?? null,
           user,
+          accessToken: user.token,
+          isGuest: false,
+        });
+      },
+
+      /**
+       * Real API login handler.
+       * Accepts a user object and separate tokens.
+       * Computes expiry and role from the JWT automatically.
+       */
+      setAuth: (userData, accessToken, _refreshToken) => {
+        // Extract expiry and role from JWT if possible
+        const expiresAt = getJwtExpiry(accessToken) ?? createExpiry(7);
+        const role = (getJwtRole(accessToken) ?? userData.role ?? "user") as UserProfile["role"];
+
+        const user: UserProfile = {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role,
+          token: accessToken,
+          expiresAt,
+        };
+
+        storeAuth(user, accessToken, role, expiresAt);
+        set({
+          isLoggedIn: true,
+          phoneNumber: userData.phone ?? null,
+          user,
+          accessToken,
           isGuest: false,
         });
       },
@@ -104,6 +142,7 @@ export const useAuthStore = create<AuthState>()(
           isLoggedIn: false,
           phoneNumber: null,
           user: null,
+          accessToken: null,
           linkedSocials: [],
           isGuest: false,
         });
@@ -117,6 +156,7 @@ export const useAuthStore = create<AuthState>()(
             isLoggedIn: false,
             phoneNumber: null,
             user: null,
+            accessToken: null,
             linkedSocials: [],
             isGuest: false,
           });
@@ -124,8 +164,21 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setUser: (user) => {
-        setAuthCookies(user.token, user.role, user.expiresAt);
-        set({ user, isLoggedIn: true, isGuest: false });
+        storeAuth(user, user.token, user.role, user.expiresAt);
+        set({ user, isLoggedIn: true, isGuest: false, accessToken: user.token });
+      },
+
+      setAccessToken: (token) => {
+        const { user } = get();
+        if (user) {
+          const expiresAt = getJwtExpiry(token) ?? user.expiresAt;
+          const updatedUser = { ...user, token, expiresAt };
+          const role = getJwtRole(token) ?? user.role;
+          storeAuth(updatedUser, token, role, expiresAt);
+          set({ accessToken: token, user: updatedUser });
+        } else {
+          set({ accessToken: token });
+        }
       },
 
       /** Guest login — creates a temporary session that expires in 24h */
@@ -138,11 +191,12 @@ export const useAuthStore = create<AuthState>()(
           token: generateToken(),
           expiresAt: createExpiry(1), // 24 hours
         };
-        setAuthCookies(user.token, user.role, user.expiresAt);
+        storeAuth(user, user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: null,
           user,
+          accessToken: user.token,
           isGuest: true,
           linkedSocials: [],
         });
@@ -167,11 +221,12 @@ export const useAuthStore = create<AuthState>()(
           expiresAt: createExpiry(30), // 30 days
         };
 
-        setAuthCookies(user.token, user.role, user.expiresAt);
+        storeAuth(user, user.token, user.role, user.expiresAt);
         set({
           isLoggedIn: true,
           phoneNumber: null,
           user,
+          accessToken: user.token,
           isGuest: false,
           linkedSocials: [profile],
         });
@@ -203,19 +258,35 @@ export const useAuthStore = create<AuthState>()(
           role: "user",
           expiresAt: createExpiry(30),
         };
-        setAuthCookies(user.token, user.role, user.expiresAt);
+        storeAuth(user, user.token, user.role, user.expiresAt);
         set({
           user,
           isGuest: false,
           phoneNumber: phone,
+          accessToken: user.token,
         });
       },
     }),
     {
       name: "auth-storage",
+      partialize: (state) => ({
+        isLoggedIn: state.isLoggedIn,
+        phoneNumber: state.phoneNumber,
+        user: state.user,
+        linkedSocials: state.linkedSocials,
+        isGuest: state.isGuest,
+        // Do NOT persist accessToken — it lives in memory for security
+      }),
     }
   )
 );
+
+/**
+ * Helper to sync auth state to cookies.
+ */
+function storeAuth(user: UserProfile, token: string, role: string, expiresAt: string): void {
+  setAuthCookies(token, role, expiresAt);
+}
 
 /** Auto-hydrate the store (validate token expiry) on initial module load */
 if (typeof window !== "undefined") {

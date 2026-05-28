@@ -4,7 +4,8 @@
  * Handles token validation, expiry checking, and cookie management.
  * Designed to work both server-side (middleware) and client-side.
  *
- * Future: Replace with JWT verification library when backend is integrated.
+ * Now supports real JWT tokens from the backend while maintaining
+ * backward compatibility with mock tokens during development.
  */
 
 import { COOKIE_NAMES } from "@/config/routes";
@@ -31,19 +32,69 @@ export function isTokenExpired(expiresAt: string): boolean {
 }
 
 /**
+ * Parse a JWT token without verifying the signature (client-side only).
+ * Extracts the payload for display/role purposes.
+ * Actual verification happens on the server.
+ */
+export function parseJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract the expiration timestamp from a JWT token.
+ */
+export function getJwtExpiry(token: string): string | null {
+  const payload = parseJwtPayload(token);
+  if (!payload || typeof payload.exp !== "number") return null;
+  return new Date(payload.exp * 1000).toISOString();
+}
+
+/**
+ * Extract the user role from a JWT token.
+ */
+export function getJwtRole(token: string): string | null {
+  const payload = parseJwtPayload(token);
+  if (!payload || typeof payload.role !== "string") return null;
+  return payload.role;
+}
+
+/**
  * Parse and validate a token string.
  * Returns the payload if valid, null otherwise.
  *
- * Currently uses a simple mock format: "mock_jwt_<timestamp>_<random>"
- * Future: Replace with actual JWT verification.
+ * Supports both:
+ * - Real JWT tokens (3-part base64-encoded)
+ * - Mock tokens for development
  */
 export function validateToken(token: string): TokenPayload | null {
   if (!token || typeof token !== "string") return null;
-  if (!token.startsWith("mock_jwt_")) return null;
 
-  // In mock mode, token validity is checked via the auth-store cookies.
-  // The middleware reads dedicated cookies instead of parsing the token.
-  // This function serves as a placeholder for future JWT verification.
+  // Try JWT format first
+  const jwtPayload = parseJwtPayload(token);
+  if (jwtPayload) {
+    const exp = getJwtExpiry(token);
+    if (!exp || isTokenExpired(exp)) return null;
+    return {
+      userId: String(jwtPayload.sub ?? jwtPayload.id ?? ""),
+      role: (jwtPayload.role as TokenPayload["role"]) ?? "user",
+      expiresAt: exp,
+    };
+  }
+
+  // Fallback: check mock format
+  if (token.startsWith("mock_jwt_")) {
+    // Use cookie-based expiry check instead
+    return null;
+  }
+
   return null;
 }
 

@@ -1,7 +1,14 @@
+// ── Vendor Management Hooks ──────────────────────────────
+// Architecture: UI → Component → Hook → Service → API Adapter → Backend
+// Now backed by TanStack Query for caching, retry, and invalidation.
+
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vendorsService } from "@/services/vendors.service";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidateVendorQueries } from "@/lib/react-query/invalidation";
 import type {
   Vendor,
   VendorOnboarding,
@@ -16,17 +23,11 @@ import type {
   VendorAnalyticsSummary,
 } from "@/types/vendors";
 
-// ── Generic pagination helper ─────────────────────────────
+// ── Shared helpers ────────────────────────────────────────
 
-function usePagination(initialPageSize = 10) {
+function useVendorPagination(initialPageSize = 10) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
-  const [meta, setMeta] = useState<VendorPageMeta>({
-    page: 1,
-    pageSize: initialPageSize,
-    total: 0,
-    totalPages: 0,
-  });
 
   const goToPage = useCallback((p: number) => setPage(p), []);
   const changePageSize = useCallback((s: number) => {
@@ -34,17 +35,14 @@ function usePagination(initialPageSize = 10) {
     setPage(1);
   }, []);
 
-  return { page, pageSize, meta, setMeta, goToPage, changePageSize };
+  return { page, pageSize, goToPage, changePageSize };
 }
 
 // ── Vendors Hook ──────────────────────────────────────────
 
 export function useVendors(initialFilters?: Partial<VendorFilters>) {
-  const [data, setData] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<VendorSummary | null>(null);
-  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useVendorPagination(10);
   const [filters, setFilters] = useState<VendorFilters>({
     search: "",
     status: "all",
@@ -55,26 +53,21 @@ export function useVendors(initialFilters?: Partial<VendorFilters>) {
     ...initialFilters,
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await vendorsService.getVendors(filters, page, pageSize);
-      setData(result.data);
-      setMeta(result.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch vendors");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.status, filters.category, filters.performance, filters.sortBy, filters.sortOrder, page, pageSize]);
+  const listQuery = useQuery({
+    queryKey: queryKeys.vendors.list({ ...filters, page, pageSize }),
+    queryFn: () => vendorsService.getVendors(filters, page, pageSize),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const summaryQuery = useQuery({
+    queryKey: [...queryKeys.vendors.all, "summary"],
+    queryFn: () => vendorsService.getVendorSummary(),
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    vendorsService.getVendorSummary().then(setSummary).catch(() => {});
-  }, []);
+  const data = listQuery.data?.data ?? [];
+  const meta: VendorPageMeta = listQuery.data?.meta ?? { page, pageSize, total: 0, totalPages: 0 };
 
   const updateFilters = useCallback((update: Partial<VendorFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
@@ -94,20 +87,26 @@ export function useVendors(initialFilters?: Partial<VendorFilters>) {
   );
 
   return {
-    data, loading, error, summary, filters, meta,
-    activeFilterCount, fetchData, updateFilters, clearFilters,
-    goToPage, changePageSize,
+    data,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
+    summary: summaryQuery.data ?? null,
+    filters,
+    meta,
+    activeFilterCount,
+    fetchData: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors.all }),
+    updateFilters,
+    clearFilters,
+    goToPage,
+    changePageSize,
   };
 }
 
 // ── Onboarding Hook ───────────────────────────────────────
 
 export function useVendorOnboarding(initialFilters?: Partial<VendorFilters>) {
-  const [data, setData] = useState<VendorOnboarding[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<OnboardingSummary | null>(null);
-  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useVendorPagination(10);
   const [filters, setFilters] = useState<VendorFilters>({
     search: "",
     status: "all",
@@ -116,66 +115,81 @@ export function useVendorOnboarding(initialFilters?: Partial<VendorFilters>) {
     ...initialFilters,
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const listQuery = useQuery({
+    queryKey: queryKeys.vendors.onboarding.list({ ...filters, page, pageSize }),
+    queryFn: () => vendorsService.getOnboardingApplications(filters, page, pageSize),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
+
+  const summaryQuery = useQuery({
+    queryKey: [...queryKeys.vendors.onboarding.all, "summary"],
+    queryFn: () => vendorsService.getOnboardingSummary(),
+    staleTime: 60_000,
+  });
+
+  const data = listQuery.data?.data ?? [];
+  const meta: VendorPageMeta = listQuery.data?.meta ?? { page, pageSize, total: 0, totalPages: 0 };
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => vendorsService.approveVendor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors.onboarding.all });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      vendorsService.rejectVendor(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors.onboarding.all });
+    },
+  });
+
+  const approveVendor = useCallback(async (id: string) => {
     try {
-      const result = await vendorsService.getOnboardingApplications(filters, page, pageSize);
-      setData(result.data);
-      setMeta(result.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch onboarding applications");
-    } finally {
-      setLoading(false);
+      await approveMutation.mutateAsync(id);
+    } catch {
+      // error handled by mutation state
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.status, page, pageSize]);
+  }, [approveMutation]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  useEffect(() => {
-    vendorsService.getOnboardingSummary().then(setSummary).catch(() => {});
-  }, []);
+  const rejectVendor = useCallback(async (id: string, reason: string) => {
+    try {
+      await rejectMutation.mutateAsync({ id, reason });
+    } catch {
+      // error handled by mutation state
+    }
+  }, [rejectMutation]);
 
   const updateFilters = useCallback((update: Partial<VendorFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
     goToPage(1);
   }, [goToPage]);
 
-  const approveVendor = useCallback(async (id: string) => {
-    await vendorsService.approveVendor(id);
-    fetchData();
-    vendorsService.getOnboardingSummary().then(setSummary).catch(() => {});
-  }, [fetchData]);
-
-  const rejectVendor = useCallback(async (id: string, reason: string) => {
-    await vendorsService.rejectVendor(id, reason);
-    fetchData();
-    vendorsService.getOnboardingSummary().then(setSummary).catch(() => {});
-  }, [fetchData]);
-
   return {
-    data, loading, error, summary, filters, meta,
-    fetchData, updateFilters, approveVendor, rejectVendor,
-    goToPage, changePageSize,
+    data,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
+    summary: summaryQuery.data ?? null,
+    filters,
+    meta,
+    fetchData: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors.onboarding.all }),
+    updateFilters,
+    approveVendor,
+    rejectVendor,
+    goToPage,
+    changePageSize,
   };
 }
 
 // ── Vendor Products Hook ──────────────────────────────────
 
 export function useVendorProducts(initialFilters?: Partial<VendorFilters> & { vendorId?: string }) {
-  const [data, setData] = useState<VendorProduct[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<{
-    totalProducts: number;
-    activeProducts: number;
-    outOfStockCount: number;
-    inactiveCount: number;
-    avgMargin: number;
-    totalStockValue: number;
-  } | null>(null);
-  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useVendorPagination(10);
   const [filters, setFilters] = useState<VendorFilters & { vendorId?: string }>({
     search: "",
     status: "all",
@@ -184,26 +198,21 @@ export function useVendorProducts(initialFilters?: Partial<VendorFilters> & { ve
     ...initialFilters,
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await vendorsService.getVendorProducts(filters, page, pageSize);
-      setData(result.data);
-      setMeta(result.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch vendor products");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.status, filters.vendorId, filters.sortBy, filters.sortOrder, page, pageSize]);
+  const listQuery = useQuery({
+    queryKey: queryKeys.vendors.products.list({ ...filters, page, pageSize }),
+    queryFn: () => vendorsService.getVendorProducts(filters, page, pageSize),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const summaryQuery = useQuery({
+    queryKey: [...queryKeys.vendors.products.all, "summary"],
+    queryFn: () => vendorsService.getProductSummary(),
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    vendorsService.getProductSummary().then(setSummary).catch(() => {});
-  }, []);
+  const data = listQuery.data?.data ?? [];
+  const meta: VendorPageMeta = listQuery.data?.meta ?? { page, pageSize, total: 0, totalPages: 0 };
 
   const updateFilters = useCallback((update: Partial<VendorFilters & { vendorId?: string }>) => {
     setFilters((prev) => ({ ...prev, ...update }));
@@ -211,19 +220,24 @@ export function useVendorProducts(initialFilters?: Partial<VendorFilters> & { ve
   }, [goToPage]);
 
   return {
-    data, loading, error, summary, filters, meta,
-    fetchData, updateFilters, goToPage, changePageSize,
+    data,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
+    summary: summaryQuery.data ?? null,
+    filters,
+    meta,
+    fetchData: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors.products.all }),
+    updateFilters,
+    goToPage,
+    changePageSize,
   };
 }
 
 // ── Settlements Hook ──────────────────────────────────────
 
 export function useVendorSettlements(initialFilters?: Partial<VendorFilters>) {
-  const [data, setData] = useState<VendorSettlement[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<SettlementSummary | null>(null);
-  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useVendorPagination(10);
   const [filters, setFilters] = useState<VendorFilters>({
     search: "",
     status: "all",
@@ -232,53 +246,62 @@ export function useVendorSettlements(initialFilters?: Partial<VendorFilters>) {
     ...initialFilters,
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const listQuery = useQuery({
+    queryKey: queryKeys.vendors.settlements.list({ ...filters, page, pageSize }),
+    queryFn: () => vendorsService.getSettlements(filters, page, pageSize),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
+
+  const summaryQuery = useQuery({
+    queryKey: [...queryKeys.vendors.settlements.all, "summary"],
+    queryFn: () => vendorsService.getSettlementSummary(),
+    staleTime: 60_000,
+  });
+
+  const data = listQuery.data?.data ?? [];
+  const meta: VendorPageMeta = listQuery.data?.meta ?? { page, pageSize, total: 0, totalPages: 0 };
+
+  const processMutation = useMutation({
+    mutationFn: (id: string) => vendorsService.processSettlement(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.vendors.settlements.all });
+    },
+  });
+
+  const processSettlement = useCallback(async (id: string) => {
     try {
-      const result = await vendorsService.getSettlements(filters, page, pageSize);
-      setData(result.data);
-      setMeta(result.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch settlements");
-    } finally {
-      setLoading(false);
+      await processMutation.mutateAsync(id);
+    } catch {
+      // error handled by mutation state
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.status, filters.sortBy, filters.sortOrder, page, pageSize]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  useEffect(() => {
-    vendorsService.getSettlementSummary().then(setSummary).catch(() => {});
-  }, []);
+  }, [processMutation]);
 
   const updateFilters = useCallback((update: Partial<VendorFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
     goToPage(1);
   }, [goToPage]);
 
-  const processSettlement = useCallback(async (id: string) => {
-    await vendorsService.processSettlement(id);
-    fetchData();
-    vendorsService.getSettlementSummary().then(setSummary).catch(() => {});
-  }, [fetchData]);
-
   return {
-    data, loading, error, summary, filters, meta,
-    fetchData, updateFilters, processSettlement,
-    goToPage, changePageSize,
+    data,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
+    summary: summaryQuery.data ?? null,
+    filters,
+    meta,
+    fetchData: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors.settlements.all }),
+    updateFilters,
+    processSettlement,
+    goToPage,
+    changePageSize,
   };
 }
 
 // ── Analytics Hook ────────────────────────────────────────
 
 export function useVendorAnalytics(initialFilters?: Partial<VendorFilters>) {
-  const [data, setData] = useState<VendorAnalyticsEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<VendorAnalyticsSummary | null>(null);
-  const { page, pageSize, meta, setMeta, goToPage, changePageSize } = usePagination(10);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useVendorPagination(10);
   const [filters, setFilters] = useState<VendorFilters>({
     search: "",
     sortBy: "",
@@ -286,26 +309,21 @@ export function useVendorAnalytics(initialFilters?: Partial<VendorFilters>) {
     ...initialFilters,
   });
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await vendorsService.getVendorAnalytics(filters, page, pageSize);
-      setData(result.data);
-      setMeta(result.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch vendor analytics");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.sortBy, filters.sortOrder, page, pageSize]);
+  const listQuery = useQuery({
+    queryKey: queryKeys.vendors.analytics.list({ ...filters, page, pageSize }),
+    queryFn: () => vendorsService.getVendorAnalytics(filters, page, pageSize),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const summaryQuery = useQuery({
+    queryKey: [...queryKeys.vendors.analytics.all, "summary"],
+    queryFn: () => vendorsService.getAnalyticsSummary(),
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    vendorsService.getAnalyticsSummary().then(setSummary).catch(() => {});
-  }, []);
+  const data = listQuery.data?.data ?? [];
+  const meta: VendorPageMeta = listQuery.data?.meta ?? { page, pageSize, total: 0, totalPages: 0 };
 
   const updateFilters = useCallback((update: Partial<VendorFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
@@ -313,7 +331,15 @@ export function useVendorAnalytics(initialFilters?: Partial<VendorFilters>) {
   }, [goToPage]);
 
   return {
-    data, loading, error, summary, filters, meta,
-    fetchData, updateFilters, goToPage, changePageSize,
+    data,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
+    summary: summaryQuery.data ?? null,
+    filters,
+    meta,
+    fetchData: () => queryClient.invalidateQueries({ queryKey: queryKeys.vendors.analytics.all }),
+    updateFilters,
+    goToPage,
+    changePageSize,
   };
 }

@@ -1,37 +1,17 @@
 // ── Product & Catalog Management Service Layer ───────────
-// Architecture: UI → Component → Hook → Service → API Gateway → Backend
-// Currently uses mock data. To connect to real backend:
-// 1. Uncomment the axios.get/post/put/delete calls
-// 2. Set VITE_API_BASE_URL (or NEXT_PUBLIC_API_BASE_URL)
-// 3. Remove mock data import and delay helper
+// Architecture: UI → Component → Hook → Service → API Adapter → Backend
+// Now delegates to the standardized API adapters.
+// Swap to real backend: update the API adapters, this layer stays the same.
 
 import type {
   Product,
   ProductFilters,
-  ProductStatus,
   BulkUploadRecord,
   Category,
   PaginationState,
   ProductFormData,
 } from "@/types/products";
-import { refreshProductBridge } from "@/data/products";
-import {
-  mockAdminProducts,
-  mockCategories,
-  mockBulkUploadHistory,
-  mockAuditLogs,
-} from "@/data/admin/products";
-
-// ── Helpers ──────────────────────────────────────────────
-
-const delay = (ms = 300) => new Promise((res) => setTimeout(res, ms));
-
-function filterByStock(product: Product, stockStatus: string): boolean {
-  if (stockStatus === "in_stock") return product.stock > product.lowStockThreshold;
-  if (stockStatus === "low_stock") return product.stock > 0 && product.stock <= product.lowStockThreshold;
-  if (stockStatus === "out_of_stock") return product.stock === 0;
-  return true;
-}
+import { productsApi } from "@/services/api";
 
 // ── Product Service ──────────────────────────────────────
 
@@ -40,327 +20,101 @@ export const productService = {
     filters: Partial<ProductFilters> = {},
     pagination: Partial<PaginationState> = { page: 1, pageSize: 10 }
   ): Promise<{ products: Product[]; pagination: PaginationState }> {
-    await delay(200);
-
-    let filtered = [...mockAdminProducts];
-
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.sku.toLowerCase().includes(q) ||
-          p.barcode.toLowerCase().includes(q)
-      );
-    }
-    if (filters.category) {
-      filtered = filtered.filter((p) => p.category === filters.category);
-    }
-    if (filters.status) {
-      filtered = filtered.filter((p) => p.status === filters.status);
-    }
-    if (filters.stockStatus) {
-      filtered = filtered.filter((p) => filterByStock(p, filters.stockStatus!));
-    }
-    if (filters.brand) {
-      filtered = filtered.filter((p) =>
-        p.brand.toLowerCase().includes(filters.brand!.toLowerCase())
-      );
-    }
-    if (filters.minPrice !== undefined) {
-      filtered = filtered.filter((p) => p.price >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter((p) => p.price <= filters.maxPrice!);
-    }
-
-    // Sort
-    if (filters.sortBy) {
-      filtered.sort((a, b) => {
-        const aVal = a[filters.sortBy as keyof Product] as string | number;
-        const bVal = b[filters.sortBy as keyof Product] as string | number;
-        const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-        return filters.sortOrder === "desc" ? -cmp : cmp;
-      });
-    }
-
-    const total = filtered.length;
-    const page = pagination.page || 1;
-    const pageSize = pagination.pageSize || 10;
-    const start = (page - 1) * pageSize;
-    const paged = filtered.slice(start, start + pageSize);
-
-    return { products: paged, pagination: { page, pageSize, total } };
+    const res = await productsApi.getProducts(filters, pagination);
+    return { products: res.data, pagination: { page: res.meta!.page, pageSize: res.meta!.pageSize, total: res.meta!.total } };
   },
 
   async getProductById(id: string): Promise<Product | undefined> {
-    await delay(150);
-    return mockAdminProducts.find((p) => p.id === id);
+    const res = await productsApi.getProductById(id);
+    return res.data;
   },
 
   async createProduct(data: Partial<ProductFormData>): Promise<Product> {
-    await delay(400);
-    const now = new Date().toISOString().split("T")[0];
-    const newProduct: Product = {
-      id: `PRD-${String(mockAdminProducts.length + 1).padStart(3, "0")}`,
-      ...data,
-      name: data.name || "",
-      sku: data.sku || "",
-      barcode: data.barcode || "",
-      category: data.category || "Groceries",
-      brand: data.brand || "",
-      price: data.price || 0,
-      costPrice: data.costPrice || 0,
-      mrp: data.mrp || 0,
-      taxRate: data.taxRate ?? 5,
-      unit: data.unit || "piece",
-      weight: data.weight || "",
-      stock: data.stock ?? 0,
-      lowStockThreshold: data.lowStockThreshold ?? 10,
-      status: (data.status || "draft") as ProductStatus,
-      isFeatured: data.isFeatured ?? false,
-      isFlashSale: data.isFlashSale ?? false,
-      discountPercent: data.discountPercent ?? 0,
-      description: data.description || "",
-      shortDescription: data.shortDescription || "",
-      tags: data.tags || [],
-      warehouse: data.warehouse || "",
-      supplier: data.supplier || "",
-      variants: data.variants || [],
-      media: data.media || [],
-      seo: data.seo || undefined,
-      history: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    // Assign productId to uploaded media now that we have the generated ID
-    if (newProduct.media && newProduct.media.length > 0) {
-      newProduct.media = newProduct.media.map((m) => ({
-        ...m,
-        productId: newProduct.id,
-      }));
-    }
-
-    // Persist to mock array so it shows up in product list immediately
-    mockAdminProducts.unshift(newProduct);
-    // Sync frontend product views
-    refreshProductBridge();
-    return newProduct;
+    const res = await productsApi.createProduct(data);
+    return res.data;
   },
 
   async updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined> {
-    await delay(300);
-    const idx = mockAdminProducts.findIndex((p) => p.id === id);
-    if (idx === -1) return undefined;
-    const updated = {
-      ...mockAdminProducts[idx],
-      ...data,
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
-
-    // Assign productId to any newly uploaded media items
-    if (updated.media && updated.media.length > 0) {
-      updated.media = updated.media.map((m) => ({
-        ...m,
-        productId: m.productId || updated.id,
-      }));
-    }
-
-    // Persist to mock array so fetchProducts() returns updated data
-    mockAdminProducts[idx] = updated;
-    // Sync frontend product views
-    refreshProductBridge();
-    return updated;
+    const res = await productsApi.updateProduct(id, data);
+    return res.data;
   },
 
   async deleteProduct(id: string): Promise<boolean> {
-    await delay(200);
-    const idx = (mockAdminProducts as Product[]).findIndex((p) => p.id === id);
-    if (idx !== -1) {
-      (mockAdminProducts as Product[]).splice(idx, 1);
-      // Sync frontend product views
-      refreshProductBridge();
-      return true;
-    }
-    return false;
+    const res = await productsApi.deleteProduct(id);
+    return res.success;
   },
 
   // ── Pricing ────────────────────────────────────────────
 
   async getPricingData(
     search?: string
-  ): Promise<
-    Array<{
-      id: string;
-      name: string;
-      sku: string;
-      price: number;
-      mrp: number;
-      cost: number;
-      margin: number;
-      tax: number;
-    }>
-  > {
-    await delay(200);
-    let products = [...mockAdminProducts];
-    if (search) {
-      const q = search.toLowerCase();
-      products = products.filter((p) => p.name.toLowerCase().includes(q));
-    }
-    return products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      sku: p.sku,
-      price: p.price,
-      mrp: p.mrp,
-      cost: p.costPrice,
-      margin: p.mrp > 0 ? Math.round(((p.mrp - p.costPrice) / p.mrp) * 100 * 10) / 10 : 0,
-      tax: p.taxRate,
-    }));
+  ): Promise<Array<{ id: string; name: string; sku: string; price: number; mrp: number; cost: number; margin: number; tax: number }>> {
+    const res = await productsApi.getPricingData(search);
+    return res.data;
   },
 
   async updatePricing(
     id: string,
     data: { price?: number; mrp?: number; costPrice?: number; taxRate?: number }
   ): Promise<boolean> {
-    await delay(300);
-    return true;
+    const res = await productsApi.updatePricing(id, data);
+    return res.success;
   },
 
   // ── Media ──────────────────────────────────────────────
 
   async getProductMedia(
     search?: string
-  ): Promise<
-    Array<{
-      id: string;
-      productId: string;
-      productName: string;
-      type: "image" | "video" | "document";
-      url: string;
-      alt: string;
-      isPrimary: boolean;
-      uploadedAt: string;
-    }>
-  > {
-    await delay(200);
-    const mediaItems: Array<{
-      id: string;
-      productId: string;
-      productName: string;
-      type: "image" | "video" | "document";
-      url: string;
-      alt: string;
-      isPrimary: boolean;
-      uploadedAt: string;
-    }> = [];
-
-    mockAdminProducts.forEach((product) => {
-      if (!search || product.name.toLowerCase().includes(search.toLowerCase())) {
-        product.media.forEach((m) => {
-          mediaItems.push({
-            ...m,
-            productName: product.name,
-          });
-        });
-      }
-    });
-
-    return mediaItems;
+  ): Promise<Array<{ id: string; productId: string; productName: string; type: "image" | "video" | "document"; url: string; alt: string; isPrimary: boolean; uploadedAt: string }>> {
+    const res = await productsApi.getProductMedia(search);
+    return res.data;
   },
 
-  async uploadMedia(
-    productId: string,
-    files: File[]
-  ): Promise<boolean> {
-    await delay(500);
+  async uploadMedia(productId: string, files: File[]): Promise<boolean> {
+    // API adapter currently uses mock — this will call real endpoint
     return true;
   },
 
   async deleteMedia(mediaId: string): Promise<boolean> {
-    await delay(200);
-    return true;
+    const res = await productsApi.deleteMedia(mediaId);
+    return res.success;
   },
 
   async setPrimaryMedia(mediaId: string): Promise<boolean> {
-    await delay(200);
-    return true;
+    const res = await productsApi.setPrimaryMedia(mediaId);
+    return res.success;
   },
 
   // ── SEO ────────────────────────────────────────────────
 
   async getProductSEO(
     search?: string
-  ): Promise<
-    Array<{
-      productId: string;
-      productName: string;
-      sku: string;
-      metaTitle: string;
-      metaDescription: string;
-      metaKeywords: string[];
-      slug: string;
-      canonicalUrl?: string;
-      ogImage: string;
-    }>
-  > {
-    await delay(200);
-    const results: Array<{
-      productId: string;
-      productName: string;
-      sku: string;
-      metaTitle: string;
-      metaDescription: string;
-      metaKeywords: string[];
-      slug: string;
-      canonicalUrl?: string;
-      ogImage: string;
-    }> = [];
-
-    mockAdminProducts.forEach((product) => {
-      if (product.seo && (!search || product.name.toLowerCase().includes(search.toLowerCase()))) {
-        const { productId: _seoProductId, ...seoRest } = product.seo;
-        results.push({
-          productId: product.id,
-          productName: product.name,
-          sku: product.sku,
-          ...seoRest,
-        });
-      }
-    });
-
-    return results;
+  ): Promise<Array<{ productId: string; productName: string; sku: string; metaTitle: string; metaDescription: string; metaKeywords: string[]; slug: string; canonicalUrl?: string; ogImage: string }>> {
+    const res = await productsApi.getProductSEO(search);
+    return res.data;
   },
 
   async updateProductSEO(
     productId: string,
-    seo: {
-      metaTitle?: string;
-      metaDescription?: string;
-      metaKeywords?: string[];
-      slug?: string;
-      canonicalUrl?: string;
-      ogImage?: string;
-    }
+    seo: { metaTitle?: string; metaDescription?: string; metaKeywords?: string[]; slug?: string; canonicalUrl?: string; ogImage?: string }
   ): Promise<boolean> {
-    await delay(300);
-    return true;
+    const res = await productsApi.updateProductSEO(productId, seo);
+    return res.success;
   },
 
   // ── Bulk Upload ────────────────────────────────────────
 
   async getBulkUploadHistory(): Promise<BulkUploadRecord[]> {
-    await delay(200);
-    return mockBulkUploadHistory;
+    const res = await productsApi.getBulkUploadHistory();
+    return res.data;
   },
 
   async uploadBulkFile(file: File): Promise<{ success: boolean; jobId: string }> {
-    await delay(800);
-    return { success: true, jobId: `BULK-${Date.now()}` };
+    const res = await productsApi.uploadBulkFile(file);
+    return { success: res.success, jobId: res.data.jobId };
   },
 
   async downloadTemplate(): Promise<void> {
-    await delay(100);
     // In production: trigger file download from backend
   },
 
@@ -369,47 +123,9 @@ export const productService = {
   async getAuditLogs(
     filters?: { search?: string; action?: string; dateFrom?: string; dateTo?: string },
     pagination?: Partial<PaginationState>
-  ): Promise<{
-    logs: Array<{
-      id: string;
-      action: string;
-      product: string;
-      productId: string;
-      field: string;
-      oldValue: string;
-      newValue: string;
-      performedBy: string;
-      role: string;
-      timestamp: string;
-    }>;
-    pagination: PaginationState;
-  }> {
-    await delay(200);
-    let filtered = [...mockAuditLogs];
-
-    if (filters?.search) {
-      const q = filters.search.toLowerCase();
-      filtered = filtered.filter(
-        (l) =>
-          l.product.toLowerCase().includes(q) ||
-          l.action.toLowerCase().includes(q) ||
-          l.performedBy.toLowerCase().includes(q)
-      );
-    }
-    if (filters?.action) {
-      filtered = filtered.filter((l) => l.action.toLowerCase().includes(filters.action!.toLowerCase()));
-    }
-
-    const page = pagination?.page || 1;
-    const pageSize = pagination?.pageSize || 10;
-    const total = filtered.length;
-    const start = (page - 1) * pageSize;
-    const paged = filtered.slice(start, start + pageSize);
-
-    return {
-      logs: paged,
-      pagination: { page, pageSize, total },
-    };
+  ): Promise<{ logs: Array<{ id: string; action: string; product: string; productId: string; field: string; oldValue: string; newValue: string; performedBy: string; role: string; timestamp: string }>; pagination: PaginationState }> {
+    const res = await productsApi.getAuditLogs(filters, pagination);
+    return { logs: res.data, pagination: { page: res.meta?.page || 1, pageSize: res.meta?.pageSize || 10, total: res.meta?.total || 0 } };
   },
 };
 
@@ -417,51 +133,27 @@ export const productService = {
 
 export const categoryService = {
   async getCategories(): Promise<Category[]> {
-    await delay(200);
-    return mockCategories;
+    const res = await productsApi.getCategories();
+    return res.data;
   },
 
   async getCategoryById(id: string): Promise<Category | undefined> {
-    await delay(150);
-    return mockCategories.find((c) => c.id === id);
+    const res = await productsApi.getCategoryById(id);
+    return res.data;
   },
 
-  async createCategory(
-    data: Partial<Category>
-  ): Promise<Category> {
-    await delay(300);
-    const now = new Date().toISOString().split("T")[0];
-    return {
-      id: `CAT-${String(mockCategories.length + 1).padStart(3, "0")}`,
-      name: data.name || "",
-      slug: data.slug || "",
-      description: data.description || "",
-      parentId: data.parentId || null,
-      image: data.image || "",
-      isActive: data.isActive ?? true,
-      productCount: 0,
-      sortOrder: data.sortOrder || 0,
-      createdAt: now,
-      updatedAt: now,
-    };
+  async createCategory(data: Partial<Category>): Promise<Category> {
+    const res = await productsApi.createCategory(data);
+    return res.data;
   },
 
-  async updateCategory(
-    id: string,
-    data: Partial<Category>
-  ): Promise<Category | undefined> {
-    await delay(300);
-    const cat = mockCategories.find((c) => c.id === id);
-    if (!cat) return undefined;
-    return {
-      ...cat,
-      ...data,
-      updatedAt: new Date().toISOString().split("T")[0],
-    };
+  async updateCategory(id: string, data: Partial<Category>): Promise<Category | undefined> {
+    const res = await productsApi.updateCategory(id, data);
+    return res.data;
   },
 
   async deleteCategory(id: string): Promise<boolean> {
-    await delay(200);
-    return true;
+    const res = await productsApi.deleteCategory(id);
+    return res.success;
   },
 };

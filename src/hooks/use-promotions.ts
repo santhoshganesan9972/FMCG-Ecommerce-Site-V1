@@ -1,7 +1,14 @@
+// ── Promotions & Campaign Hooks ──────────────────────────
+// Architecture: UI → Component → Hook → Service → API Adapter → Backend
+// Now backed by TanStack Query for caching, retry, and invalidation.
+
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { promotionService } from "@/services/promotions.service";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidatePromotionQueries } from "@/lib/react-query/invalidation";
 import type {
   Promotion,
   Coupon,
@@ -15,440 +22,521 @@ import type {
   CampaignAnalytics,
 } from "@/types/promotions";
 
+// ── Shared helpers ────────────────────────────────────────
+
+function usePromoPagination(initialPageSize = 10) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+
+  const setPageCb = useCallback((p: number) => setPage(p), []);
+  const setPageSizeCb = useCallback((s: number) => { setPageSize(s); setPage(1); }, []);
+
+  return { page, pageSize, setPage: setPageCb, setPageSize: setPageSizeCb };
+}
+
 // ── Promotions Hook ──────────────────────────────────────
 
 export function usePromotions(initialFilters?: Partial<PromotionFilters>) {
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [summary, setSummary] = useState<{
-    total: number; active: number; scheduled: number; expired: number; totalUsage: number; totalBudget: string;
-  }>({ total: 0, active: 0, scheduled: 0, expired: 0, totalUsage: 0, totalBudget: "₹0" });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
   const [filters, setFilters] = useState<PromotionFilters>({
     search: "", type: "", status: "", ...initialFilters,
   });
 
-  const fetchPromotions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getPromotions(filters, { page: pagination.page, pageSize: pagination.pageSize });
-      setPromotions(result.promotions);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch promotions");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.type, filters.status, pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.list({ ...filters, page, pageSize }),
+    queryFn: () => promotionService.getPromotions(filters, { page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchPromotions(); }, [fetchPromotions]);
+  const promotions = data?.promotions ?? [];
+  const summary = data?.summary ?? {
+    total: 0, active: 0, scheduled: 0, expired: 0, totalUsage: 0, totalBudget: "₹0",
+  };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<Promotion> }) =>
+      promotionService.updatePromotion(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deletePromotion(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const updatePromotion = useCallback(
+    async (id: string, data: Partial<Promotion>): Promise<Promotion | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deletePromotion = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
 
   const updateFilters = useCallback((update: Partial<PromotionFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+    setPage(1);
+  }, [setPage]);
 
-  const updatePromotion = useCallback(async (id: string, data: Partial<Promotion>) => {
-    try {
-      const updated = await promotionService.updatePromotion(id, data);
-      await fetchPromotions();
-      return updated;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update promotion");
-      return null;
-    }
-  }, [fetchPromotions]);
+  const fetchPromotions = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.all });
+  }, [queryClient]);
 
-  const deletePromotion = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deletePromotion(id);
-      await fetchPromotions();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete promotion");
-      return false;
-    }
-  }, [fetchPromotions]);
-
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
-
-  return { promotions, summary, pagination, loading, error, filters, updateFilters, fetchPromotions, updatePromotion, deletePromotion, setPage, setPageSize };
+  return {
+    promotions, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    filters, updateFilters, fetchPromotions,
+    updatePromotion, deletePromotion,
+    setPage, setPageSize,
+  };
 }
 
 // ── Coupons Hook ─────────────────────────────────────────
 
 export function useCoupons(initialFilters?: Partial<CouponFilters>) {
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [summary, setSummary] = useState({
-    total: 0, active: 0, scheduled: 0, expired: 0, totalUsed: 0, totalIssued: 0,
-  });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
   const [filters, setFilters] = useState<CouponFilters>({
     search: "", type: "", status: "", ...initialFilters,
   });
 
-  const fetchCoupons = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getCoupons(filters, { page: pagination.page, pageSize: pagination.pageSize });
-      setCoupons(result.coupons);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch coupons");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.type, filters.status, pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.coupons.list({ ...filters, page, pageSize }),
+    queryFn: () => promotionService.getCoupons(filters, { page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchCoupons(); }, [fetchCoupons]);
+  const coupons = data?.coupons ?? [];
+  const summary = data?.summary ?? {
+    total: 0, active: 0, scheduled: 0, expired: 0, totalUsed: 0, totalIssued: 0,
+  };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
+
+  const generateMutation = useMutation({
+    mutationFn: (data: Partial<Coupon>) => promotionService.generateCoupon(data),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<Coupon> }) =>
+      promotionService.updateCoupon(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deleteCoupon(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const generateCoupon = useCallback(
+    async (data: Partial<Coupon>): Promise<Coupon | null> => {
+      try {
+        return await generateMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [generateMutation]
+  );
+
+  const updateCoupon = useCallback(
+    async (id: string, data: Partial<Coupon>): Promise<Coupon | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deleteCoupon = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
 
   const updateFilters = useCallback((update: Partial<CouponFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+    setPage(1);
+  }, [setPage]);
 
-  const generateCoupon = useCallback(async (data: Partial<Coupon>) => {
-    try {
-      const newCoupon = await promotionService.generateCoupon(data);
-      await fetchCoupons();
-      return newCoupon;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate coupon");
-      return null;
-    }
-  }, [fetchCoupons]);
+  const fetchCoupons = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.coupons.all });
+  }, [queryClient]);
 
-  const updateCoupon = useCallback(async (id: string, data: Partial<Coupon>) => {
-    try {
-      const updated = await promotionService.updateCoupon(id, data);
-      await fetchCoupons();
-      return updated;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update coupon");
-      return null;
-    }
-  }, [fetchCoupons]);
-
-  const deleteCoupon = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deleteCoupon(id);
-      await fetchCoupons();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete coupon");
-      return false;
-    }
-  }, [fetchCoupons]);
-
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
-
-  return { coupons, summary, pagination, loading, error, filters, updateFilters, fetchCoupons, generateCoupon, updateCoupon, deleteCoupon, setPage, setPageSize };
+  return {
+    coupons, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    filters, updateFilters, fetchCoupons,
+    generateCoupon, updateCoupon, deleteCoupon,
+    setPage, setPageSize,
+  };
 }
 
 // ── Flash Sales Hook ─────────────────────────────────────
 
 export function useFlashSales() {
-  const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
-  const [summary, setSummary] = useState({ live: 0, scheduled: 0, completed: 0, totalBudget: "₹0" });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
 
-  const fetchFlashSales = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getFlashSales({ page: pagination.page, pageSize: pagination.pageSize });
-      setFlashSales(result.flashSales);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch flash sales");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.flashSales.list({ page, pageSize }),
+    queryFn: () => promotionService.getFlashSales({ page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchFlashSales(); }, [fetchFlashSales]);
+  const flashSales = data?.flashSales ?? [];
+  const summary = data?.summary ?? { live: 0, scheduled: 0, completed: 0, totalBudget: "₹0" };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const createFlashSale = useCallback(async (data: Partial<FlashSale>) => {
-    try {
-      const newFs = await promotionService.createFlashSale(data);
-      await fetchFlashSales();
-      return newFs;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create flash sale");
-      return null;
-    }
-  }, [fetchFlashSales]);
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<FlashSale>) => promotionService.createFlashSale(data),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const updateFlashSale = useCallback(async (id: string, data: Partial<FlashSale>) => {
-    try {
-      const updated = await promotionService.updateFlashSale(id, data);
-      await fetchFlashSales();
-      return updated;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update flash sale");
-      return null;
-    }
-  }, [fetchFlashSales]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<FlashSale> }) =>
+      promotionService.updateFlashSale(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const deleteFlashSale = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deleteFlashSale(id);
-      await fetchFlashSales();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete flash sale");
-      return false;
-    }
-  }, [fetchFlashSales]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deleteFlashSale(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
+  const createFlashSale = useCallback(
+    async (data: Partial<FlashSale>): Promise<FlashSale | null> => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [createMutation]
+  );
 
-  return { flashSales, summary, pagination, loading, error, fetchFlashSales, createFlashSale, updateFlashSale, deleteFlashSale, setPage, setPageSize };
+  const updateFlashSale = useCallback(
+    async (id: string, data: Partial<FlashSale>): Promise<FlashSale | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deleteFlashSale = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
+
+  const fetchFlashSales = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.flashSales.all });
+  }, [queryClient]);
+
+  return {
+    flashSales, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchFlashSales, createFlashSale, updateFlashSale, deleteFlashSale,
+    setPage, setPageSize,
+  };
 }
 
 // ── Campaigns Hook ───────────────────────────────────────
 
 export function useCampaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [summary, setSummary] = useState({ active: 0, scheduled: 0, drafts: 0, totalReach: "0" });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
 
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getCampaigns({ page: pagination.page, pageSize: pagination.pageSize });
-      setCampaigns(result.campaigns);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch campaigns");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.campaigns.list({ page, pageSize }),
+    queryFn: () => promotionService.getCampaigns({ page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+  const campaigns = data?.campaigns ?? [];
+  const summary = data?.summary ?? { active: 0, scheduled: 0, drafts: 0, totalReach: "0" };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const createCampaign = useCallback(async (data: Partial<Campaign>) => {
-    try {
-      const newCamp = await promotionService.createCampaign(data);
-      await fetchCampaigns();
-      return newCamp;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create campaign");
-      return null;
-    }
-  }, [fetchCampaigns]);
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<Campaign>) => promotionService.createCampaign(data),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const updateCampaign = useCallback(async (id: string, data: Partial<Campaign>) => {
-    try {
-      const updated = await promotionService.updateCampaign(id, data);
-      if (updated) setCampaigns((prev) => prev.map((c) => (c.id === id ? updated : c)));
-      return updated || null;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update campaign");
-      return null;
-    }
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<Campaign> }) =>
+      promotionService.updateCampaign(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const deleteCampaign = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deleteCampaign(id);
-      await fetchCampaigns();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete campaign");
-      return false;
-    }
-  }, [fetchCampaigns]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deleteCampaign(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
+  const createCampaign = useCallback(
+    async (data: Partial<Campaign>): Promise<Campaign | null> => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [createMutation]
+  );
 
-  return { campaigns, summary, pagination, loading, error, fetchCampaigns, createCampaign, updateCampaign, deleteCampaign, setPage, setPageSize };
+  const updateCampaign = useCallback(
+    async (id: string, data: Partial<Campaign>): Promise<Campaign | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deleteCampaign = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
+
+  const fetchCampaigns = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.campaigns.all });
+  }, [queryClient]);
+
+  return {
+    campaigns, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchCampaigns, createCampaign, updateCampaign, deleteCampaign,
+    setPage, setPageSize,
+  };
 }
 
 // ── Push Notifications Hook ──────────────────────────────
 
 export function usePushNotifications() {
-  const [notifications, setNotifications] = useState<PushNotification[]>([]);
-  const [summary, setSummary] = useState({ sent: 0, scheduled: 0, drafts: 0, avgOpenRate: "0%" });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
 
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getPushNotifications({ page: pagination.page, pageSize: pagination.pageSize });
-      setNotifications(result.notifications);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch notifications");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.pushNotifications.list({ page, pageSize }),
+    queryFn: () => promotionService.getPushNotifications({ page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  const notifications = data?.notifications ?? [];
+  const summary = data?.summary ?? { sent: 0, scheduled: 0, drafts: 0, avgOpenRate: "0%" };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const createNotification = useCallback(async (data: Partial<PushNotification>) => {
-    try {
-      const newNotif = await promotionService.createPushNotification(data);
-      await fetchNotifications();
-      return newNotif;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create notification");
-      return null;
-    }
-  }, [fetchNotifications]);
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<PushNotification>) =>
+      promotionService.createPushNotification(data),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const updateNotification = useCallback(async (id: string, data: Partial<PushNotification>) => {
-    try {
-      const updated = await promotionService.updatePushNotification(id, data);
-      await fetchNotifications();
-      return updated;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update notification");
-      return null;
-    }
-  }, [fetchNotifications]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<PushNotification> }) =>
+      promotionService.updatePushNotification(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const deleteNotification = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deletePushNotification(id);
-      await fetchNotifications();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete notification");
-      return false;
-    }
-  }, [fetchNotifications]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deletePushNotification(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
 
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
+  const createNotification = useCallback(
+    async (data: Partial<PushNotification>): Promise<PushNotification | null> => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [createMutation]
+  );
 
-  return { notifications, summary, pagination, loading, error, fetchNotifications, createNotification, updateNotification, deleteNotification, setPage, setPageSize };
+  const updateNotification = useCallback(
+    async (id: string, data: Partial<PushNotification>): Promise<PushNotification | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deleteNotification = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
+
+  const fetchNotifications = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.pushNotifications.all });
+  }, [queryClient]);
+
+  return {
+    notifications, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchNotifications, createNotification, updateNotification, deleteNotification,
+    setPage, setPageSize,
+  };
 }
 
 // ── A/B Tests Hook ───────────────────────────────────────
 
 export function useABTests(initialFilters?: Partial<ABTestFilters>) {
-  const [tests, setTests] = useState<ABTest[]>([]);
-  const [summary, setSummary] = useState({ total: 0, running: 0, completed: 0, totalImpressions: 0 });
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, setPage, setPageSize } = usePromoPagination(10);
   const [filters, setFilters] = useState<ABTestFilters>({
     search: "", status: "", ...initialFilters,
   });
 
-  const fetchTests = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await promotionService.getABTests(filters, { page: pagination.page, pageSize: pagination.pageSize });
-      setTests(result.tests);
-      setSummary(result.summary);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch A/B tests");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, filters.status, pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.abTests.list({ ...filters, page, pageSize }),
+    queryFn: () => promotionService.getABTests(filters, { page, pageSize }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchTests(); }, [fetchTests]);
+  const tests = data?.tests ?? [];
+  const summary = data?.summary ?? { total: 0, running: 0, completed: 0, totalImpressions: 0 };
+  const pagination = data?.pagination ?? { page, pageSize, total: 0 };
+
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<ABTest>) => promotionService.createABTest(data),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string; data: Partial<ABTest> }) =>
+      promotionService.updateABTest(id, updateData),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => promotionService.deleteABTest(id),
+    onSuccess: () => invalidatePromotionQueries(queryClient),
+  });
+
+  const createTest = useCallback(
+    async (data: Partial<ABTest>): Promise<ABTest | null> => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [createMutation]
+  );
+
+  const updateTest = useCallback(
+    async (id: string, data: Partial<ABTest>): Promise<ABTest | undefined | null> => {
+      try {
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
+        return null;
+      }
+    },
+    [updateMutation]
+  );
+
+  const deleteTest = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        return await deleteMutation.mutateAsync(id);
+      } catch {
+        return false;
+      }
+    },
+    [deleteMutation]
+  );
 
   const updateFilters = useCallback((update: Partial<ABTestFilters>) => {
     setFilters((prev) => ({ ...prev, ...update }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  }, []);
+    setPage(1);
+  }, [setPage]);
 
-  const createTest = useCallback(async (data: Partial<ABTest>) => {
-    try {
-      const newTest = await promotionService.createABTest(data);
-      await fetchTests();
-      return newTest;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create A/B test");
-      return null;
-    }
-  }, [fetchTests]);
+  const fetchTests = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.promotions.abTests.all });
+  }, [queryClient]);
 
-  const updateTest = useCallback(async (id: string, data: Partial<ABTest>) => {
-    try {
-      const updated = await promotionService.updateABTest(id, data);
-      await fetchTests();
-      return updated || null;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update A/B test");
-      return null;
-    }
-  }, [fetchTests]);
-
-  const deleteTest = useCallback(async (id: string) => {
-    try {
-      const success = await promotionService.deleteABTest(id);
-      await fetchTests();
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete A/B test");
-      return false;
-    }
-  }, [fetchTests]);
-
-  const setPage = useCallback((page: number) => setPagination((prev) => ({ ...prev, page })), []);
-  const setPageSize = useCallback((pageSize: number) => setPagination((prev) => ({ ...prev, page: 1, pageSize })), []);
-
-  return { tests, summary, pagination, loading, error, filters, updateFilters, fetchTests, createTest, updateTest, deleteTest, setPage, setPageSize };
+  return {
+    tests, summary, pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
+    filters, updateFilters, fetchTests,
+    createTest, updateTest, deleteTest,
+    setPage, setPageSize,
+  };
 }
 
 // ── Campaign Analytics Hook ──────────────────────────────
 
 export function useCampaignAnalytics() {
-  const [analytics, setAnalytics] = useState<CampaignAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.promotions.campaignAnalytics.list(),
+    queryFn: () => promotionService.getCampaignAnalytics(),
+    staleTime: 60_000,
+  });
 
-  const fetchAnalytics = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await promotionService.getCampaignAnalytics();
-      setAnalytics(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch campaign analytics");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
-
-  return { analytics, loading, error, fetchAnalytics };
+  return {
+    analytics: data ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchAnalytics: () => {}, // auto-fetched via query
+  };
 }

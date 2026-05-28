@@ -1,13 +1,17 @@
 // ── Delivery Management Hooks ────────────────────────────
-// Architecture: UI → Component → Hook → Service → Axios → API Gateway → Backend
+// Architecture: UI → Component → Hook → Service → API Adapter → Backend
+// Now backed by TanStack Query for caching, retry, and invalidation.
 //
 // Each hook manages its own loading/error/data states and exposes
 // a clean interface for page components. No API logic lives in components.
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deliveryService } from "@/services/delivery.service";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidateDeliveryQueries } from "@/lib/react-query/invalidation";
 import type {
   DeliveryPartner,
   PartnerProfile,
@@ -22,294 +26,240 @@ import type {
   AssignDeliveryFormData,
   UpdateDeliveryStatusFormData,
 } from "@/types/delivery";
-import type { PaginationState } from "@/types/products";
+
+// ── Shared Helpers ────────────────────────────────────────
+
+function useDeliveryPagination(initialPageSize = 10) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+
+  const goToPage = useCallback((p: number) => setPage(p), []);
+  const changePageSize = useCallback((s: number) => {
+    setPageSize(s);
+    setPage(1);
+  }, []);
+
+  return { page, pageSize, goToPage, changePageSize, setPage: goToPage, setPageSize: changePageSize };
+}
 
 // ── Delivery Partners Hook ────────────────────────────────
 
 export function useDeliveryPartners(initialParams?: Partial<DeliveryQueryParams>) {
-  const [partners, setPartners] = useState<DeliveryPartner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useDeliveryPagination(10);
   const [search, setSearch] = useState(initialParams?.search || "");
   const [statusFilter, setStatusFilter] = useState(initialParams?.status || "all");
   const [zoneFilter, setZoneFilter] = useState(initialParams?.zone || "");
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+
+  const listQuery = useQuery({
+    queryKey: [...queryKeys.delivery.partners.list(), { search, status: statusFilter, zone: zoneFilter, page, pageSize }],
+    queryFn: () => deliveryService.getPartners({
+      search: search || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      zone: zoneFilter || undefined,
+      page,
+      pageSize,
+    }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
   });
 
-  const fetchPartners = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getPartners({
-        search: search || undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        zone: zoneFilter || undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      });
-      if (res.success && res.data) {
-        setPartners(res.data.items);
-        setPagination(res.data.pagination);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load partners");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter, zoneFilter, pagination.page, pagination.pageSize]);
-
-  useEffect(() => { fetchPartners(); }, [fetchPartners]);
-
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
-
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+  const partners = listQuery.data?.data?.items ?? [];
+  const pagination = useMemo(() => listQuery.data?.data?.pagination ?? { page, pageSize, total: 0 }, [listQuery.data, page, pageSize]);
 
   const onlineCount = useMemo(() => partners.filter((p) => p.status === "online").length, [partners]);
   const busyCount = useMemo(() => partners.filter((p) => p.status === "busy").length, [partners]);
   const zones = useMemo(() => [...new Set(partners.map((p) => p.zone).filter(Boolean))] as string[], [partners]);
 
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.delivery.partners.all });
+  }, [queryClient]);
+
   return {
-    partners, loading, error,
+    partners,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
     search, setSearch,
     statusFilter, setStatusFilter,
     zoneFilter, setZoneFilter,
-    pagination, setPage, setPageSize,
+    pagination, setPage: goToPage, setPageSize: changePageSize,
     onlineCount, busyCount, zones,
-    refresh: fetchPartners,
+    refresh,
   };
 }
 
 // ── Partner Profile Hook ──────────────────────────────────
 
 export function usePartnerProfile(partnerId: string | null) {
-  const [profile, setProfile] = useState<PartnerProfile | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: [...queryKeys.delivery.all, "partnerProfile", partnerId],
+    queryFn: () => deliveryService.getPartnerProfile(partnerId!),
+    enabled: !!partnerId,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    if (!partnerId) {
-      setProfile(null);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    deliveryService.getPartnerProfile(partnerId)
-      .then((res) => {
-        if (res.success) setProfile(res.data);
-        else setError(res.error || "Failed to load profile");
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load profile"))
-      .finally(() => setLoading(false));
-  }, [partnerId]);
-
-  return { profile, loading, error };
+  return {
+    profile: data?.data ?? null,
+    loading: isLoading,
+    error: error?.message ?? (data && !data.success ? (data.error ?? "Failed to load profile") : null),
+  };
 }
 
 // ── Live Deliveries Hook ─────────────────────────────────
 
 export function useLiveDeliveries(initialParams?: Partial<DeliveryQueryParams>) {
-  const [deliveries, setDeliveries] = useState<LiveDelivery[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useDeliveryPagination(10);
   const [statusFilter, setStatusFilter] = useState(initialParams?.status || "all");
   const [zoneFilter, setZoneFilter] = useState(initialParams?.zone || "");
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+
+  const listQuery = useQuery({
+    queryKey: [...queryKeys.delivery.all, "live", { status: statusFilter, zone: zoneFilter, page, pageSize }],
+    queryFn: () => deliveryService.getLiveDeliveries({
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      zone: zoneFilter || undefined,
+      page,
+      pageSize,
+    }),
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+    refetchInterval: 15_000,
   });
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchDeliveries = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getLiveDeliveries({
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        zone: zoneFilter || undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      });
-      if (res.success && res.data) {
-        setDeliveries(res.data.items);
-        setPagination(res.data.pagination);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load deliveries");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, zoneFilter, pagination.page, pagination.pageSize]);
-
-  useEffect(() => { fetchDeliveries(); }, [fetchDeliveries]);
-
-  // Auto-poll every 15s for real-time updates (simulates socket)
-  useEffect(() => {
-    pollRef.current = setInterval(() => {
-      fetchDeliveries();
-    }, 15000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [fetchDeliveries]);
-
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
-
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+  const deliveries = listQuery.data?.data?.items ?? [];
+  const pagination = useMemo(() => listQuery.data?.data?.pagination ?? { page, pageSize, total: 0 }, [listQuery.data, page, pageSize]);
 
   const activeCount = useMemo(
     () => deliveries.filter((d) => !["delivered", "failed", "returned", "cancelled"].includes(d.status)).length,
     [deliveries]
   );
 
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.delivery.all });
+  }, [queryClient]);
+
   return {
-    deliveries, loading, error,
+    deliveries,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
     statusFilter, setStatusFilter,
     zoneFilter, setZoneFilter,
-    pagination, setPage, setPageSize,
+    pagination, setPage: goToPage, setPageSize: changePageSize,
     activeCount,
-    refresh: fetchDeliveries,
+    refresh,
   };
 }
 
 // ── Delivery Routes Hook ─────────────────────────────────
 
 export function useDeliveryRoutes(initialParams?: Partial<DeliveryQueryParams>) {
-  const [routes, setRoutes] = useState<DeliveryRoute[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage } = useDeliveryPagination(10);
   const [statusFilter, setStatusFilter] = useState(initialParams?.status || "all");
-  const [optimizing, setOptimizing] = useState(false);
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+
+  const listQuery = useQuery({
+    queryKey: [...queryKeys.delivery.all, "routes", { status: statusFilter, page, pageSize }],
+    queryFn: () => deliveryService.getRoutes({
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      page,
+      pageSize,
+    }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
   });
 
-  const fetchRoutes = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getRoutes({
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      });
-      if (res.success && res.data) {
-        setRoutes(res.data.items);
-        setPagination(res.data.pagination);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load routes");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, pagination.page, pagination.pageSize]);
+  const routes = listQuery.data?.data?.items ?? [];
+  const pagination = useMemo(() => listQuery.data?.data?.pagination ?? { page, pageSize, total: 0 }, [listQuery.data, page, pageSize]);
 
-  useEffect(() => { fetchRoutes(); }, [fetchRoutes]);
+  const optimizeMutation = useMutation({
+    mutationFn: () => deliveryService.optimizeAllRoutes(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.delivery.all, "routes"] });
+    },
+  });
 
   const optimizeAllRoutes = useCallback(async () => {
-    setOptimizing(true);
     try {
-      await deliveryService.optimizeAllRoutes();
-      await fetchRoutes();
-    } finally {
-      setOptimizing(false);
+      await optimizeMutation.mutateAsync();
+    } catch {
+      // error handled by mutation state
     }
-  }, [fetchRoutes]);
+  }, [optimizeMutation]);
 
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.delivery.all });
+  }, [queryClient]);
 
   return {
-    routes, loading, error,
+    routes,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
     statusFilter, setStatusFilter,
-    optimizing, optimizeAllRoutes,
-    pagination, setPage,
-    refresh: fetchRoutes,
+    optimizing: optimizeMutation.isPending,
+    optimizeAllRoutes,
+    pagination, setPage: goToPage,
+    refresh,
   };
 }
 
 // ── Delivery Status Hook ────────────────────────────────
 
 export function useDeliveryStatuses(initialParams?: Partial<DeliveryQueryParams>) {
-  const [entries, setEntries] = useState<DeliveryStatusEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { page, pageSize, goToPage, changePageSize } = useDeliveryPagination(10);
   const [search, setSearch] = useState(initialParams?.search || "");
   const [statusFilter, setStatusFilter] = useState(initialParams?.status || "all");
   const [zoneFilter, setZoneFilter] = useState(initialParams?.zone || "");
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+
+  const listQuery = useQuery({
+    queryKey: [...queryKeys.delivery.all, "statuses", { search, status: statusFilter, zone: zoneFilter, page, pageSize }],
+    queryFn: () => deliveryService.getDeliveryStatuses({
+      search: search || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      zone: zoneFilter || undefined,
+      page,
+      pageSize,
+    }),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
   });
 
-  const fetchStatuses = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getDeliveryStatuses({
-        search: search || undefined,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-        zone: zoneFilter || undefined,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      });
-      if (res.success && res.data) {
-        setEntries(res.data.items);
-        setPagination(res.data.pagination);
+  const entries = listQuery.data?.data?.items ?? [];
+  const pagination = useMemo(() => listQuery.data?.data?.pagination ?? { page, pageSize, total: 0 }, [listQuery.data, page, pageSize]);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (data: UpdateDeliveryStatusFormData) => deliveryService.updateDeliveryStatus(data),
+    onSuccess: () => invalidateDeliveryQueries(queryClient),
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: (data: AssignDeliveryFormData) => deliveryService.assignDelivery(data),
+    onSuccess: () => invalidateDeliveryQueries(queryClient),
+  });
+
+  const updateStatus = useCallback(
+    async (data: UpdateDeliveryStatusFormData): Promise<boolean> => {
+      try {
+        const res = await updateStatusMutation.mutateAsync(data);
+        return res.success;
+      } catch {
+        return false;
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load delivery statuses");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter, zoneFilter, pagination.page, pagination.pageSize]);
+    },
+    [updateStatusMutation]
+  );
 
-  useEffect(() => { fetchStatuses(); }, [fetchStatuses]);
-
-  const updateStatus = useCallback(async (data: UpdateDeliveryStatusFormData): Promise<boolean> => {
-    try {
-      const res = await deliveryService.updateDeliveryStatus(data);
-      if (res.success) {
-        await fetchStatuses();
-        return true;
+  const assignDelivery = useCallback(
+    async (data: AssignDeliveryFormData): Promise<boolean> => {
+      try {
+        const res = await assignMutation.mutateAsync(data);
+        return res.success;
+      } catch {
+        return false;
       }
-      return false;
-    } catch {
-      return false;
-    }
-  }, [fetchStatuses]);
-
-  const assignDelivery = useCallback(async (data: AssignDeliveryFormData): Promise<boolean> => {
-    try {
-      const res = await deliveryService.assignDelivery(data);
-      if (res.success) {
-        await fetchStatuses();
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }, [fetchStatuses]);
-
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
-
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+    },
+    [assignMutation]
+  );
 
   const summary = useMemo(() => ({
     total: entries.length,
@@ -323,56 +273,63 @@ export function useDeliveryStatuses(initialParams?: Partial<DeliveryQueryParams>
     delayed: entries.filter((e) => e.slaStatus === "delayed" || e.slaStatus === "critical").length,
   }), [entries]);
 
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.delivery.all });
+  }, [queryClient]);
+
   return {
-    entries, loading, error,
+    entries,
+    loading: listQuery.isLoading,
+    error: listQuery.error?.message ?? null,
     search, setSearch,
     statusFilter, setStatusFilter,
     zoneFilter, setZoneFilter,
-    pagination, setPage, setPageSize,
+    pagination, setPage: goToPage, setPageSize: changePageSize,
     summary, updateStatus, assignDelivery,
-    refresh: fetchStatuses,
+    refresh,
   };
 }
 
 // ── Partner Performance Hook ──────────────────────────────
 
 export function usePartnerPerformance(partnerId?: string | null) {
-  const [performances, setPerformances] = useState<PerformanceOverview[]>([]);
-  const [selectedPerformance, setSelectedPerformance] = useState<PerformanceOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<string>("30d");
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (partnerId) {
-        const res = await deliveryService.getPartnerPerformance(partnerId, { period: period as AnalyticsQueryParams["period"] });
-        if (res.success) {
-          setSelectedPerformance(res.data);
-          setPerformances(res.data ? [res.data] : []);
-        }
-      } else {
-        const res = await deliveryService.getAllPartnerPerformance({ period: period as AnalyticsQueryParams["period"] });
-        if (res.success) {
-          setPerformances(res.data);
-          setSelectedPerformance(null);
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load performance data");
-    } finally {
-      setLoading(false);
-    }
-  }, [partnerId, period]);
+  const singleQuery = useQuery({
+    queryKey: [...queryKeys.delivery.performance.all, partnerId, period],
+    queryFn: () => deliveryService.getPartnerPerformance(partnerId!, { period: period as AnalyticsQueryParams["period"] }),
+    enabled: !!partnerId,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const allQuery = useQuery({
+    queryKey: [...queryKeys.delivery.performance.all, "all", period],
+    queryFn: () => deliveryService.getAllPartnerPerformance({ period: period as AnalyticsQueryParams["period"] }),
+    enabled: !partnerId,
+    staleTime: 30_000,
+  });
+
+  const loading = partnerId ? singleQuery.isLoading : allQuery.isLoading;
+  const error = partnerId ? singleQuery.error?.message ?? null : allQuery.error?.message ?? null;
+
+  const performances = useMemo(() => {
+    if (partnerId) {
+      return singleQuery.data?.data ? [singleQuery.data.data] : [];
+    }
+    return allQuery.data?.data ?? [];
+  }, [partnerId, singleQuery.data, allQuery.data]);
+
+  const selectedPerformance = partnerId ? (singleQuery.data?.data ?? null) : null;
 
   const topPerformers = useMemo(
     () => [...performances].sort((a, b) => b.onTimeRate - a.onTimeRate).slice(0, 5),
     [performances]
   );
+
+  const queryClient = useQueryClient();
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.delivery.performance.all });
+  }, [queryClient]);
 
   return {
     performances,
@@ -380,96 +337,90 @@ export function usePartnerPerformance(partnerId?: string | null) {
     loading, error,
     period, setPeriod,
     topPerformers,
-    refresh: fetchData,
+    refresh,
   };
 }
 
 // ── Delivery Analytics Hook ───────────────────────────────
 
 export function useDeliveryAnalytics(initialParams?: Partial<AnalyticsQueryParams>) {
-  const [analytics, setAnalytics] = useState<DeliveryAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState(initialParams?.period || "30d");
 
-  const fetchAnalytics = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getAnalytics({ period: period as AnalyticsQueryParams["period"] });
-      if (res.success) setAnalytics(res.data);
-      else setError(res.error || "Failed to load analytics");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load analytics");
-    } finally {
-      setLoading(false);
-    }
-  }, [period]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: [...queryKeys.delivery.analytics.list(), period],
+    queryFn: () => deliveryService.getAnalytics({ period: period as AnalyticsQueryParams["period"] }),
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
-
-  return { analytics, loading, error, period, setPeriod, refresh: fetchAnalytics };
+  return {
+    analytics: data?.data ?? null,
+    loading: isLoading,
+    error: error?.message ?? (data && !data.success ? (data.error ?? "Failed to load analytics") : null),
+    period, setPeriod,
+    refresh: () => {}, // auto-fetched via query key change
+  };
 }
 
 // ── SLA Dashboard Hook ────────────────────────────────────
 
 export function useSLADashboard() {
-  const [slaData, setSlaData] = useState<SLADashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.delivery.sla.list(),
+    queryFn: () => deliveryService.getSLADashboard(),
+    staleTime: 30_000,
+  });
 
-  const fetchSLA = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await deliveryService.getSLADashboard();
-      if (res.success) setSlaData(res.data);
-      else setError(res.error || "Failed to load SLA data");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load SLA data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchSLA(); }, [fetchSLA]);
-
-  return { slaData, loading, error, refresh: fetchSLA };
+  return {
+    slaData: data?.data ?? null,
+    loading: isLoading,
+    error: error?.message ?? (data && !data.success ? (data.error ?? "Failed to load SLA data") : null),
+    refresh: () => {}, // auto-fetched via query
+  };
 }
 
 // ── Delivery Actions Hook ─────────────────────────────────
 
 export function useDeliveryActions() {
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const assignPartner = useCallback(async (data: AssignDeliveryFormData): Promise<boolean> => {
-    setUpdating(true);
-    setError(null);
-    try {
-      const res = await deliveryService.assignDelivery(data);
-      return res.success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to assign");
-      return false;
-    } finally {
-      setUpdating(false);
-    }
-  }, []);
+  const assignMutation = useMutation({
+    mutationFn: (data: AssignDeliveryFormData) => deliveryService.assignDelivery(data),
+    onSuccess: () => invalidateDeliveryQueries(queryClient),
+  });
 
-  const updateStatus = useCallback(async (data: UpdateDeliveryStatusFormData): Promise<boolean> => {
-    setUpdating(true);
-    setError(null);
-    try {
-      const res = await deliveryService.updateDeliveryStatus(data);
-      return res.success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update");
-      return false;
-    } finally {
-      setUpdating(false);
-    }
-  }, []);
+  const updateStatusMutation = useMutation({
+    mutationFn: (data: UpdateDeliveryStatusFormData) => deliveryService.updateDeliveryStatus(data),
+    onSuccess: () => invalidateDeliveryQueries(queryClient),
+  });
 
-  return { assignPartner, updateStatus, updating, error };
+  const assignPartner = useCallback(
+    async (data: AssignDeliveryFormData): Promise<boolean> => {
+      try {
+        const res = await assignMutation.mutateAsync(data);
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    [assignMutation]
+  );
+
+  const updateStatus = useCallback(
+    async (data: UpdateDeliveryStatusFormData): Promise<boolean> => {
+      try {
+        const res = await updateStatusMutation.mutateAsync(data);
+        return res.success;
+      } catch {
+        return false;
+      }
+    },
+    [updateStatusMutation]
+  );
+
+  return {
+    assignPartner,
+    updateStatus,
+    updating: assignMutation.isPending || updateStatusMutation.isPending,
+    error: assignMutation.error?.message ?? updateStatusMutation.error?.message ?? null,
+  };
 }

@@ -1,186 +1,126 @@
 // ── Inventory Service ──────────────────────────────
-// Service layer for all Inventory Management API calls.
-// Currently returns mock data — swap to real API by uncommenting axios calls.
+// Now delegates to the standardized API adapters.
+// Swap to real backend: update the API adapters, this layer stays the same.
 
-// import { apiClient } from "@/lib/api-client";
-import {
-  mockInventoryItems,
-  mockWarehouses,
-  mockStockTransfers,
-  mockSafetyStockRules,
-  mockFEFOBatches,
-  mockDemandForecasts,
-  mockLowStockAlerts,
-} from "@/data/admin/inventory";
 import type { InventoryItem, Warehouse, StockTransfer, SafetyStockRule, FEFOBatch, DemandForecast, LowStockAlert, InventoryQueryParams, TransferQueryParams } from "@/types/inventory";
-
-// Helper: simulate network delay
-const delay = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Helper: filter & paginate
-function applyPaginationAndSearch<T extends Record<string, unknown>>(
-  items: T[],
-  params: { page?: number; pageSize?: number; search?: string; status?: string },
-  searchFields: (keyof T)[],
-): { data: T[]; pagination: { page: number; pageSize: number; total: number; totalPages: number } } {
-  let filtered = [...items];
-
-  if (params.search) {
-    const q = params.search.toLowerCase();
-    filtered = filtered.filter((item) =>
-      searchFields.some((field) => String(item[field] ?? "").toLowerCase().includes(q)),
-    );
-  }
-
-  if (params.status && params.status !== "all") {
-    filtered = filtered.filter((item) => String(item.status ?? "") === params.status);
-  }
-
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 10;
-  const total = filtered.length;
-  const totalPages = Math.ceil(total / pageSize);
-  const data = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  return { data, pagination: { page, pageSize, total, totalPages } };
-}
+import { inventoryApi } from "@/services/api";
 
 export const inventoryService = {
   // ── Inventory Items ──────────────────────────────
   async getInventory(params?: InventoryQueryParams) {
-    await delay();
-    // const res = await apiClient.get<ApiResponse>("/inventory", { params });
-    const filtered = applyPaginationAndSearch(
-      mockInventoryItems as unknown as Record<string, unknown>[],
-      { page: params?.page, pageSize: params?.pageSize, search: params?.search, status: params?.status },
-      ["productName", "sku", "warehouse"],
-    );
-    return { success: true, data: filtered.data as InventoryItem[], pagination: filtered.pagination };
+    // API adapter returns ApiResponse<InventoryItem[]> with meta
+    const res = await inventoryApi.getInventory(params);
+    return {
+      success: res.success,
+      data: res.data,
+      error: res.error,
+      pagination: {
+        page: res.meta?.page || 1,
+        pageSize: res.meta?.pageSize || 10,
+        total: res.meta?.total || 0,
+        totalPages: res.meta?.totalPages || 0,
+      },
+    };
   },
 
   async getInventoryItem(id: string): Promise<{ success: boolean; data: InventoryItem }> {
-    await delay();
-    // const res = await apiClient.get(`/inventory/${id}`);
-    const item = mockInventoryItems.find((i) => i.id === id);
-    if (!item) throw new Error(`Inventory item ${id} not found`);
-    return { success: true, data: item };
+    const res = await inventoryApi.getInventoryItem(id);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   async updateStock(id: string, updates: Partial<InventoryItem>): Promise<{ success: boolean; data: InventoryItem }> {
-    await delay(300);
-    // const res = await apiClient.patch(`/inventory/${id}`, updates);
-    const idx = mockInventoryItems.findIndex((i) => i.id === id);
-    if (idx === -1) throw new Error(`Inventory item ${id} not found`);
-    const updated = { ...mockInventoryItems[idx], ...updates, lastUpdated: new Date().toISOString().split("T")[0] };
-    mockInventoryItems[idx] = updated;
-    return { success: true, data: updated };
+    const res = await inventoryApi.updateStock(id, updates);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   // ── Warehouses ───────────────────────────────────
   async getWarehouses(): Promise<{ success: boolean; data: Warehouse[] }> {
-    await delay();
-    // const res = await apiClient.get("/inventory/warehouses");
-    return { success: true, data: mockWarehouses };
+    const res = await inventoryApi.getWarehouses();
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   async getWarehouse(id: string): Promise<{ success: boolean; data: Warehouse }> {
-    await delay();
-    const wh = mockWarehouses.find((w) => w.id === id);
-    if (!wh) throw new Error(`Warehouse ${id} not found`);
-    return { success: true, data: wh };
+    const res = await inventoryApi.getWarehouse(id);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   async updateWarehouse(id: string, updates: Partial<Warehouse>): Promise<{ success: boolean; data: Warehouse }> {
-    await delay(300);
-    const idx = mockWarehouses.findIndex((w) => w.id === id);
-    if (idx === -1) throw new Error(`Warehouse ${id} not found`);
-    const updated = { ...mockWarehouses[idx], ...updates };
-    mockWarehouses[idx] = updated;
-    return { success: true, data: updated };
+    const res = await inventoryApi.updateWarehouse(id, updates);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   // ── Stock Transfers ──────────────────────────────
   async getTransfers(params?: TransferQueryParams) {
-    await delay();
-    // const res = await apiClient.get("/inventory/transfers", { params });
-    const filtered = applyPaginationAndSearch(
-      mockStockTransfers as unknown as Record<string, unknown>[],
-      { page: params?.page, pageSize: params?.pageSize, search: params?.search, status: params?.status },
-      ["product", "id", "sku"],
-    );
-    return { success: true, data: filtered.data as StockTransfer[], pagination: filtered.pagination };
+    const res = await inventoryApi.getTransfers(params);
+    return {
+      success: res.success,
+      data: res.data,
+      error: res.error,
+      pagination: {
+        page: res.meta?.page || 1,
+        pageSize: res.meta?.pageSize || 10,
+        total: res.meta?.total || 0,
+        totalPages: res.meta?.totalPages || 0,
+      },
+    };
   },
 
   async createTransfer(transfer: Omit<StockTransfer, "id" | "status" | "createdAt">): Promise<{ success: boolean; data: StockTransfer }> {
-    await delay(400);
-    // const res = await apiClient.post("/inventory/transfers", transfer);
-    const newTransfer: StockTransfer = {
-      ...transfer,
-      id: `ST-${String(mockStockTransfers.length + 1).padStart(3, "0")}`,
-      status: "pending",
-      date: new Date().toISOString().split("T")[0],
-      createdAt: new Date().toISOString(),
-      completedAt: null,
-    };
-    mockStockTransfers.unshift(newTransfer);
-    return { success: true, data: newTransfer };
+    const res = await inventoryApi.createTransfer(transfer);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   async updateTransferStatus(id: string, status: StockTransfer["status"]): Promise<{ success: boolean; data: StockTransfer }> {
-    await delay(300);
-    const idx = mockStockTransfers.findIndex((t) => t.id === id);
-    if (idx === -1) throw new Error(`Transfer ${id} not found`);
-    mockStockTransfers[idx] = {
-      ...mockStockTransfers[idx],
-      status,
-      completedAt: status === "completed" ? new Date().toISOString() : mockStockTransfers[idx].completedAt,
-    };
-    return { success: true, data: mockStockTransfers[idx] };
+    const res = await inventoryApi.updateTransferStatus(id, status);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   // ── Safety Stock ─────────────────────────────────
   async getSafetyStockRules(params?: { status?: string; search?: string }) {
-    await delay();
-    // const res = await apiClient.get("/inventory/safety-stock", { params });
-    const filtered = applyPaginationAndSearch(
-      mockSafetyStockRules as unknown as Record<string, unknown>[],
-      { ...params },
-      ["product", "sku"],
-    );
-    return { success: true, data: filtered.data as SafetyStockRule[], pagination: filtered.pagination };
+    const res = await inventoryApi.getSafetyStockRules(params);
+    return {
+      success: res.success,
+      data: res.data,
+      error: res.error,
+      pagination: {
+        page: res.meta?.page || 1,
+        pageSize: res.meta?.pageSize || 10,
+        total: res.meta?.total || 0,
+        totalPages: res.meta?.totalPages || 0,
+      },
+    };
   },
 
   async updateSafetyStockRule(id: string, updates: Partial<SafetyStockRule>): Promise<{ success: boolean; data: SafetyStockRule }> {
-    await delay(300);
-    const idx = mockSafetyStockRules.findIndex((r) => r.id === id);
-    if (idx === -1) throw new Error(`Safety stock rule ${id} not found`);
-    mockSafetyStockRules[idx] = { ...mockSafetyStockRules[idx], ...updates };
-    return { success: true, data: mockSafetyStockRules[idx] };
+    const res = await inventoryApi.updateSafetyStockRule(id, updates);
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   // ── FEFO ─────────────────────────────────────────
   async getFEFOBatches(params?: { search?: string; status?: string }) {
-    await delay();
-    // const res = await apiClient.get("/inventory/fefo", { params });
-    const filtered = applyPaginationAndSearch(
-      mockFEFOBatches as unknown as Record<string, unknown>[],
-      { ...params },
-      ["product", "batch", "warehouse"],
-    );
-    return { success: true, data: filtered.data as FEFOBatch[], pagination: filtered.pagination };
+    const res = await inventoryApi.getFEFOBatches(params);
+    return {
+      success: res.success,
+      data: res.data,
+      error: res.error,
+      pagination: {
+        page: res.meta?.page || 1,
+        pageSize: res.meta?.pageSize || 10,
+        total: res.meta?.total || 0,
+        totalPages: res.meta?.totalPages || 0,
+      },
+    };
   },
 
   // ── Demand Forecasts ─────────────────────────────
   async getDemandForecasts(): Promise<{ success: boolean; data: DemandForecast[] }> {
-    await delay();
-    // const res = await apiClient.get("/inventory/forecasts");
-    return { success: true, data: mockDemandForecasts };
+    const res = await inventoryApi.getDemandForecasts();
+    return { success: res.success, data: res.data, error: res.error };
   },
 
   // ── Low Stock Alerts ─────────────────────────────
   async getLowStockAlerts(): Promise<{ success: boolean; data: LowStockAlert[] }> {
-    await delay();
-    // const res = await apiClient.get("/inventory/low-stock-alerts");
-    return { success: true, data: mockLowStockAlerts };
+    const res = await inventoryApi.getLowStockAlerts();
+    return { success: res.success, data: res.data, error: res.error };
   },
 };
