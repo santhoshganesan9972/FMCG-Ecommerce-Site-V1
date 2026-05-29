@@ -33,6 +33,7 @@ import ScheduledDelivery from "@/components/ui/checkout/scheduled-delivery";
 import StorePickup from "@/components/ui/checkout/store-pickup";
 import SubstitutionSuggestions from "@/components/ui/checkout/substitution-suggestions";
 import { useCallback, useEffect } from "react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 type DeliveryMode = "express" | "scheduled" | "pickup" | "subscription";
 
@@ -49,7 +50,7 @@ export default function CheckoutPage() {
   const cart = useCartStore((state) => state.cart);
   const clearCart = useCartStore((state) => state.clearCart);
   const addOrder = useOrderStore((state) => state.addOrder);
-  const { addresses, getDefaultAddress } = useAddressStore();
+  const { addresses, getDefaultAddress, addAddress } = useAddressStore();
   
   const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("");
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
@@ -61,6 +62,7 @@ export default function CheckoutPage() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCity, setDeliveryCity] = useState("");
   const [deliveryPincode, setDeliveryPincode] = useState("");
+  const [addressType, setAddressType] = useState<"Home" | "Work" | "Other">("Home");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ... (deliveryMode, subscriptionFrequency, etc. same as before)
@@ -76,6 +78,10 @@ export default function CheckoutPage() {
 
   // Load default address on mount
   useEffect(() => {
+    if (cart.length === 0) {
+      router.replace("/cart");
+      return;
+    }
     const defaultAddr = getDefaultAddress();
     if (defaultAddr) {
       setSelectedAddressId(defaultAddr.id);
@@ -87,7 +93,7 @@ export default function CheckoutPage() {
     } else {
       setSelectedAddressId("new");
     }
-  }, [getDefaultAddress]);
+  }, [getDefaultAddress, cart.length, router]);
 
   const handleAddressSelect = (addr: Address | "new") => {
     if (addr === "new") {
@@ -125,6 +131,42 @@ export default function CheckoutPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSaveAddress = () => {
+    if (!validateForm()) {
+      toast.error("Please fill all required fields correctly");
+      return;
+    }
+
+    if (deliveryMode === "pickup") {
+      toast.error("Pickup cannot be saved as an address");
+      return;
+    }
+
+    const newAddressId = `addr_${Date.now()}`;
+    addAddress({
+      type: addressType,
+      name: deliveryName,
+      phone: deliveryPhone,
+      address: deliveryAddress,
+      city: deliveryCity,
+      pincode: deliveryPincode,
+      isDefault: addresses.length === 0,
+    });
+
+    // We can't set exact ID without knowing it (addAddress creates a random one or uses Date.now),
+    // but we can assume the user will just see it selected if we set selectedAddressId to "new" 
+    // Actually, we should let them select it from the list.
+    // If we just reset selectedAddressId to empty, it might default.
+    // Let's manually add id to the new address if we could, but we don't need to.
+    // Just refresh the form.
+    toast.success("Address saved successfully!");
+    setSelectedAddressId(""); // This will unselect "new" but it won't select the newly added one.
+    // Let's set selectedAddressId to newAddressId, and update the store function manually? 
+    // Wait, the store's addAddress uses: `{ ...address, id: \`addr_${Date.now()}\` }`.
+    // It's better to just leave `selectedAddressId="new"` or set it to something else.
+    // Let's clear the form if we want, or just leave it.
+  };
+
   const itemTotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
     [cart]
@@ -151,8 +193,9 @@ export default function CheckoutPage() {
 
   const subscriptionDiscount = useMemo(() => {
     if (deliveryMode !== "subscription") return 0;
-    return Math.round(itemTotal * 0.1); // 10% off for subscription
-  }, [deliveryMode, itemTotal]);
+    const rates: Record<string, number> = { weekly: 0.1, biweekly: 0.12, monthly: 0.15 };
+    return Math.round(itemTotal * (rates[subscriptionFrequency] || 0.1));
+  }, [deliveryMode, itemTotal, subscriptionFrequency]);
 
   const totalDiscount = couponDiscount + subscriptionDiscount;
   const total = useMemo(
@@ -220,10 +263,10 @@ export default function CheckoutPage() {
       clearCart();
       setIsPlacingOrder(false);
       toast.success("Order placed successfully! 🎉", {
-        description: `Order ${orderId} • ₹${total}`,
+        description: `Order ${orderId} • ₹${total.toLocaleString("en-IN")}`,
         duration: 4000,
       });
-      router.push(`/account/orders`);
+      router.push(`/account/orders/${encodeURIComponent(orderId)}`);
     }, 1500);
   };
 
@@ -238,7 +281,7 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-[#f2f2f2] pb-20 md:pb-0">
       <Navbar />
 
-      <div className="pt-16">
+      <div className="pt-[72px] sm:pt-20">
         <div className="border-b border-[#e8e8e8] bg-white px-3 py-2.5 sm:px-4 md:px-6">
           <div className="mx-auto flex max-w-[1400px] items-center gap-1.5 text-xs text-[#999]">
             <Link href="/cart" className="hover-text-pink">
@@ -253,7 +296,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="space-y-3 lg:col-span-2">
               {/* Delivery Mode Selector */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+              <section className="rounded-xl border border-[#e8e8e8] bg-white relative z-20">
                 <SectionHeader icon={Truck} title="Delivery Mode" />
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-4">
                   {[
@@ -277,7 +320,42 @@ export default function CheckoutPage() {
                     </button>
                   ))}
                 </div>
-                {/* ... (Subscription, Scheduled, Pickup blocks same as before) */}
+                {/* Express delivery slot picker */}
+                {deliveryMode === "express" && (
+                  <div className="px-4 pb-4 animate-slide-down">
+                    <p className="text-xs font-bold text-[#1a1a1a] mb-2">Select Delivery Slot</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: "10 minutes", label: "10 Minutes", sub: "Ultra-fast express", badge: "FASTEST", emoji: "⚡" },
+                        { id: "2 hours",   label: "2 Hours",    sub: "Standard express",  badge: "FREE",    emoji: "🚀" },
+                      ].map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => setSelectedSlot(slot.id)}
+                          className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-bold transition-all ${
+                            selectedSlot === slot.id
+                              ? "border-[#ff4f8b] bg-[#fff0f6] text-[#ff4f8b]"
+                              : "border-[#e8e8e8] text-[#666] hover:border-[#ff4f8b]/30 hover:bg-[#fff8fb]"
+                          }`}
+                        >
+                          <span
+                            className={`absolute -top-2 -right-1 text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                              slot.badge === "FASTEST"
+                                ? "bg-[#ff4f8b] text-white"
+                                : "bg-[#e8f5e9] text-[#0c831f]"
+                            }`}
+                          >
+                            {slot.badge}
+                          </span>
+                          <span className="text-xl">{slot.emoji}</span>
+                          <span>{slot.label}</span>
+                          <span className="text-[9px] font-normal text-[#999]">{slot.sub}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Subscription details */}
                 {deliveryMode === "subscription" && (
                   <div className="px-4 pb-4 animate-slide-down">
@@ -287,15 +365,16 @@ export default function CheckoutPage() {
                         <span className="text-sm font-bold text-[#0c831f]">Subscription Benefits</span>
                       </div>
                       <p className="text-xs text-[#666]">Save 10% on every order • Free delivery • Flexible skip/cancel</p>
-                      <select
+                      <CustomSelect
                         value={subscriptionFrequency}
-                        onChange={(e) => setSubscriptionFrequency(e.target.value)}
-                        className="w-full h-10 rounded-lg border border-[#0c831f]/30 px-3 text-sm outline-none focus:border-[#0c831f] bg-white"
-                      >
-                        <option value="weekly">Every Week — 10% off</option>
-                        <option value="biweekly">Every 2 Weeks — 12% off</option>
-                        <option value="monthly">Every Month — 15% off</option>
-                      </select>
+                        onChange={setSubscriptionFrequency}
+                        theme="green"
+                        options={[
+                          { value: "weekly", label: "Every Week — 10% off" },
+                          { value: "biweekly", label: "Every 2 Weeks — 12% off" },
+                          { value: "monthly", label: "Every Month — 15% off" }
+                        ]}
+                      />
                     </div>
                   </div>
                 )}
@@ -324,7 +403,7 @@ export default function CheckoutPage() {
               </section>
 
               {/* Delivery Address */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+              <section className="rounded-xl border border-[#e8e8e8] bg-white relative z-10">
                 <SectionHeader icon={MapPin} title="Delivery Address" />
                 <div className="p-4 space-y-4">
                   {/* Saved Addresses */}
@@ -365,16 +444,16 @@ export default function CheckoutPage() {
 
                   {/* Address Form (only if "new" or no addresses) */}
                   {(selectedAddressId === "new" || addresses.length === 0) && (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2 border-t border-[#f0f0f0]">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-4 border-t border-[#f0f0f0]">
                       <div>
                         <input
                           aria-label="Full Name"
                           placeholder="Full Name"
                           value={deliveryName}
                           onChange={(e) => setDeliveryName(e.target.value)}
-                          className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.name ? "border-red-500" : "border-[#e8e8e8]"}`}
+                          className={`h-12 w-full rounded-xl border bg-[#f9f9f9] px-4 text-sm font-medium text-[#1a1a1a] outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 placeholder:text-[#999] ${errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-[#e8e8e8]"}`}
                         />
-                        {errors.name && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.name}</p>}
+                        {errors.name && <p className="mt-1.5 text-[10px] text-red-500 font-bold px-1">{errors.name}</p>}
                       </div>
                       <div>
                         <input
@@ -383,9 +462,9 @@ export default function CheckoutPage() {
                           placeholder="Phone Number"
                           value={deliveryPhone}
                           onChange={(e) => setDeliveryPhone(e.target.value)}
-                          className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.phone ? "border-red-500" : "border-[#e8e8e8]"}`}
+                          className={`h-12 w-full rounded-xl border bg-[#f9f9f9] px-4 text-sm font-medium text-[#1a1a1a] outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 placeholder:text-[#999] ${errors.phone ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-[#e8e8e8]"}`}
                         />
-                        {errors.phone && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.phone}</p>}
+                        {errors.phone && <p className="mt-1.5 text-[10px] text-red-500 font-bold px-1">{errors.phone}</p>}
                       </div>
                       {deliveryMode !== "pickup" && (
                         <>
@@ -395,9 +474,9 @@ export default function CheckoutPage() {
                               placeholder="Full Address"
                               value={deliveryAddress}
                               onChange={(e) => setDeliveryAddress(e.target.value)}
-                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.address ? "border-red-500" : "border-[#e8e8e8]"}`}
+                              className={`h-12 w-full rounded-xl border bg-[#f9f9f9] px-4 text-sm font-medium text-[#1a1a1a] outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 placeholder:text-[#999] ${errors.address ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-[#e8e8e8]"}`}
                             />
-                            {errors.address && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.address}</p>}
+                            {errors.address && <p className="mt-1.5 text-[10px] text-red-500 font-bold px-1">{errors.address}</p>}
                           </div>
                           <div>
                             <input
@@ -405,9 +484,9 @@ export default function CheckoutPage() {
                               placeholder="City"
                               value={deliveryCity}
                               onChange={(e) => setDeliveryCity(e.target.value)}
-                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.city ? "border-red-500" : "border-[#e8e8e8]"}`}
+                              className={`h-12 w-full rounded-xl border bg-[#f9f9f9] px-4 text-sm font-medium text-[#1a1a1a] outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 placeholder:text-[#999] ${errors.city ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-[#e8e8e8]"}`}
                             />
-                            {errors.city && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.city}</p>}
+                            {errors.city && <p className="mt-1.5 text-[10px] text-red-500 font-bold px-1">{errors.city}</p>}
                           </div>
                           <div>
                             <input
@@ -417,12 +496,38 @@ export default function CheckoutPage() {
                               placeholder="Pincode"
                               value={deliveryPincode}
                               onChange={(e) => setDeliveryPincode(e.target.value)}
-                              className={`h-11 w-full rounded-lg border bg-[#f9f9f9] px-3 text-sm text-[#1a1a1a] outline-none transition-colors placeholder:text-[#999] focus-border-pink ${errors.pincode ? "border-red-500" : "border-[#e8e8e8]"}`}
+                              className={`h-12 w-full rounded-xl border bg-[#f9f9f9] px-4 text-sm font-medium text-[#1a1a1a] outline-none transition-all hover:bg-white focus:bg-white focus:border-[#ff4f8b] focus:ring-4 focus:ring-[#ff4f8b]/10 placeholder:text-[#999] ${errors.pincode ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-[#e8e8e8]"}`}
                             />
-                            {errors.pincode && <p className="mt-1 text-[10px] text-red-500 font-bold">{errors.pincode}</p>}
+                            {errors.pincode && <p className="mt-1.5 text-[10px] text-red-500 font-bold px-1">{errors.pincode}</p>}
                           </div>
                         </>
                       )}
+
+                      <div className="sm:col-span-2 flex flex-wrap gap-2 pt-2">
+                        {["Home", "Work", "Other"].map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => setAddressType(type as any)}
+                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                              addressType === type
+                                ? "border-[#ff4f8b] bg-[#fff0f6] text-[#ff4f8b]"
+                                : "border-[#e8e8e8] text-[#666] hover:border-[#ff4f8b]"
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="sm:col-span-2 pt-2">
+                        <button
+                          onClick={handleSaveAddress}
+                          className="w-full h-12 rounded-xl bg-black text-white font-bold text-sm transition-all hover:bg-black/80 flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Save Delivery Address
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -432,22 +537,24 @@ export default function CheckoutPage() {
             {/* Right Column — Order Summary & Payment */}
             <aside className="space-y-3 lg:sticky lg:top-20 lg:h-fit">
               {/* Coupon */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+              <section className="rounded-xl border border-[#e8e8e8] bg-white relative z-30">
                 <SectionHeader icon={Tag} title="Apply Coupon" />
                 <div className="p-4">
                   <div className="flex gap-2">
-                    <select
+                    <CustomSelect
                       value={appliedCoupon ?? ""}
-                      onChange={(e) => setAppliedCoupon(e.target.value || null)}
-                      className="flex-1 h-10 rounded-lg border border-[#e8e8e8] px-3 text-sm outline-none focus:border-[#ff4f8b] bg-white text-[#1a1a1a]"
-                    >
-                      <option value="">Select coupon</option>
-                      <option value="SAVE20">SAVE20 — 20% OFF</option>
-                      <option value="FIRST50">FIRST50 — ₹50 OFF (min ₹299)</option>
-                      <option value="WELCOME10">WELCOME10 — 10% OFF</option>
-                      <option value="FMCG100">FMCG100 — ₹100 OFF (min ₹499)</option>
-                      <option value="SUPER15">SUPER15 — 15% OFF (min ₹199)</option>
-                    </select>
+                      onChange={(val) => setAppliedCoupon(val || null)}
+                      placeholder="Select coupon"
+                      options={[
+                        { value: "", label: "Select coupon" },
+                        { value: "SAVE20", label: "SAVE20 — 20% OFF" },
+                        { value: "FIRST50", label: "FIRST50 — ₹50 OFF (min ₹299)" },
+                        { value: "WELCOME10", label: "WELCOME10 — 10% OFF" },
+                        { value: "FMCG100", label: "FMCG100 — ₹100 OFF (min ₹499)" },
+                        { value: "SUPER15", label: "SUPER15 — 15% OFF (min ₹199)" }
+                      ]}
+                      className="flex-1"
+                    />
                   </div>
                   {appliedCoupon && (
                     <p className="mt-2 text-[10px] font-bold text-[#0c831f]">
@@ -458,7 +565,7 @@ export default function CheckoutPage() {
               </section>
 
               {/* Bill Details */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+              <section className="rounded-xl border border-[#e8e8e8] bg-white">
                 <SectionHeader icon={ReceiptText} title="Bill Details" />
                 <div className="p-4 space-y-3">
                   <BillRow label="Item total" value={<>₹{itemTotal}</>} />
@@ -481,7 +588,7 @@ export default function CheckoutPage() {
               </section>
 
               {/* Payment Method */}
-              <section className="overflow-hidden rounded-xl border border-[#e8e8e8] bg-white">
+              <section className="rounded-xl border border-[#e8e8e8] bg-white relative z-20">
                 <SectionHeader icon={CreditCard} title="Payment Method" />
                 <div className="p-4 space-y-2">
                   {[

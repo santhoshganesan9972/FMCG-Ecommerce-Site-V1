@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, MapPin, ChevronRight } from "lucide-react";
+import { TrendingUp, MapPin, ChevronRight, Minus, Plus } from "lucide-react";
 import { products } from "@/data/products";
 import { SafeProductImage } from "@/components/ui/safe-image";
 import { useCartStore } from "@/store/cart-store";
@@ -19,6 +19,9 @@ const AREAS = [
 export default function NearbyTrends() {
   const [areaIndex, setAreaIndex] = useState(0);
   const addToCart = useCartStore((s) => s.addToCart);
+  const increaseQty = useCartStore((s) => s.increaseQuantity);
+  const decreaseQty = useCartStore((s) => s.decreaseQuantity);
+  const cart = useCartStore((s) => s.cart);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,6 +70,8 @@ export default function NearbyTrends() {
         >
           {trendingProducts.map((product) => {
             const discount = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
+            const cartItem = cart.find((item) => item.id === product.id);
+            const quantity = cartItem?.quantity ?? 0;
             return (
               <div
                 key={product.id}
@@ -100,23 +105,56 @@ export default function NearbyTrends() {
                       </p>
                     </Link>
                     <p className="text-[9px] text-[#999] mt-0.5">{product.category}</p>
-                     <div className="flex items-center justify-between mt-1.5">
-                       <div className="flex-1">
+                     <div className="mt-1.5">
+                       <div className="flex items-center gap-1">
                          <span className="text-sm font-black text-[#1a1a1a]">₹{product.price}</span>
-                         <span className="text-[9px] text-[#999] line-through ml-1">₹{product.oldPrice}</span>
+                         <span className="text-[9px] text-[#999] line-through">₹{product.oldPrice}</span>
                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
-                            toast.success("Added to cart 🛒");
-                          }}
-                          className="min-h-[44px] h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
-                        >
-                          ADD
-                        </button>
+                       <div className="mt-2">
+                        {quantity === 0 ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                              toast.success("Added to cart 🛒");
+                            }}
+                            className="w-full h-8 sm:h-9 rounded-lg text-xs font-black text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                          >
+                            ADD
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-between w-full h-8 sm:h-9 rounded-lg bg-[#ff4f8b] overflow-hidden shadow-sm">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                decreaseQty(product.id);
+                              }}
+                              className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-black text-white">{quantity}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                increaseQty(product.id);
+                                toast.success("Added to cart 🛒");
+                              }}
+                              className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                       </div>
                      </div>
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import CursorGlow from "@/components/ui/cursor-glow";
 import AuthGate from "@/components/ui/auth/auth-gate";
 import OfflineIndicator from "@/components/ui/mobile/offline-indicator";
 import AnimatedBackground from "@/components/ui/animated-background";
+import GlobalComparison from "@/components/ui/products/global-comparison";
 
 export default function LayoutClient({
   children,
@@ -18,6 +19,7 @@ export default function LayoutClient({
       <PageTransition>
         <CursorGlow />
         {children}
+        <GlobalComparison />
       </PageTransition>
     </QueryProvider>
   );

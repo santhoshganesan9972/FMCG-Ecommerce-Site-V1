@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -108,13 +108,13 @@ export default function VendorsPage() {
           />
           <ReusableCard
             title="Total Sales"
-            value={summary ? `₹${(summary.totalSales / 10000000).toFixed(2)}Cr` : "—"}
+            value={summary ? `?${(summary.totalSales / 10000000).toFixed(2)}Cr` : "�"}
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#9333ea]" bgColor="bg-[#f3e8ff]"
           />
           <ReusableCard
             title="Pending Payouts"
-            value={summary ? `₹${(summary.pendingPayouts / 100000).toFixed(1)}L` : "—"}
+            value={summary ? `?${(summary.pendingPayouts / 100000).toFixed(1)}L` : "�"}
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#d97706]" bgColor="bg-[#fffbeb]"
             subtitle={summary ? `${summary.pendingVendors} pending approval` : undefined}
@@ -193,7 +193,7 @@ export default function VendorsPage() {
             { key: "totalProducts", header: "Products", width: "80px", align: "right", sortable: true },
             {
               key: "totalSales", header: "Sales", width: "100px", align: "right", sortable: true,
-              render: (v) => <span className="font-bold">₹{(v.totalSales / 100000).toFixed(1)}L</span>,
+              render: (v) => <span className="font-bold">?{(v.totalSales / 100000).toFixed(1)}L</span>,
             },
             {
               key: "commissionRate", header: "Commission", width: "100px", align: "right",
@@ -277,11 +277,11 @@ export default function VendorsPage() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: "Total Orders", value: selectedVendor.totalOrders.toLocaleString(), color: "text-[#2563eb]" },
-                  { label: "Total Sales", value: `₹${(selectedVendor.totalSales / 100000).toFixed(1)}L`, color: "text-[#0c831f]" },
+                  { label: "Total Sales", value: `?${(selectedVendor.totalSales / 100000).toFixed(1)}L`, color: "text-[#0c831f]" },
                   { label: "On-Time Delivery", value: `${selectedVendor.onTimeDeliveryRate}%`, color: selectedVendor.onTimeDeliveryRate >= 95 ? "text-[#0c831f]" : "text-[#d97706]" },
                   { label: "Return Rate", value: `${selectedVendor.returnRate}%`, color: selectedVendor.returnRate <= 2 ? "text-[#0c831f]" : "text-[#dc2626]" },
                   { label: "Active Products", value: selectedVendor.activeProducts, color: "text-[#9333ea]" },
-                  { label: "Pending Payout", value: `₹${(selectedVendor.pendingPayout / 1000).toFixed(1)}K`, color: "text-[#d97706]" },
+                  { label: "Pending Payout", value: `?${(selectedVendor.pendingPayout / 1000).toFixed(1)}K`, color: "text-[#d97706]" },
                 ].map((m) => (
                   <div key={m.label} className="rounded-lg bg-[#f9fafb] p-3">
                     <p className="text-[10px] font-bold text-[#666]">{m.label}</p>

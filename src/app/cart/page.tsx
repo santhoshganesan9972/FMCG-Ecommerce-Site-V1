@@ -126,7 +126,7 @@ export default function CartPage() {
     <main className="min-h-screen bg-[#f2f2f2] pb-36 md:pb-16">
       <Navbar />
 
-      <div className="pt-16">
+      <div className="pt-[72px] sm:pt-20">
         <div className="bg-white border-b border-[#e8e8e8]">
           <Container>
             <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -377,21 +377,29 @@ export default function CartPage() {
                         </div>
                         <button 
                           onClick={() => {
-                            const coupons: Record<string, number> = {
-                              "SAVE20": 20,
-                              "FIRST50": 50,
-                              "WELCOME10": 10
-                            };
-                            const code = couponCode.toUpperCase();
-                            if (coupons[code]) {
-                              setAppliedCoupon({ code, discount: coupons[code] });
-                              setCouponMessage("Coupon applied!");
-                              toast.success(`Coupon ${code} applied!`);
-                            } else {
-                              setCouponMessage("Invalid code");
-                              toast.error("Invalid coupon code");
-                            }
-                          }}
+                             const coupons: Record<string, { discount: number; type: "percent" | "fixed"; minAmount: number }> = {
+                               "SAVE20":   { discount: 20,  type: "percent", minAmount: 0 },
+                               "FIRST50":  { discount: 50,  type: "fixed",   minAmount: 299 },
+                               "WELCOME10":{ discount: 10,  type: "percent", minAmount: 0 },
+                               "FMCG100":  { discount: 100, type: "fixed",   minAmount: 499 },
+                               "SUPER15":  { discount: 15,  type: "percent", minAmount: 199 },
+                             };
+                             const code = couponCode.toUpperCase();
+                             const coupon = coupons[code];
+                             if (coupon) {
+                               if (itemTotal < coupon.minAmount) {
+                                 setCouponMessage(`Min order ₹${coupon.minAmount} required`);
+                                 toast.error(`Minimum order ₹${coupon.minAmount} needed for ${code}`);
+                                 return;
+                               }
+                               setAppliedCoupon({ code, discount: coupon.type === "percent" ? coupon.discount : Math.round((coupon.discount / itemTotal) * 100) });
+                               setCouponMessage("Coupon applied!");
+                               toast.success(`Coupon ${code} applied!`);
+                             } else {
+                               setCouponMessage("Invalid code");
+                               toast.error("Invalid coupon code");
+                             }
+                           }}
                           className="rounded-lg bg-[#ff4f8b] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#e63872]"
                         >
                           Apply

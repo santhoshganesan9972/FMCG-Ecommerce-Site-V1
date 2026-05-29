@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import DashboardLayout from "../../dashboard-layout";
 import AuditTimeline from "@/components/ui/products/admin/audit-timeline";

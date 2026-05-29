@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -7,11 +7,11 @@ import ReusableCard from "@/components/ui/admin/reusable-card";
 import { Users, Star, Shield, Zap, TrendingUp } from "lucide-react";
 
 const segments = [
-  { name: "VIP Customers", count: 156, avgSpent: "₹78,500", orders: 92, color: "bg-[#9333ea]", icon: Star, desc: "High-value customers with >50 orders" },
-  { name: "Regular Buyers", count: 2340, avgSpent: "₹18,200", orders: 24, color: "bg-[#2563eb]", icon: Users, desc: "Consistent monthly purchasers" },
-  { name: "New Users", count: 890, avgSpent: "₹4,500", orders: 3, color: "bg-[#0c831f]", icon: Zap, desc: "Registered within last 30 days" },
-  { name: "At Risk", count: 312, avgSpent: "₹12,400", orders: 8, color: "bg-[#d97706]", icon: Shield, desc: "No purchase in last 60 days" },
-  { name: "Churned", count: 156, avgSpent: "₹8,900", orders: 0, color: "bg-[#dc2626]", icon: TrendingUp, desc: "Inactive >90 days, likely lost" },
+  { name: "VIP Customers", count: 156, avgSpent: "?78,500", orders: 92, color: "bg-[#9333ea]", icon: Star, desc: "High-value customers with >50 orders" },
+  { name: "Regular Buyers", count: 2340, avgSpent: "?18,200", orders: 24, color: "bg-[#2563eb]", icon: Users, desc: "Consistent monthly purchasers" },
+  { name: "New Users", count: 890, avgSpent: "?4,500", orders: 3, color: "bg-[#0c831f]", icon: Zap, desc: "Registered within last 30 days" },
+  { name: "At Risk", count: 312, avgSpent: "?12,400", orders: 8, color: "bg-[#d97706]", icon: Shield, desc: "No purchase in last 60 days" },
+  { name: "Churned", count: 156, avgSpent: "?8,900", orders: 0, color: "bg-[#dc2626]", icon: TrendingUp, desc: "Inactive >90 days, likely lost" },
 ];
 
 export default function SegmentationPage() {

@@ -51,7 +51,7 @@ export default function RecommendationSection() {
 
         <Link
           href="/recommendations"
-          className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] h-9 sm:h-10 px-4 sm:px-5 rounded-lg bg-white text-[#0c831f] font-bold text-xs sm:text-sm hover:bg-white/90 transition"
+          className="flex-shrink-0 inline-flex items-center justify-center h-8 sm:h-9 px-4 rounded-lg bg-white text-[#0c831f] font-bold text-xs sm:text-sm hover:bg-white/90 transition shadow-sm"
         >
           View All
         </Link>
@@ -113,7 +113,7 @@ export default function RecommendationSection() {
                         </div>
                       </Link>
 
-                      <div className="mt-2">
+                      <div className="mt-2.5">
                         {quantity === 0 ? (
                           <button
                             type="button"
@@ -129,12 +129,12 @@ export default function RecommendationSection() {
                               });
                               toast.success("Added to cart 🛒");
                             }}
-                            className="min-h-[44px] w-full h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                            className="w-full h-8 sm:h-9 rounded-lg text-xs font-black text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
                           >
                             ADD
                           </button>
                         ) : (
-                          <div className="flex items-center justify-center w-full h-7 rounded-md bg-[#ff4f8b] overflow-hidden shadow-sm">
+                          <div className="flex items-center justify-between w-full h-8 sm:h-9 rounded-lg bg-[#ff4f8b] overflow-hidden shadow-sm">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -144,9 +144,9 @@ export default function RecommendationSection() {
                               }}
                               className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
                             >
-                              <span className="text-sm font-bold">-</span>
+                              <span className="text-sm font-black">-</span>
                             </button>
-                            <span className="w-6 text-center text-sm font-bold text-white">
+                            <span className="w-8 text-center text-sm font-black text-white">
                               {quantity}
                             </span>
                             <button
@@ -159,7 +159,7 @@ export default function RecommendationSection() {
                               }}
                               className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
                             >
-                              <span className="text-sm font-bold">+</span>
+                              <span className="text-sm font-black">+</span>
                             </button>
                           </div>
                         )}

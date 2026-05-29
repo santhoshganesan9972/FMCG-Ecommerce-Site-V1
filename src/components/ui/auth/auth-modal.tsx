@@ -21,8 +21,10 @@ const SOCIAL_PROVIDERS: { provider: SocialProvider; icon: typeof Globe; label: s
 
 export default function AuthModal() {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "name">("phone");
   const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [userName, setUserName] = useState("");
   const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
   const [guestLoading, setGuestLoading] = useState(false);
   const { isLoggedIn, isGuest, login, socialLogin, guestLogin } = useAuthStore();
@@ -33,25 +35,37 @@ export default function AuthModal() {
     }
   };
 
+  const DEMO_OTP = "123456";
+
   const handleVerifyOTP = () => {
-    if (otp.length === 6) {
-      login({
-        id: "user_" + phoneNumber,
-        name: "User",
-        email: "user@fmcgcommerce.com",
-        role: "user",
-        token: "mock_jwt_" + Date.now(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      }, phoneNumber);
-      setStep("phone");
-      setPhoneNumber("");
-      setOtp("");
-      toast.success("Welcome back! 🎉", {
-        description: "You're now logged in.",
-        duration: 3000,
-        position: "top-center",
-      });
+    if (otp !== DEMO_OTP) {
+      setOtpError("Invalid OTP. Use demo OTP: 123456");
+      return;
     }
+    setOtpError("");
+    setStep("name");
+  };
+
+  const handleCompleteName = () => {
+    const finalName = userName.trim() || "User";
+    login({
+      id: "user_" + phoneNumber,
+      name: finalName,
+      email: `${phoneNumber}@fmcgcommerce.com`,
+      role: "user",
+      token: "mock_jwt_" + Date.now(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    }, phoneNumber);
+    setStep("phone");
+    setPhoneNumber("");
+    setOtp("");
+    setUserName("");
+    setOtpError("");
+    toast.success(`Welcome, ${finalName}! 🎉`, {
+      description: "You're now logged in.",
+      duration: 3000,
+      position: "top-center",
+    });
   };
 
   const handleSocialLogin = (provider: SocialProvider) => {
@@ -86,8 +100,8 @@ export default function AuthModal() {
   // If logged in, show account link with indicator
   if (isLoggedIn) {
     return (
-      <Link href="/account" className="flex min-h-[44px] h-10 items-center gap-1.5 rounded-lg border border-[#e8e8e8] px-3 text-sm font-semibold text-[#1a1a1a] transition-all duration-200 btn-press hover-border-pink hover-bg-pink-light sm:px-4">
-        <User className="w-4 h-4 text-[#ff4f8b]" />
+      <Link href="/account" className="flex min-h-[44px] h-11 items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] px-4 text-sm font-semibold text-[#1a1a1a] transition-all duration-200 btn-press hover-border-pink hover-bg-pink-light hover:shadow-sm">
+        <User className="w-5 h-5 text-[#ff4f8b]" />
         <span className="hidden sm:block">{isGuest ? "Guest" : "My Account"}</span>
         {isGuest && (
           <span className="px-1.5 py-0.5 bg-[#fff3e0] text-[#e65100] text-[8px] font-bold rounded-full uppercase">
@@ -101,8 +115,8 @@ export default function AuthModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="flex min-h-[44px] h-10 items-center gap-1.5 rounded-lg border border-[#e8e8e8] px-3 text-sm font-semibold text-[#1a1a1a] transition-all duration-200 btn-press hover-border-pink hover-bg-pink-light sm:px-4">
-          <User className="w-4 h-4 text-[#ff4f8b]" />
+        <button className="flex min-h-[44px] h-11 items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f8f9fa] px-4 text-sm font-semibold text-[#1a1a1a] transition-all duration-200 btn-press hover-border-pink hover-bg-pink-light hover:shadow-sm">
+          <User className="w-5 h-5 text-[#ff4f8b]" />
           <span className="hidden sm:block">Login</span>
         </button>
       </DialogTrigger>
@@ -127,7 +141,7 @@ export default function AuthModal() {
 
         <div className="space-y-4 p-6">
           {step === "phone" ? (
-            <>
+            <> {/* Phone entry step */}
               <div>
                 <label className="text-xs font-black uppercase tracking-wide text-[#666]">
                   Phone Number
@@ -159,23 +173,29 @@ export default function AuthModal() {
                 <ChevronRight className="h-4 w-4" />
               </button>
             </>
-          ) : (
+          ) : step === "otp" ? (
             <>
               <div>
                 <label className="text-xs font-black uppercase tracking-wide text-[#666]">
                   Enter OTP
                 </label>
                 <p className="text-xs text-[#666] mt-1">
-                  Sent to +91 {phoneNumber} • Demo OTP: 123456
+                  Sent to +91 {phoneNumber} •{" "}
+                  <span className="font-bold text-[#0c831f]">Demo OTP: 123456</span>
                 </p>
                 <input
                   type="tel"
                   inputMode="numeric"
                   placeholder="Enter 6 digit OTP"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="mt-2 h-11 w-full rounded-lg border border-[#e8e8e8] bg-[#f6f7f6] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+                  onChange={(e) => { setOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setOtpError(""); }}
+                  className={`mt-2 h-11 w-full rounded-lg border bg-[#f6f7f6] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f] ${
+                    otpError ? "border-red-500" : "border-[#e8e8e8]"
+                  }`}
                 />
+                {otpError && (
+                  <p className="mt-1 text-xs font-semibold text-red-500">{otpError}</p>
+                )}
               </div>
 
               <button
@@ -183,15 +203,41 @@ export default function AuthModal() {
                 disabled={otp.length !== 6}
                 className="flex h-11 w-full items-center justify-between rounded-xl bg-[#ff4f8b] px-4 text-sm font-black text-white transition-all duration-200 disabled:opacity-50 hover:bg-[#e63872] btn-press active:scale-[0.98]"
               >
-                Verify & Login
+                Verify OTP
                 <ChevronRight className="h-4 w-4" />
               </button>
 
               <button
-                onClick={() => setStep("phone")}
+                onClick={() => { setStep("phone"); setOtp(""); setOtpError(""); }}
                 className="text-sm text-[#ff4f8b] font-semibold"
               >
                 Change Number
+              </button>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="text-xs font-black uppercase tracking-wide text-[#666]">
+                  Your Name
+                </label>
+                <p className="text-xs text-[#666] mt-1">How should we address you?</p>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="mt-2 h-11 w-full rounded-lg border border-[#e8e8e8] bg-[#f6f7f6] px-3 text-sm text-[#1a1a1a] outline-none focus:border-[#0c831f]"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleCompleteName()}
+                />
+              </div>
+
+              <button
+                onClick={handleCompleteName}
+                className="flex h-11 w-full items-center justify-between rounded-xl bg-[#ff4f8b] px-4 text-sm font-black text-white transition-all duration-200 hover:bg-[#e63872] btn-press active:scale-[0.98]"
+              >
+                {userName.trim() ? `Continue as ${userName.trim()}` : "Continue as Guest"}
+                <ChevronRight className="h-4 w-4" />
               </button>
             </>
           )}
