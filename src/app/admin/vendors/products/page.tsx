@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -25,15 +25,17 @@ export default function VendorProductsPage() {
 
   const [selectedProduct, setSelectedProduct] = useState<VendorProduct | null>(null);
 
-  const vendorNames = [...new Set(mockVendors.map((v) => v.name))];
-
-  return (
-    <DashboardLayout>
+  const vendorNames = [...new Set(mockVendors.map((v) => v.name))];  return (
+    <>
       <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Vendors"
           title="Vendor Products"
+<<<<<<< HEAD
           subtitle="View and manage all products supplied by vendors — stock, pricing, margins, and performance."
+=======
+          subtitle="View and manage all products supplied by vendors ï¿½ stock, pricing, margins, and performance."
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
           actions={
             <div className="flex items-center gap-2">
               <button onClick={fetchData} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
@@ -52,8 +54,13 @@ export default function VendorProductsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard title="Total Products" value={summary?.totalProducts ?? 0} icon={<Package className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" subtitle={summary ? `${summary.activeProducts} active` : undefined} />
           <ReusableCard title="Out of Stock" value={summary?.outOfStockCount ?? 0} icon={<AlertTriangle className="h-5 w-5" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" subtitle={summary ? `${summary.inactiveCount} inactive` : undefined} />
+<<<<<<< HEAD
           <ReusableCard title="Avg Margin" value={summary ? `${summary.avgMargin}%` : "—"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
           <ReusableCard title="Total Stock Value" value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+=======
+          <ReusableCard title="Avg Margin" value={summary ? `${summary.avgMargin}%` : "ï¿½"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Total Stock Value" value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "ï¿½"} icon={<DollarSign className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
         </div>
 
         {/* Filters */}
@@ -216,8 +223,7 @@ export default function VendorProductsPage() {
               </div>
             </div>
           </div>
-        )}
-      </ReusableDrawer>
-    </DashboardLayout>
+        )}      </ReusableDrawer>
+    </>
   );
 }

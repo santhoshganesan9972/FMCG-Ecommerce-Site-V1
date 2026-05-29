@@ -2,14 +2,17 @@
 
 // ── useDashboard Hook ────────────────────────────────────
 // Manages all data fetching for the Executive Dashboard.
-// Provides granular loading/error per section and aggregate states.
+// Now backed by TanStack Query for caching, retry, and invalidation.
 //
 // Usage:
-//   const { data, loading, error, refresh } = useDashboard();
+//   const { overview, revenue, loading, error } = useDashboard();
 //   const { data, loading, error } = useDashboard({ period: "7d" });
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardService } from "@/services/dashboard.service";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidateNotificationQueries } from "@/lib/react-query/invalidation";
 import type {
   DashboardOverview,
   DashboardQueryParams,
@@ -23,198 +26,170 @@ import type {
   AcquisitionMetric,
 } from "@/types/dashboard";
 
-// ── Per-section loading / error tracking ─────────────────
+// ── Combined Dashboard Hook ──────────────────────────────
 
-interface SectionState {
-  loading: boolean;
-  error: string | null;
-}
+export function useDashboard(params?: Partial<DashboardQueryParams>) {
+  const queryClient = useQueryClient();
 
-interface DashboardState {
-  // Data
-  overview: DashboardOverview | null;
-  revenue: RevenueKpi | null;
-  orders: OrdersKpi | null;
-  customers: CustomersKpi | null;
-  liveOrders: LiveOrder[] | null;
-  lowStockAlerts: StockAlert[] | null;
-  vendorPayments: VendorPayment[] | null;
-  topProducts: TopProduct[] | null;
-  acquisitionMetrics: AcquisitionMetric[] | null;
+  const overviewQuery = useQuery({
+    queryKey: queryKeys.dashboard.overview(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getOverview(params),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
 
-  // Aggregate loading states
-  loading: boolean;
-  error: string | null;
+  const revenueQuery = useQuery({
+    queryKey: queryKeys.dashboard.revenue(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getRevenue(params),
+    staleTime: 30_000,
+  });
 
-  // Per-section granular loading
-  sections: Record<string, SectionState>;
+  const ordersQuery = useQuery({
+    queryKey: queryKeys.dashboard.orders(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getOrders(params),
+    staleTime: 15_000,
+  });
 
-  // Timestamp of last successful fetch
-  lastUpdated: string | null;
-}
+  const customersQuery = useQuery({
+    queryKey: queryKeys.dashboard.customers(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getCustomers(params),
+    staleTime: 30_000,
+  });
 
-interface DashboardActions {
-  refresh: () => Promise<void>;
-  refreshSection: (section: string) => Promise<void>;
-}
+  const liveOrdersQuery = useQuery({
+    queryKey: queryKeys.dashboard.liveOrders(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getLiveOrders(params),
+    staleTime: 15_000,
+    refetchInterval: 15_000,
+  });
 
-const initialSectionState: SectionState = { loading: false, error: null };
+  const lowStockQuery = useQuery({
+    queryKey: queryKeys.dashboard.lowStockAlerts(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getLowStockAlerts(params),
+    staleTime: 60_000,
+  });
 
-function createInitialState(): DashboardState {
-  return {
-    overview: null,
-    revenue: null,
-    orders: null,
-    customers: null,
-    liveOrders: null,
-    lowStockAlerts: null,
-    vendorPayments: null,
-    topProducts: null,
-    acquisitionMetrics: null,
-    loading: true,
-    error: null,
-    sections: {},
-    lastUpdated: null,
+  const topProductsQuery = useQuery({
+    queryKey: queryKeys.dashboard.topProducts(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getTopProducts(params),
+    staleTime: 60_000,
+  });
+
+  const vendorPaymentsQuery = useQuery({
+    queryKey: queryKeys.dashboard.vendorPayments(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getVendorPayments(params),
+    staleTime: 60_000,
+  });
+
+  const acquisitionQuery = useQuery({
+    queryKey: queryKeys.dashboard.acquisitionMetrics(params as Record<string, unknown> | undefined),
+    queryFn: () => dashboardService.getAcquisitionMetrics(params),
+    staleTime: 60_000,
+  });
+
+  const loading =
+    overviewQuery.isLoading ||
+    revenueQuery.isLoading ||
+    ordersQuery.isLoading ||
+    customersQuery.isLoading ||
+    liveOrdersQuery.isLoading ||
+    lowStockQuery.isLoading ||
+    topProductsQuery.isLoading ||
+    vendorPaymentsQuery.isLoading ||
+    acquisitionQuery.isLoading;
+
+  const error =
+    overviewQuery.error?.message ??
+    revenueQuery.error?.message ??
+    ordersQuery.error?.message ??
+    customersQuery.error?.message ??
+    liveOrdersQuery.error?.message ??
+    lowStockQuery.error?.message ??
+    topProductsQuery.error?.message ??
+    vendorPaymentsQuery.error?.message ??
+    acquisitionQuery.error?.message ??
+    null;
+
+  const overview = overviewQuery.data ?? null;
+  const lastUpdated = overviewQuery.dataUpdatedAt
+    ? new Date(overviewQuery.dataUpdatedAt).toISOString()
+    : null;
+
+  // Per-section granular errors
+  const sections = {
+    revenue: {
+      loading: revenueQuery.isLoading,
+      error: revenueQuery.error?.message ?? null,
+    },
+    orders: {
+      loading: ordersQuery.isLoading,
+      error: ordersQuery.error?.message ?? null,
+    },
+    customers: {
+      loading: customersQuery.isLoading,
+      error: customersQuery.error?.message ?? null,
+    },
+    liveOrders: {
+      loading: liveOrdersQuery.isLoading,
+      error: liveOrdersQuery.error?.message ?? null,
+    },
+    lowStockAlerts: {
+      loading: lowStockQuery.isLoading,
+      error: lowStockQuery.error?.message ?? null,
+    },
+    topProducts: {
+      loading: topProductsQuery.isLoading,
+      error: topProductsQuery.error?.message ?? null,
+    },
+    vendorPayments: {
+      loading: vendorPaymentsQuery.isLoading,
+      error: vendorPaymentsQuery.error?.message ?? null,
+    },
+    acquisitionMetrics: {
+      loading: acquisitionQuery.isLoading,
+      error: acquisitionQuery.error?.message ?? null,
+    },
   };
-}
 
-export type UseDashboardReturn = DashboardState & DashboardActions;
-
-export function useDashboard(params?: Partial<DashboardQueryParams>): UseDashboardReturn {
-  const [state, setState] = useState<DashboardState>(createInitialState);
-  const abortRef = useRef<AbortController | null>(null);
-
-  const fetchAll = useCallback(async () => {
-    // Cancel any in-flight request
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-    abortRef.current = new AbortController();
-
-    setState((prev) => ({
-      ...prev,
-      loading: true,
-      error: null,
-      sections: {
-        ...prev.sections,
-        revenue: { loading: true, error: null },
-        orders: { loading: true, error: null },
-        customers: { loading: true, error: null },
-        liveOrders: { loading: true, error: null },
-        lowStockAlerts: { loading: true, error: null },
-        vendorPayments: { loading: true, error: null },
-        topProducts: { loading: true, error: null },
-        acquisitionMetrics: { loading: true, error: null },
-      },
-    }));
-
-    try {
-      const response = await dashboardService.getOverview(params);
-
-      if (!response.success) {
-        throw new Error(response.error || "Failed to load dashboard data");
-      }
-
-      setState({
-        overview: response.data,
-        revenue: response.data.revenue,
-        orders: response.data.orders,
-        customers: response.data.customers,
-        liveOrders: response.data.liveOrders,
-        lowStockAlerts: response.data.lowStockAlerts,
-        vendorPayments: response.data.vendorPayments,
-        topProducts: response.data.topProducts,
-        acquisitionMetrics: response.data.acquisitionMetrics,
-        loading: false,
-        error: null,
-        sections: {},
-        lastUpdated: response.meta?.cachedAt || new Date().toISOString(),
-      });
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: message,
-        sections: {},
-      }));
-    }
-  }, [params?.period, params?.warehouse, params?.region]);
-
-  // Fetch on mount and when params change
-  useEffect(() => {
-    fetchAll();
-    return () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-    };
-  }, [fetchAll]);
-
-  // Manual refresh
   const refresh = useCallback(async () => {
-    await fetchAll();
-  }, [fetchAll]);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+  }, [queryClient]);
 
-  // Refresh a single section (for granular loading)
   const refreshSection = useCallback(
     async (section: string) => {
-      setState((prev) => ({
-        ...prev,
-        sections: {
-          ...prev.sections,
-          [section]: { loading: true, error: null },
-        },
-      }));
-
-      try {
-        let data: unknown;
-        switch (section) {
-          case "revenue":
-            data = (await dashboardService.getRevenue(params)).data;
-            break;
-          case "orders":
-            data = (await dashboardService.getOrders(params)).data;
-            break;
-          case "customers":
-            data = (await dashboardService.getCustomers(params)).data;
-            break;
-          case "liveOrders":
-            data = (await dashboardService.getLiveOrders(params)).data;
-            break;
-          case "lowStockAlerts":
-            data = (await dashboardService.getLowStockAlerts(params)).data;
-            break;
-          case "vendorPayments":
-            data = (await dashboardService.getVendorPayments(params)).data;
-            break;
-          case "topProducts":
-            data = (await dashboardService.getTopProducts(params)).data;
-            break;
-          case "acquisitionMetrics":
-            data = (await dashboardService.getAcquisitionMetrics(params)).data;
-            break;
-          default:
-            throw new Error(`Unknown section: ${section}`);
-        }
-
-        setState((prev) => ({
-          ...prev,
-          [section]: data,
-          sections: { ...prev.sections, [section]: { loading: false, error: null } },
-        }));
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to load section";
-        setState((prev) => ({
-          ...prev,
-          sections: { ...prev.sections, [section]: { loading: false, error: message } },
-        }));
+      const keyMap: Record<string, readonly unknown[]> = {
+        revenue: queryKeys.dashboard.revenue(params as Record<string, unknown> | undefined),
+        orders: queryKeys.dashboard.orders(params as Record<string, unknown> | undefined),
+        customers: queryKeys.dashboard.customers(params as Record<string, unknown> | undefined),
+        liveOrders: queryKeys.dashboard.liveOrders(params as Record<string, unknown> | undefined),
+        lowStockAlerts: queryKeys.dashboard.lowStockAlerts(params as Record<string, unknown> | undefined),
+        topProducts: queryKeys.dashboard.topProducts(params as Record<string, unknown> | undefined),
+        vendorPayments: queryKeys.dashboard.vendorPayments(params as Record<string, unknown> | undefined),
+        acquisitionMetrics: queryKeys.dashboard.acquisitionMetrics(params as Record<string, unknown> | undefined),
+      };
+      const key = keyMap[section];
+      if (key) {
+        await queryClient.invalidateQueries({ queryKey: key });
       }
     },
-    [params],
+    [queryClient, params],
   );
 
-  return { ...state, refresh, refreshSection };
+  return {
+    overview,
+    revenue: overview?.revenue ?? (revenueQuery.data as RevenueKpi | null) ?? null,
+    orders: overview?.orders ?? (ordersQuery.data as OrdersKpi | null) ?? null,
+    customers: overview?.customers ?? (customersQuery.data as CustomersKpi | null) ?? null,
+    liveOrders: overview?.liveOrders ?? (liveOrdersQuery.data as LiveOrder[] | null) ?? [],
+    lowStockAlerts: overview?.lowStockAlerts ?? (lowStockQuery.data as StockAlert[] | null) ?? [],
+    topProducts: overview?.topProducts ?? (topProductsQuery.data as TopProduct[] | null) ?? [],
+    vendorPayments: overview?.vendorPayments ?? (vendorPaymentsQuery.data as VendorPayment[] | null) ?? [],
+    acquisitionMetrics: overview?.acquisitionMetrics ?? (acquisitionQuery.data as AcquisitionMetric[] | null) ?? [],
+    loading,
+    error,
+    sections,
+    lastUpdated,
+    refresh,
+    refreshSection,
+  };
 }

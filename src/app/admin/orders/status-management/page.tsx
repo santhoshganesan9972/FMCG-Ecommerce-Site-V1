@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import ReusableCard from "@/components/ui/admin/reusable-card";
@@ -39,8 +39,7 @@ export default function StatusManagementPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+       <>      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -118,6 +117,8 @@ export default function StatusManagementPage() {
           </div>
         )}
       </ReusableModal>
-    </DashboardLayout>
+       </>
+
+
   );
 }

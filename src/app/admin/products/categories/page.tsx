@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
@@ -93,8 +93,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+       <>      <div className="space-y-4 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -288,7 +287,11 @@ export default function CategoriesPage() {
               {editCategory?.name}
             </h2>
             <p className="text-[10px] text-[#999] mt-0.5">
+<<<<<<< HEAD
               {editCategory?.productCount} products · {editCategory?.slug}
+=======
+              {editCategory?.productCount} products ï¿½ {editCategory?.slug}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             </p>
           </div>
           <button
@@ -434,6 +437,8 @@ export default function CategoriesPage() {
           </button>
         </div>
       </aside>
-    </DashboardLayout>
+       </>
+
+
   );
 }

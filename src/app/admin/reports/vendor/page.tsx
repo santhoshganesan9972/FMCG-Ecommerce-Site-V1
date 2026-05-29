@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -48,8 +48,7 @@ export default function VendorReportsPage() {
   const [selectedVendor, setSelectedVendor] = useState<VendorReportEntry | null>(null);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Vendor Reports"
@@ -82,21 +81,33 @@ export default function VendorReportsPage() {
           />
           <ReusableCard
             title="Total Gross Sales"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalGrossSales / 10000000).toFixed(2)}Cr` : "—"}
+=======
+            value={summary ? `?${(summary.totalGrossSales / 10000000).toFixed(2)}Cr` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#0c831f]"
             bgColor="bg-[#e8f5e9]"
           />
           <ReusableCard
             title="Total Commission"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalCommission / 100000).toFixed(1)}L` : "—"}
+=======
+            value={summary ? `?${(summary.totalCommission / 100000).toFixed(1)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#9333ea]"
             bgColor="bg-[#f3e8ff]"
           />
           <ReusableCard
             title="Pending Payouts"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalPendingPayout / 1000).toFixed(1)}K` : "—"}
+=======
+            value={summary ? `?${(summary.totalPendingPayout / 1000).toFixed(1)}K` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<Banknote className="h-5 w-5" />}
             color="text-[#d97706]"
             bgColor="bg-[#fffbeb]"
@@ -137,7 +148,11 @@ export default function VendorReportsPage() {
                   </div>
                   <div>
                     <span className="font-bold text-[#1a1a1a]">{r.vendorName}</span>
+<<<<<<< HEAD
                     <span className="block text-[10px] text-[#999]">{r.vendorId} · {r.category}</span>
+=======
+                    <span className="block text-[10px] text-[#999]">{r.vendorId} ï¿½ {r.category}</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                   </div>
                 </div>
               ),
@@ -308,6 +323,8 @@ export default function VendorReportsPage() {
           </div>
         )}
       </ReusableDrawer>
-    </DashboardLayout>
+       </>
+
+
   );
 }

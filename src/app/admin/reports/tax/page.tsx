@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -50,8 +50,7 @@ export default function TaxReportsPage() {
   const [selectedReport, setSelectedReport] = useState<TaxReportEntry | null>(null);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Tax Reports"
@@ -76,14 +75,22 @@ export default function TaxReportsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard
             title="Total Tax Collected"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalTaxCollected / 10000000).toFixed(2)}Cr` : "—"}
+=======
+            value={summary ? `?${(summary.totalTaxCollected / 10000000).toFixed(2)}Cr` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<Landmark className="h-5 w-5" />}
             color="text-[#2563eb]"
             bgColor="bg-[#eff6ff]"
           />
           <ReusableCard
             title="ITC Claimed"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalITCClaimed / 100000).toFixed(1)}L` : "—"}
+=======
+            value={summary ? `?${(summary.totalITCClaimed / 100000).toFixed(1)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]"
             bgColor="bg-[#e8f5e9]"
@@ -98,7 +105,11 @@ export default function TaxReportsPage() {
           />
           <ReusableCard
             title="Next Due Date"
+<<<<<<< HEAD
             value={summary?.nextDueDate ?? "—"}
+=======
+            value={summary?.nextDueDate ?? "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<Calendar className="h-5 w-5" />}
             color="text-[#9333ea]"
             bgColor="bg-[#f3e8ff]"
@@ -112,7 +123,11 @@ export default function TaxReportsPage() {
             <div>
               <p className="text-sm font-bold text-amber-700">
                 {summary.pendingFilings} filing{summary.pendingFilings > 1 ? "s" : ""} pending
+<<<<<<< HEAD
                 {summary.overdueFilings > 0 && ` · ${summary.overdueFilings} overdue`}
+=======
+                {summary.overdueFilings > 0 && ` ï¿½ ${summary.overdueFilings} overdue`}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
               </p>
               <p className="text-xs text-amber-600">Next due: {summary.nextDueDate}</p>
             </div>
@@ -152,7 +167,11 @@ export default function TaxReportsPage() {
                   </div>
                   <div>
                     <span className="font-bold text-[#1a1a1a]">{r.reportTitle}</span>
+<<<<<<< HEAD
                     <span className="block text-[10px] text-[#999]">{r.id} · {r.period}</span>
+=======
+                    <span className="block text-[10px] text-[#999]">{r.id} ï¿½ {r.period}</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                   </div>
                 </div>
               ),
@@ -175,7 +194,11 @@ export default function TaxReportsPage() {
               sortable: true,
               render: (r) => (
                 <span className="font-bold">
+<<<<<<< HEAD
                   {r.totalTaxAmount > 0 ? `?${(r.totalTaxAmount / 100000).toFixed(2)}L` : "—"}
+=======
+                  {r.totalTaxAmount > 0 ? `?${(r.totalTaxAmount / 100000).toFixed(2)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                 </span>
               ),
             },
@@ -197,7 +220,11 @@ export default function TaxReportsPage() {
               width: "110px",
               hideOnMobile: true,
               render: (r) => (
+<<<<<<< HEAD
                 <span className={r.dueDate !== "—" && r.status === "pending" ? "font-bold text-[#d97706]" : "text-[#666]"}>
+=======
+                <span className={r.dueDate !== "ï¿½" && r.status === "pending" ? "font-bold text-[#d97706]" : "text-[#666]"}>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                   {r.dueDate}
                 </span>
               ),
@@ -264,7 +291,11 @@ export default function TaxReportsPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wide text-[#666]">Format / Size</p>
+<<<<<<< HEAD
                   <p className="mt-1 text-sm font-bold text-[#1a1a1a] uppercase">{selectedReport.format} · {selectedReport.fileSize}</p>
+=======
+                  <p className="mt-1 text-sm font-bold text-[#1a1a1a] uppercase">{selectedReport.format} ï¿½ {selectedReport.fileSize}</p>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                 </div>
               </div>
             </div>
@@ -275,11 +306,19 @@ export default function TaxReportsPage() {
                 <h4 className="mb-3 text-xs font-black uppercase tracking-wide text-[#666]">Tax Breakdown</h4>
                 <div className="space-y-2.5">
                   {[
+<<<<<<< HEAD
                     { label: "Taxable Value", value: selectedReport.taxableValue > 0 ? `?${(selectedReport.taxableValue / 100000).toFixed(2)}L` : "—" },
                     { label: "CGST", value: selectedReport.cgst > 0 ? `?${(selectedReport.cgst / 1000).toFixed(1)}K` : "—" },
                     { label: "SGST", value: selectedReport.sgst > 0 ? `?${(selectedReport.sgst / 1000).toFixed(1)}K` : "—" },
                     { label: "IGST", value: selectedReport.igst > 0 ? `?${(selectedReport.igst / 1000).toFixed(1)}K` : "—" },
                     { label: "TDS", value: selectedReport.tds > 0 ? `?${(selectedReport.tds / 1000).toFixed(1)}K` : "—" },
+=======
+                    { label: "Taxable Value", value: selectedReport.taxableValue > 0 ? `?${(selectedReport.taxableValue / 100000).toFixed(2)}L` : "ï¿½" },
+                    { label: "CGST", value: selectedReport.cgst > 0 ? `?${(selectedReport.cgst / 1000).toFixed(1)}K` : "ï¿½" },
+                    { label: "SGST", value: selectedReport.sgst > 0 ? `?${(selectedReport.sgst / 1000).toFixed(1)}K` : "ï¿½" },
+                    { label: "IGST", value: selectedReport.igst > 0 ? `?${(selectedReport.igst / 1000).toFixed(1)}K` : "ï¿½" },
+                    { label: "TDS", value: selectedReport.tds > 0 ? `?${(selectedReport.tds / 1000).toFixed(1)}K` : "ï¿½" },
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                     { label: "Total Tax Amount", value: `?${(selectedReport.totalTaxAmount / 100000).toFixed(2)}L`, highlight: true },
                   ].map((item) => (
                     <div
@@ -319,17 +358,27 @@ export default function TaxReportsPage() {
                   {selectedReport.status === "filed"
                     ? `Filed on ${selectedReport.filedDate}`
                     : selectedReport.status === "pending"
+<<<<<<< HEAD
                     ? `Pending — due ${selectedReport.dueDate}`
                     : `Status: ${selectedReport.status}`}
                 </span>
               </div>
               {selectedReport.generatedAt !== "—" && (
+=======
+                    ? `Pending ï¿½ due ${selectedReport.dueDate}`
+                    : `Status: ${selectedReport.status}`}
+                </span>
+              </div>
+              {selectedReport.generatedAt !== "ï¿½" && (
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                 <p className="mt-1 text-xs text-[#999]">Generated: {selectedReport.generatedAt}</p>
               )}
             </div>
           </div>
         )}
       </ReusableDrawer>
-    </DashboardLayout>
+       </>
+
+
   );
 }

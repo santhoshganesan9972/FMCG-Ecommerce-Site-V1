@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -59,10 +59,8 @@ export default function VendorsPage() {
     } catch {
       toast.error("Failed to update vendor status");
     }
-  };
-
-  return (
-    <DashboardLayout>
+  };  return (
+    <>
       <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Vendors"
@@ -108,13 +106,21 @@ export default function VendorsPage() {
           />
           <ReusableCard
             title="Total Sales"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalSales / 10000000).toFixed(2)}Cr` : "—"}
+=======
+            value={summary ? `?${(summary.totalSales / 10000000).toFixed(2)}Cr` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#9333ea]" bgColor="bg-[#f3e8ff]"
           />
           <ReusableCard
             title="Pending Payouts"
+<<<<<<< HEAD
             value={summary ? `?${(summary.pendingPayouts / 100000).toFixed(1)}L` : "—"}
+=======
+            value={summary ? `?${(summary.pendingPayouts / 100000).toFixed(1)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#d97706]" bgColor="bg-[#fffbeb]"
             subtitle={summary ? `${summary.pendingVendors} pending approval` : undefined}
@@ -412,8 +418,7 @@ export default function VendorsPage() {
           >
             {addLoading ? "Onboarding..." : "Onboard Vendor"}
           </button>
-        </div>
-      </ReusableModal>
-    </DashboardLayout>
+        </div>      </ReusableModal>
+    </>
   );
 }

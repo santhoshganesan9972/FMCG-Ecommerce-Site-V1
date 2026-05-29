@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -49,8 +49,7 @@ export default function SalesReportsPage() {
   const maxChart = Math.max(...chartData.map((d) => d.value), 1);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Sales Reports"
@@ -75,7 +74,11 @@ export default function SalesReportsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard
             title="Total Revenue (MTD)"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "—"}
+=======
+            value={summary ? `?${(summary.totalRevenue / 10000000).toFixed(2)}Cr` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]"
             bgColor="bg-[#e8f5e9]"
@@ -83,7 +86,11 @@ export default function SalesReportsPage() {
           />
           <ReusableCard
             title="Total Orders (MTD)"
+<<<<<<< HEAD
             value={summary ? summary.totalOrders.toLocaleString() : "—"}
+=======
+            value={summary ? summary.totalOrders.toLocaleString() : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<ShoppingCart className="h-5 w-5" />}
             color="text-[#2563eb]"
             bgColor="bg-[#eff6ff]"
@@ -91,14 +98,22 @@ export default function SalesReportsPage() {
           />
           <ReusableCard
             title="Avg Order Value"
+<<<<<<< HEAD
             value={summary ? `?${summary.avgOrderValue.toLocaleString()}` : "—"}
+=======
+            value={summary ? `?${summary.avgOrderValue.toLocaleString()}` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#9333ea]"
             bgColor="bg-[#f3e8ff]"
           />
           <ReusableCard
             title="Total Refunds"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalRefunds / 100000).toFixed(1)}L` : "—"}
+=======
+            value={summary ? `?${(summary.totalRefunds / 100000).toFixed(1)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
             icon={<RefreshCw className="h-5 w-5" />}
             color="text-[#d97706]"
             bgColor="bg-[#fffbeb]"
@@ -301,7 +316,11 @@ export default function SalesReportsPage() {
                  </div>
                  <div className="rounded-lg bg-[#f9fafb] p-3">
                    <p className="text-[10px] font-bold text-[#666]">Top Category</p>
+<<<<<<< HEAD
                    <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory ?? "—"}</p>
+=======
+                   <p className="mt-1 text-sm font-black text-[#1a1a1a]">{selectedEntry.topCategory ?? "ï¿½"}</p>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
                  </div>
               </div>
             </div>
@@ -341,6 +360,8 @@ export default function SalesReportsPage() {
           </div>
         )}
       </ReusableDrawer>
-    </DashboardLayout>
+       </>
+
+
   );
 }
