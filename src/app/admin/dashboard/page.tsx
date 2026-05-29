@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState, useEffect } from "react";
 import {
@@ -31,7 +31,7 @@ import {
   DashboardError,
 } from "@/components/ui/dashboard";
 
-// ── Icon Map (for recent activity icons stored as strings) ─
+// -- Icon Map (for recent activity icons stored as strings) -
 
 const iconMap: Record<string, LucideIcon> = {
   ShoppingCart,
@@ -46,7 +46,7 @@ function resolveIcon(iconName: string): LucideIcon {
   return iconMap[iconName] || ShoppingCart;
 }
 
-// ── Page Component ────────────────────────────────────────
+// -- Page Component ----------------------------------------
 
 export default function AdminDashboardPage() {
   const {
@@ -160,7 +160,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // ── Error state ────────────────────────────────────────
+  // -- Error state ----------------------------------------
 
   if (error) {
     return (
@@ -174,11 +174,11 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // ── Empty state ────────────────────────────────────────
+  // -- Empty state ----------------------------------------
 
   if (!sections) return null;
 
-  // ── Render ──────────────────────────────────────────────
+  // -- Render ----------------------------------------------
 
   const { kpiData, chartsData, donutData, deliveryData, sidePanelData, custData, invData, topProdCatData, funnelData } =
     sections;
@@ -186,46 +186,46 @@ export default function AdminDashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-5 sm:space-y-6">
-        {/* ═══ Header ═══ */}
+        {/* --- Header --- */}
         <DashboardHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
 
-        {/* ═══ KPI Cards ═══ */}
+        {/* --- KPI Cards --- */}
         <KpiGrid {...kpiData} />
 
-        {/* ═══ Quick Actions ═══ */}
+        {/* --- Quick Actions --- */}
         <QuickActions />
 
-        {/* ═══ Charts Row ═══ */}
+        {/* --- Charts Row --- */}
         <ChartsSection {...chartsData} />
 
-        {/* ═══ 3 Donut Analytics ═══ */}
+        {/* --- 3 Donut Analytics --- */}
         <DonutSection {...donutData} />
 
-        {/* ═══ Conversion Funnel ═══ */}
+        {/* --- Conversion Funnel --- */}
         {funnelData.stages.length > 0 && (
           <ConversionFunnel stages={funnelData.stages} />
         )}
 
-        {/* ═══ Top Products + Categories ═══ */}
+        {/* --- Top Products + Categories --- */}
         <TopProductsCategories {...topProdCatData} />
 
-        {/* ═══ Delivery + System Health ═══ */}
+        {/* --- Delivery + System Health --- */}
         <DeliverySystemHealth {...deliveryData} />
 
-        {/* ═══ 4 Side Panels ═══ */}
+        {/* --- 4 Side Panels --- */}
         <SidePanels {...sidePanelData} />
 
-        {/* ═══ Customer Metrics ═══ */}
+        {/* --- Customer Metrics --- */}
         <CustomerMetrics {...custData} />
 
-        {/* ═══ Inventory Health ═══ */}
+        {/* --- Inventory Health --- */}
         <InventoryHealth {...invData} />
       </div>
     </DashboardLayout>
   );
 }
 
-// ── Header Section ───────────────────────────────────────
+// -- Header Section ---------------------------------------
 
 function DashboardHeader({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefreshing?: boolean }) {
   return (

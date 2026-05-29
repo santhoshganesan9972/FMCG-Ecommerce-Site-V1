@@ -49,7 +49,7 @@ export default function FlashSaleSection() {
 
         <Link
           href="/offers/flash-sale"
-          className="flex-shrink-0 inline-flex items-center justify-center min-h-[44px] h-9 sm:h-10 px-4 sm:px-5 rounded-lg bg-white text-[#dc2626] font-bold text-xs sm:text-sm hover:bg-white/90 transition"
+          className="flex-shrink-0 inline-flex items-center justify-center h-8 sm:h-9 px-4 rounded-lg bg-white text-[#dc2626] font-bold text-xs sm:text-sm hover:bg-white/90 transition shadow-sm"
         >
           View All Deals
         </Link>
@@ -118,7 +118,7 @@ export default function FlashSaleSection() {
                       </div>
                     </Link>
 
-                    <div className="mt-2">
+                    <div className="mt-2.5">
                       {quantity === 0 ? (
                         <button
                           type="button"
@@ -134,12 +134,12 @@ export default function FlashSaleSection() {
                             });
                             toast.success("Added to cart 🛒");
                           }}
-                          className="min-h-[44px] w-full h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#dc2626] hover:bg-[#b91c1c] active:scale-95 transition-all shadow-sm"
+                          className="w-full h-8 sm:h-9 rounded-lg text-xs font-black text-white bg-[#dc2626] hover:bg-[#b91c1c] active:scale-95 transition-all shadow-sm"
                         >
                           ADD
                         </button>
                       ) : (
-                        <div className="flex items-center justify-center w-full h-7 rounded-md bg-[#dc2626] overflow-hidden shadow-sm">
+                        <div className="flex items-center justify-between w-full h-8 sm:h-9 rounded-lg bg-[#dc2626] overflow-hidden shadow-sm">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -149,9 +149,9 @@ export default function FlashSaleSection() {
                             }}
                             className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#b91c1c] transition-colors"
                           >
-                            <span className="text-sm font-bold">-</span>
+                            <span className="text-sm font-black">-</span>
                           </button>
-                          <span className="w-6 text-center text-sm font-bold text-white">
+                          <span className="w-8 text-center text-sm font-black text-white">
                             {quantity}
                           </span>
                           <button
@@ -164,7 +164,7 @@ export default function FlashSaleSection() {
                             }}
                             className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#b91c1c] transition-colors"
                           >
-                            <span className="text-sm font-bold">+</span>
+                            <span className="text-sm font-black">+</span>
                           </button>
                         </div>
                       )}

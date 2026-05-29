@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -26,7 +26,7 @@ import {
   Inbox,
 } from "lucide-react";
 
-// ── Notification Type Config ──────────────────────────────
+// -- Notification Type Config ------------------------------
 
 const typeConfig: Record<
   string,
@@ -86,7 +86,7 @@ const filterTabs = [
   { id: "system" as const, label: "System", icon: Settings2 },
 ];
 
-// ── Priority Dot ──────────────────────────────────────────
+// -- Priority Dot ------------------------------------------
 
 function PriorityDot({ priority }: { priority: string }) {
   const colors: Record<string, string> = {
@@ -105,7 +105,7 @@ function PriorityDot({ priority }: { priority: string }) {
   );
 }
 
-// ── Time Format ───────────────────────────────────────────
+// -- Time Format -------------------------------------------
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr);
@@ -124,7 +124,7 @@ function formatTime(dateStr: string): string {
   });
 }
 
-// ── Notification Item ─────────────────────────────────────
+// -- Notification Item -------------------------------------
 
 function NotificationItem({
   notification,
@@ -285,7 +285,7 @@ function NotificationItem({
   );
 }
 
-// ── Notification Skeleton ─────────────────────────────────
+// -- Notification Skeleton ---------------------------------
 
 function NotificationSkeleton() {
   return (
@@ -309,7 +309,7 @@ function NotificationSkeleton() {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────
+// -- Main Page ---------------------------------------------
 
 export default function NotificationsPage() {
   const {
@@ -334,13 +334,13 @@ export default function NotificationsPage() {
     toggleExpand,
   } = useAdminNotifications();
 
-  // ── Scroll to top on page change ────────────────────────
+  // -- Scroll to top on page change ------------------------
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Compute unread for each tab ─────────────────────────
+  // -- Compute unread for each tab -------------------------
   const tabUnread = useMemo(() => {
     if (!stats) return {};
     const result: Record<string, number> = {};
@@ -356,7 +356,7 @@ export default function NotificationsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-4 p-2 sm:p-4">
-        {/* ── Header ────────────────────────────────────── */}
+        {/* -- Header -------------------------------------- */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -396,7 +396,7 @@ export default function NotificationsPage() {
           </div>
         </section>
 
-        {/* ── Stats Bar ─────────────────────────────────── */}
+        {/* -- Stats Bar ----------------------------------- */}
         {stats && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -454,7 +454,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* ── Filters + Search ──────────────────────────── */}
+        {/* -- Filters + Search ---------------------------- */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Tabs */}
           <div className="flex flex-wrap gap-1 rounded-2xl border border-[#e8e8e8] bg-white p-1 shadow-sm">
@@ -500,7 +500,7 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {/* ── Select All Bar ────────────────────────────── */}
+        {/* -- Select All Bar ------------------------------ */}
         {feed && feed.groups.length > 0 && (
           <div className="flex items-center justify-between rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-4 py-2">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -527,7 +527,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* ── Notification List ─────────────────────────── */}
+        {/* -- Notification List --------------------------- */}
         {loading ? (
           <NotificationSkeleton />
         ) : error ? (
@@ -595,12 +595,12 @@ export default function NotificationsPage() {
               </div>
             ))}
 
-            {/* ── Pagination ───────────────────────────── */}
+            {/* -- Pagination ----------------------------- */}
             {totalPages > 1 && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#e8e8e8] bg-white px-4 py-3 shadow-sm">
                 <div className="flex items-center gap-2 text-xs text-[#666]">
                   <span>
-                    Showing {(feed.page - 1) * feed.pageSize + 1}–
+                    Showing {(feed.page - 1) * feed.pageSize + 1}�
                     {Math.min(feed.page * feed.pageSize, feed.totalCount)} of{" "}
                     {feed.totalCount} notifications
                   </span>
@@ -651,7 +651,7 @@ export default function NotificationsPage() {
           </>
         ) : null}
 
-        {/* ── Empty spacer ──────────────────────────────── */}
+        {/* -- Empty spacer -------------------------------- */}
         <div className="h-8" />
       </div>
     </DashboardLayout>

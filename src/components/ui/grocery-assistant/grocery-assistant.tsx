@@ -139,8 +139,13 @@ export default function GroceryAssistant() {
       const lookX = Math.max(-maxLook, Math.min(maxLook, (dx / (distance || 1)) * maxLook));
       const lookY = Math.max(-maxLook, Math.min(maxLook, (dy / (distance || 1)) * maxLook));
 
-      setLookDirection({ x: lookX, y: lookY });
-      setHeadTilt(dx > 0 ? Math.min(6, dx / 60) : Math.max(-6, dx / 60));
+      setLookDirection((prev) => {
+        if (Math.abs(prev.x - lookX) < 0.1 && Math.abs(prev.y - lookY) < 0.1) return prev;
+        return { x: lookX, y: lookY };
+      });
+      
+      const newTilt = dx > 0 ? Math.min(6, dx / 60) : Math.max(-6, dx / 60);
+      setHeadTilt((prev) => (Math.abs(prev - newTilt) < 0.1 ? prev : newTilt));
     };
 
     updateEyeTracking();

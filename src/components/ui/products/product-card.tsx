@@ -2,7 +2,7 @@
 
 import { Heart, Plus, Minus, BarChart3, RotateCw } from "lucide-react";
 import Link from "next/link";
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { useComparisonStore } from "@/store/comparison-store";
@@ -46,179 +46,194 @@ function ProductCard({ product }: ProductCardProps) {
   const addToWishlist   = useWishlistStore((s) => s.addToWishlist);
   const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
 
-  const quantity   = cartItem?.quantity ?? 0;
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const quantity   = isMounted ? (cartItem?.quantity ?? 0) : 0;
   const discount   = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
   const glowClass  = categoryGlowClass[product.category] ?? "";
   const stock      = stockConfig[product.stock];
   const isOOS      = product.stock === "out_of_stock";
-  const isWishlisted = wishlist.some((item) => item.id === product.id);
-  const isCompared = useComparisonStore((s) => s.isInComparison)(product.id);
+  const isWishlisted = isMounted ? wishlist.some((item) => item.id === product.id) : false;
+  
+  const isComparedVal = useComparisonStore((s) => s.isInComparison)(product.id);
+  const isCompared = isMounted ? isComparedVal : false;
+  
   const addToComparison = useComparisonStore((s) => s.addToComparison);
-  const removeFromComparison = useComparisonStore((s) => s.removeFromComparison);
+    const removeFromComparison = useComparisonStore((s) => s.removeFromComparison);
   const seoAlt = `${product.name} — ${product.category} — ₹${product.price} — FMCG Commerce grocery delivery`;
 
   return (
-    <Link href={`/product/${product.id}`} aria-label={`View ${product.name} — ₹${product.price} — ${product.category}`}>
-      <div
-        className={`product-card ${glowClass} group bg-white rounded-xl border border-[#e8e8e8] overflow-hidden cursor-pointer`}
-        itemScope
-        itemType="https://schema.org/Product"
-      >
-        <meta itemProp="name" content={product.name} />
-        <meta itemProp="category" content={product.category} />
-        <meta itemProp="price" content={String(product.price)} />
-        <meta itemProp="priceCurrency" content="INR" />
-        <meta itemProp="brand" content="FMCG Commerce" />
-        <link itemProp="url" href={`${env.siteUrl}/product/${product.id}`} />
-        <meta itemProp="image" content={product.image} />
+    <div
+      className={`product-card ${glowClass} group bg-white rounded-xl border border-[#e8e8e8] overflow-hidden relative shadow-sm hover:shadow-md transition-shadow`}
+      itemScope
+      itemType="https://schema.org/Product"
+    >
+      <meta itemProp="name" content={product.name} />
+      <meta itemProp="category" content={product.category} />
+      <meta itemProp="price" content={String(product.price)} />
+      <meta itemProp="priceCurrency" content="INR" />
+      <meta itemProp="brand" content="FMCG Commerce" />
+      <link itemProp="url" href={`${env.siteUrl}/product/${product.id}`} />
+      <meta itemProp="image" content={product.image} />
 
-        {/* ── Image ── */}
-        <div className={`relative bg-[#f2f2f2] aspect-square overflow-hidden ${isOOS ? "opacity-60 grayscale" : ""}`}>
-           <SafeProductImage
-              src={product.image}
-              alt={seoAlt}
-              fill
-              sizes="(max-width: 640px) 150px, (max-width: 768px) 170px, 185px"
-              className={`transition-transform duration-300 ${isOOS ? "" : "group-hover:scale-105"}`}
-              loading="lazy"
-            />
+      {/* ── Image ── */}
+      <div className={`relative bg-[#f2f2f2] aspect-square overflow-hidden ${isOOS ? "opacity-60 grayscale" : ""}`}>
+        <Link href={`/product/${product.id}`} className="block w-full h-full" aria-label={`View ${product.name}`}>
+          <SafeProductImage
+            src={product.image}
+            alt={seoAlt}
+            fill
+            sizes="(max-width: 640px) 150px, (max-width: 768px) 170px, 185px"
+            className={`transition-transform duration-300 ${isOOS ? "" : "group-hover:scale-105"}`}
+            loading="lazy"
+          />
+        </Link>
 
-          {/* Discount badge */}
-          {discount > 0 && !isOOS && (
-            <span className="absolute top-2 left-2 text-[10px] font-black text-white bg-[#ff4f8b] px-1.5 py-0.5 rounded z-10">
-              {discount}% OFF
-            </span>
-          )}
+        {/* Discount badge */}
+        {discount > 0 && !isOOS && (
+          <span className="absolute top-2 left-2 text-[10px] font-black text-white bg-[#ff4f8b] px-1.5 py-0.5 rounded z-10 pointer-events-none">
+            {discount}% OFF
+          </span>
+        )}
 
-          {/* Out-of-stock overlay - Blinkit style */}
-          {isOOS && (
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
-              <div className="flex flex-col items-center">
-                <span className="text-xs font-black text-white bg-[#ff4f8b] px-3 py-1.5 rounded-lg shadow-lg border-2 border-white/30">
-                  SOLD OUT
-                </span>
-              </div>
+        {/* Out-of-stock overlay - Blinkit style */}
+        {isOOS && (
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10 pointer-events-none">
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-black text-white bg-[#ff4f8b] px-3 py-1.5 rounded-lg shadow-lg border-2 border-white/30">
+                SOLD OUT
+              </span>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Only show interactive buttons if not OOS */}
-          {!isOOS && (
+        {/* Only show interactive buttons if not OOS */}
+        {!isOOS && (
+          <>
+            {/* 360° View */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShow360(true);
+              }}
+              className="absolute bottom-2 left-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
+              aria-label="View 360° product"
+            >
+              <RotateCw className="w-3.5 h-3.5 text-[#666] hover:text-[#ff4f8b]" />
+            </button>
+
+            {/* Compare */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isCompared) {
+                  addToComparison({
+                    id: product.id,
+                    name: product.name,
+                    image: product.image,
+                    price: product.price,
+                    oldPrice: product.oldPrice,
+                    rating: product.rating ?? 0,
+                    category: product.category,
+                    stock: product.stock,
+                  });
+                } else {
+                  removeFromComparison(product.id);
+                  toast("Removed from comparison");
+                }
+              }}
+              className="absolute bottom-2 right-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
+              aria-label={isCompared ? "Remove from comparison" : "Add to comparison"}
+            >
+              <BarChart3 className={`w-3.5 h-3.5 ${isCompared ? "text-[#0c831f]" : "text-[#999] hover:text-[#0c831f]"}`} />
+            </button>
+
+            {/* Wishlist */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isWishlisted) {
+                  addToWishlist({ id: product.id, name: product.name, image: product.image, price: product.price });
+                  toast.success("Added to wishlist ❤️");
+                  setAnimateHeart(true);
+                  window.setTimeout(() => setAnimateHeart(false), 240);
+                } else {
+                  removeFromWishlist(product.id);
+                  toast("Removed from wishlist 💔");
+                }
+              }}
+              className={`wish-button absolute top-2 right-2 min-w-[44px] min-h-[44px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95 ${isWishlisted ? "active" : ""}`}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              suppressHydrationWarning
+            >
+              <Heart className={`heart-icon w-3.5 h-3.5 ${isWishlisted ? "text-[#ff4f8b]" : "text-[#666] hover:text-[#ff4f8b]"} ${animateHeart ? "heart-pop" : ""}`} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ── Info ── */}
+      <div className={`p-2.5 sm:p-3 ${isOOS ? "opacity-60" : ""}`}>
+        {/* Delivery + stock row */}
+        <div className="flex items-center justify-between gap-1 mb-1.5">
+          {isOOS ? (
+            <span className="text-[10px] font-bold text-[#ff4f8b] bg-[#fff0f6] px-1.5 py-0.5 rounded">
+              Currently Unavailable
+            </span>
+          ) : (
             <>
-              {/* 360° View */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShow360(true);
-                }}
-                className="absolute bottom-2 left-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
-                aria-label="View 360° product"
-              >
-                <RotateCw className="w-3.5 h-3.5 text-[#666] hover:text-[#ff4f8b]" />
-              </button>
-
-              {/* Compare */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!isCompared) {
-                    addToComparison({
-                      id: product.id,
-                      name: product.name,
-                      image: product.image,
-                      price: product.price,
-                      oldPrice: product.oldPrice,
-                      rating: product.rating ?? 0,
-                      category: product.category,
-                      stock: product.stock,
-                    });
-                  } else {
-                    removeFromComparison(product.id);
-                    toast("Removed from comparison");
-                  }
-                }}
-                className="absolute bottom-2 right-2 min-w-[36px] min-h-[36px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95"
-                aria-label={isCompared ? "Remove from comparison" : "Add to comparison"}
-              >
-                <BarChart3 className={`w-3.5 h-3.5 ${isCompared ? "text-[#0c831f]" : "text-[#999] hover:text-[#0c831f]"}`} />
-              </button>
-
-              {/* Wishlist */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!isWishlisted) {
-                    addToWishlist({ id: product.id, name: product.name, image: product.image, price: product.price });
-                    toast.success("Added to wishlist ❤️");
-                    setAnimateHeart(true);
-                    window.setTimeout(() => setAnimateHeart(false), 240);
-                  } else {
-                    removeFromWishlist(product.id);
-                    toast("Removed from wishlist 💔");
-                  }
-                }}
-                className={`wish-button absolute top-2 right-2 min-w-[44px] min-h-[44px] w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform z-20 active:scale-95 ${isWishlisted ? "active" : ""}`}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                suppressHydrationWarning
-              >
-                <Heart className={`heart-icon w-3.5 h-3.5 ${isWishlisted ? "text-[#ff4f8b]" : "text-[#666] hover:text-[#ff4f8b]"} ${animateHeart ? "heart-pop" : ""}`} />
-              </button>
+              <span className="text-[10px] font-bold text-[#0c831f] bg-[#e8f5e9] px-1.5 py-0.5 rounded">
+                10 mins
+              </span>
+              <span className="flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${stock.dot} ${stock.pulse ? "stock-pulse" : ""}`} />
+                <span className="text-[9px] font-semibold text-[#666]">{stock.label}</span>
+              </span>
             </>
           )}
         </div>
 
-        {/* ── Info ── */}
-        <div className={`p-2.5 sm:p-3 ${isOOS ? "opacity-60" : ""}`}>
+        <Link href={`/product/${product.id}`} className="block group/title">
+          <h2 className={`text-xs sm:text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] ${isOOS ? "text-[#666]" : "text-[#1a1a1a] group-hover/title:text-[#ff4f8b] transition-colors"}`}>
+            {product.name}
+          </h2>
+        </Link>
 
-          {/* Delivery + stock row */}
-          <div className="flex items-center justify-between gap-1 mb-1.5">
-            {isOOS ? (
-              <span className="text-[10px] font-bold text-[#ff4f8b] bg-[#fff0f6] px-1.5 py-0.5 rounded">
-                Currently Unavailable
+        <p className="text-[10px] text-[#999] mt-0.5">{product.category}</p>
+
+        {/* Price + Add button */}
+        <div className="mt-2">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-sm sm:text-base font-black ${isOOS ? "text-[#999] line-through" : "text-[#1a1a1a]"}`} itemProp="price">
+              ₹{product.price}
+              <meta itemProp="priceCurrency" content="INR" />
+            </span>
+            {!isOOS && (
+              <span className="text-[10px] text-[#999] line-through" aria-label={`Original price: ₹${product.oldPrice}`}>
+                ₹{product.oldPrice}
               </span>
-            ) : (
-              <>
-                <span className="text-[10px] font-bold text-[#0c831f] bg-[#e8f5e9] px-1.5 py-0.5 rounded">
-                  10 mins
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${stock.dot} ${stock.pulse ? "stock-pulse" : ""}`} />
-                  <span className="text-[9px] font-semibold text-[#666]">{stock.label}</span>
-                </span>
-              </>
             )}
           </div>
 
-          <h2 className={`text-xs sm:text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] ${isOOS ? "text-[#666]" : "text-[#1a1a1a]"}`}>
-            {product.name}
-          </h2>
-
-          <p className="text-[10px] text-[#999] mt-0.5">{product.category}</p>
-
-          {/* Price + Add button */}
-          <div className="flex items-center justify-between mt-2 gap-1">
-            <div>
-              <p className={`text-sm sm:text-base font-black ${isOOS ? "text-[#999] line-through" : "text-[#1a1a1a]"}`} itemProp="price">
-                ₹{product.price}
-                <meta itemProp="priceCurrency" content="INR" />
-              </p>
-              {!isOOS && (
-                <p className="text-[10px] text-[#999] line-through" aria-label={`Original price: ₹${product.oldPrice}`}>
-                  ₹{product.oldPrice}
-                </p>
-              )}
-            </div>
-
+          <div className="mt-2.5">
             {isOOS ? (
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   toast("Price alert feature coming soon!");
                 }}
-                className="flex items-center gap-1 min-h-[44px] h-7 px-2.5 rounded-md bg-[#fafafa] text-[#ff4f8b] font-semibold text-[10px] flex-shrink-0 border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors"
+                className="flex items-center justify-center w-full h-8 sm:h-9 rounded-lg bg-[#fafafa] text-[#ff4f8b] font-bold text-[11px] border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors shadow-sm"
               >
                 NOTIFY
               </button>
@@ -227,31 +242,40 @@ function ProductCard({ product }: ProductCardProps) {
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1, weight: product.weight });
                   toast.success("Added to cart 🛒");
                 }}
-                className="add-btn min-h-[44px] h-7 px-2.5 rounded-md bg-[#ff4f8b] text-white font-bold text-[11px] flex-shrink-0 shadow-sm hover:bg-[#e63872] active:scale-95 transition-all"
+                className="add-btn w-full h-8 sm:h-9 rounded-lg bg-[#ff4f8b] text-white font-black text-xs shadow-sm hover:bg-[#e63872] active:scale-95 transition-all"
               >
                 ADD
               </button>
             ) : (
-              <div className="flex items-center min-h-[44px] h-7 rounded-md bg-[#ff4f8b] overflow-hidden flex-shrink-0 shadow-sm">
+              <div className="flex items-center justify-between w-full h-8 sm:h-9 rounded-lg bg-[#ff4f8b] overflow-hidden shadow-sm">
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); decreaseQty(product.id); }}
-                  className="min-w-[44px] w-7 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    decreaseQty(product.id);
+                  }}
+                  className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
                   aria-label="Decrease quantity"
                 >
-                  <Minus className="w-3 h-3" />
+                  <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="w-6 text-center text-sm font-bold text-white">{quantity}</span>
+                <span className="w-8 text-center text-sm font-black text-white">{quantity}</span>
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); increaseQty(product.id); }}
-                  className="min-w-[44px] w-7 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    increaseQty(product.id);
+                  }}
+                  className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
                   aria-label="Increase quantity"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
@@ -271,7 +295,7 @@ function ProductCard({ product }: ProductCardProps) {
         onClose={() => setShow360(false)}
         product={{ id: product.id, name: product.name, image: product.image, category: product.category }}
       />
-    </Link>
+    </div>
   );
 }
 

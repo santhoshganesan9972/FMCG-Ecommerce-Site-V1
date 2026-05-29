@@ -34,12 +34,12 @@ export default function NotificationPanel() {
       {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative min-w-[44px] min-h-[44px] w-10 h-10 rounded-lg bg-[#f2f2f2] border border-[#e8e8e8] flex items-center justify-center hover-border-pink transition-all duration-200 btn-press"
+        className="relative min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#f8f9fa] border border-[#e8e8e8] flex items-center justify-center hover-border-pink transition-all duration-200 btn-press hover:bg-white hover:shadow-sm group"
         aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
       >
-        <Bell className="w-4 h-4 text-[#1a1a1a]" />
+        <Bell className="w-5 h-5 text-[#444] group-hover:text-[#ff4f8b] transition-colors" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-[#ff4f8b] text-white text-[9px] font-black min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center leading-none px-1">
+          <span className="absolute -top-1 -right-1 bg-[#ff4f8b] text-white text-[9px] font-black min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center leading-none px-1 shadow-sm">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

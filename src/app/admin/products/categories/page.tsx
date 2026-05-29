@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -24,7 +24,7 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // ── Edit Drawer ──────────────────────────────────────────
+  // -- Edit Drawer ------------------------------------------
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category>>({});
 
@@ -46,7 +46,7 @@ export default function CategoriesPage() {
     fetchCategories();
   };
 
-  // ── Add form state ───────────────────────────────────────
+  // -- Add form state ---------------------------------------
   const [addForm, setAddForm] = useState({
     name: "",
     slug: "",
@@ -76,20 +76,20 @@ export default function CategoriesPage() {
   );
 
   const categoryIcons: Record<string, string> = {
-    Groceries: "🍚",
-    Fruits: "🍎",
-    Vegetables: "🥦",
-    Dairy: "🥛",
-    Beverages: "🥤",
-    Snacks: "🍿",
-    Health: "💊",
-    "Personal Care": "🧴",
-    "Home Care": "🧹",
-    "Baby Care": "👶",
-    "Packaged Food": "📦",
-    Organic: "🌱",
-    Imported: "🌍",
-    Seasonal: "🌸",
+    Groceries: "??",
+    Fruits: "??",
+    Vegetables: "??",
+    Dairy: "??",
+    Beverages: "??",
+    Snacks: "??",
+    Health: "??",
+    "Personal Care": "??",
+    "Home Care": "??",
+    "Baby Care": "??",
+    "Packaged Food": "??",
+    Organic: "??",
+    Imported: "??",
+    Seasonal: "??",
   };
 
   return (
@@ -133,7 +133,7 @@ export default function CategoriesPage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-2xl">{categoryIcons[cat.name] || "📁"}</span>
+                  <span className="text-2xl">{categoryIcons[cat.name] || "??"}</span>
                   <div>
                     <p className="text-sm font-bold text-[#1a1a1a]">{cat.name}</p>
                     <p className="text-[10px] text-[#999]">{cat.slug}</p>
@@ -199,7 +199,7 @@ export default function CategoriesPage() {
         )}
       </div>
 
-      {/* ── Add Category Modal ── */}
+      {/* -- Add Category Modal -- */}
       <ReusableModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -265,7 +265,7 @@ export default function CategoriesPage() {
         </div>
       </ReusableModal>
 
-      {/* ── Edit Category Drawer ── */}
+      {/* -- Edit Category Drawer -- */}
       {/* Overlay */}
       <div
         className={`fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${editCategory ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -288,7 +288,7 @@ export default function CategoriesPage() {
               {editCategory?.name}
             </h2>
             <p className="text-[10px] text-[#999] mt-0.5">
-              {editCategory?.productCount} products · {editCategory?.slug}
+              {editCategory?.productCount} products � {editCategory?.slug}
             </p>
           </div>
           <button

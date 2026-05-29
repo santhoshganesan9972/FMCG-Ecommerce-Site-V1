@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../dashboard-layout";
@@ -101,7 +101,7 @@ export default function SettingsPage() {
                   { label: "Store Name", value: "FMCG Commerce", type: "text" },
                   { label: "Support Email", value: "support@fmcg.com", type: "email" },
                   { label: "Support Phone", value: "+91 1800-123-456", type: "text" },
-                  { label: "Currency", value: "INR (₹)", type: "text", disabled: true },
+                  { label: "Currency", value: "INR (?)", type: "text", disabled: true },
                   { label: "Timezone", value: "Asia/Kolkata (IST)", type: "text", disabled: true },
                   { label: "Delivery Radius (km)", value: "15", type: "number" },
                 ].map((field) => (
@@ -135,8 +135,8 @@ export default function SettingsPage() {
                 {[
                   { label: "Payment Gateway", value: "Razorpay" },
                   { label: "Gateway Commission (%)", value: "2.0" },
-                  { label: "Minimum COD Amount (₹)", value: "500" },
-                  { label: "Maximum COD Amount (₹)", value: "5000" },
+                  { label: "Minimum COD Amount (?)", value: "500" },
+                  { label: "Maximum COD Amount (?)", value: "5000" },
                 ].map((field) => (
                   <div key={field.label}>
                     <label className="mb-1.5 block text-xs font-bold text-[#666]">{field.label}</label>

@@ -70,23 +70,23 @@ export const useCartStore = create<CartStore>()(
         })),
 
       increaseQuantity: (id) => {
+        const MAX_QUANTITY = 20;
         const productInfo = products.find((p) => p.id === id);
-        
+
         if (productInfo && productInfo.stock === "out_of_stock") {
           console.warn(`Cannot increase quantity for OOS product (ID: ${id})`);
           return;
         }
 
-        set((state) => ({
-          cart: state.cart.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  quantity: item.quantity + 1,
-                }
-              : item
-          ),
-        }));
+        set((state) => {
+          const item = state.cart.find((i) => i.id === id);
+          if (!item || item.quantity >= MAX_QUANTITY) return state;
+          return {
+            cart: state.cart.map((i) =>
+              i.id === id ? { ...i, quantity: Math.min(i.quantity + 1, MAX_QUANTITY) } : i
+            ),
+          };
+        });
       },
 
       decreaseQuantity: (id) =>

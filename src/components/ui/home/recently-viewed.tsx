@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Clock, Trash2 } from "lucide-react";
+import { ChevronRight, Clock, Trash2, Minus, Plus } from "lucide-react";
 import { useRecentlyViewedStore } from "@/store/recently-viewed-store";
 import { products } from "@/data/products";
 import { SafeProductImage } from "@/components/ui/safe-image";
@@ -12,6 +12,9 @@ import { useRef } from "react";
 export default function RecentlyViewed() {
   const { items, clearRecentlyViewed } = useRecentlyViewedStore();
   const addToCart = useCartStore((s) => s.addToCart);
+  const increaseQty = useCartStore((s) => s.increaseQuantity);
+  const decreaseQty = useCartStore((s) => s.decreaseQuantity);
+  const cart = useCartStore((s) => s.cart);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const viewedProducts = items
@@ -59,6 +62,8 @@ export default function RecentlyViewed() {
         >
           {viewedProducts.map((product) => {
             const oos = isOutOfStock(product!.stock);
+            const cartItem = cart.find((item) => item.id === product!.id);
+            const quantity = cartItem?.quantity ?? 0;
             return (
               <div
                 key={product!.id}
@@ -90,36 +95,67 @@ export default function RecentlyViewed() {
                         {product!.name}
                       </p>
                     </Link>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <div className="flex-1">
+                    <div className="mt-1.5">
+                      <div className="flex items-center gap-1">
                         <span className={`text-sm font-black ${oos ? "text-[#999] line-through" : "text-[#1a1a1a]"}`}>₹{product!.price}</span>
                       </div>
-                      {oos ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toast("Price alert feature coming soon!");
-                          }}
-                          className="text-[10px] font-semibold bg-[#fafafa] text-[#ff4f8b] rounded-md px-2 py-0.5 border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors"
-                        >
-                          NOTIFY
-                        </button>
-                       ) : (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addToCart({ id: product!.id, name: product!.name, price: product!.price, image: product!.image, quantity: 1 });
-                            toast.success("Added to cart 🛒");
-                          }}
-                          className="min-h-[44px] h-7 px-2.5 rounded-md text-[11px] font-bold text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
-                        >
-                          ADD
-                        </button>
-                      )}
+                      <div className="mt-2">
+                        {oos ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toast("Price alert feature coming soon!");
+                            }}
+                            className="w-full h-8 sm:h-9 rounded-lg text-xs font-bold bg-[#fafafa] text-[#ff4f8b] border border-[#ff4f8b]/20 hover:bg-[#fff0f6] transition-colors"
+                          >
+                            NOTIFY
+                          </button>
+                         ) : quantity === 0 ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              addToCart({ id: product!.id, name: product!.name, price: product!.price, image: product!.image, quantity: 1 });
+                              toast.success("Added to cart 🛒");
+                            }}
+                            className="w-full h-8 sm:h-9 rounded-lg text-xs font-black text-white bg-[#ff4f8b] hover:bg-[#e63872] active:scale-95 transition-all shadow-sm"
+                          >
+                            ADD
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-between w-full h-8 sm:h-9 rounded-lg bg-[#ff4f8b] overflow-hidden shadow-sm">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                decreaseQty(product!.id);
+                              }}
+                              className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-black text-white">{quantity}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                increaseQty(product!.id);
+                                toast.success("Added to cart 🛒");
+                              }}
+                              className="flex-1 h-full flex items-center justify-center text-white hover:bg-[#e63872] transition-colors"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

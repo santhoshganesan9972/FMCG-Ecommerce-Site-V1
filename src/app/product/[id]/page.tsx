@@ -117,14 +117,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <Navbar />
       <RecentlyViewedTracker product={product} />
 
-      <div className="pt-16">
+      <div className="pt-[72px] sm:pt-20">
 
         {/* Breadcrumb */}
         <div className="bg-white border-b border-[#e8e8e8] px-3 sm:px-4 md:px-6 py-2.5">
           <div className="max-w-[1400px] mx-auto flex items-center gap-1.5 text-xs text-[#999]">
-            <span>Home</span>
+            <Link href="/" className="hover:text-[#ff4f8b] transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
-            <span>{product.category}</span>
+            <Link href={`/category/${categorySlug}`} className="hover:text-[#ff4f8b] transition-colors">{product.category}</Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-[#1a1a1a] font-semibold truncate">{product.name}</span>
           </div>
@@ -194,7 +194,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 <p className="text-sm text-[#666] leading-relaxed mb-6">
-                  Premium quality {product.category.toLowerCase()} product. Fresh and carefully sourced for the best experience.
+                  {product.name} is a premium quality {product.category.toLowerCase()} item carefully sourced to ensure maximum freshness and value. Delivered straight to your door in 10 minutes, making it perfect for your everyday grocery needs.
                 </p>
 
                 {/* Trust badges */}

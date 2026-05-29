@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import DashboardLayout from "../../dashboard-layout";
@@ -33,7 +33,7 @@ export default function VendorProductsPage() {
         <ReusablePageHeader
           breadcrumb="Vendors"
           title="Vendor Products"
-          subtitle="View and manage all products supplied by vendors — stock, pricing, margins, and performance."
+          subtitle="View and manage all products supplied by vendors � stock, pricing, margins, and performance."
           actions={
             <div className="flex items-center gap-2">
               <button onClick={fetchData} className="flex items-center gap-1.5 rounded-xl border border-[#e8e8e8] bg-white px-3 py-1.5 text-xs font-bold text-[#666] hover:bg-[#f6f7f6]">
@@ -52,8 +52,8 @@ export default function VendorProductsPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ReusableCard title="Total Products" value={summary?.totalProducts ?? 0} icon={<Package className="h-5 w-5" />} color="text-[#2563eb]" bgColor="bg-[#eff6ff]" subtitle={summary ? `${summary.activeProducts} active` : undefined} />
           <ReusableCard title="Out of Stock" value={summary?.outOfStockCount ?? 0} icon={<AlertTriangle className="h-5 w-5" />} color="text-[#dc2626]" bgColor="bg-[#fef2f2]" subtitle={summary ? `${summary.inactiveCount} inactive` : undefined} />
-          <ReusableCard title="Avg Margin" value={summary ? `${summary.avgMargin}%` : "—"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
-          <ReusableCard title="Total Stock Value" value={summary ? `₹${(summary.totalStockValue / 100000).toFixed(1)}L` : "—"} icon={<DollarSign className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
+          <ReusableCard title="Avg Margin" value={summary ? `${summary.avgMargin}%` : "�"} icon={<TrendingUp className="h-5 w-5" />} color="text-[#0c831f]" bgColor="bg-[#e8f5e9]" />
+          <ReusableCard title="Total Stock Value" value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "�"} icon={<DollarSign className="h-5 w-5" />} color="text-[#9333ea]" bgColor="bg-[#f3e8ff]" />
         </div>
 
         {/* Filters */}
@@ -108,8 +108,8 @@ export default function VendorProductsPage() {
               key: "price", header: "Price", width: "80px", align: "right", sortable: true,
               render: (p) => (
                 <div className="text-right">
-                  <span className="font-bold">₹{p.price}</span>
-                  <span className="block text-[10px] text-[#999]">MRP ₹{p.mrp}</span>
+                  <span className="font-bold">?{p.price}</span>
+                  <span className="block text-[10px] text-[#999]">MRP ?{p.mrp}</span>
                 </div>
               ),
             },
@@ -167,9 +167,9 @@ export default function VendorProductsPage() {
               <h4 className="mb-3 text-xs font-black uppercase tracking-wide text-[#666]">Pricing</h4>
               <div className="space-y-2">
                 {[
-                  { label: "Selling Price", value: `₹${selectedProduct.price}` },
-                  { label: "MRP", value: `₹${selectedProduct.mrp}` },
-                  { label: "Cost Price", value: `₹${selectedProduct.costPrice}` },
+                  { label: "Selling Price", value: `?${selectedProduct.price}` },
+                  { label: "MRP", value: `?${selectedProduct.mrp}` },
+                  { label: "Cost Price", value: `?${selectedProduct.costPrice}` },
                   { label: "Gross Margin", value: `${selectedProduct.margin}%`, highlight: true },
                 ].map((item) => (
                   <div key={item.label} className={`flex justify-between py-1 ${item.highlight ? "border-t border-[#e8e8e8] pt-2" : ""}`}>
@@ -210,7 +210,7 @@ export default function VendorProductsPage() {
                 {selectedProduct.rating && (
                   <div>
                     <p className="text-[10px] font-bold text-[#999]">Rating</p>
-                    <p className="mt-0.5 font-bold text-amber-500">★ {selectedProduct.rating}</p>
+                    <p className="mt-0.5 font-bold text-amber-500">? {selectedProduct.rating}</p>
                   </div>
                 )}
               </div>
