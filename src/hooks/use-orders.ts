@@ -1,11 +1,15 @@
 // ── Order Management Hooks ──────────────────────────────
 // Architecture: UI → Component → Hook → Service → API Gateway → Backend
+// Now powered by TanStack Query for caching, retry, and invalidation.
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/services/orders.service";
 import { notifyOrder } from "@/lib/notifications";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidateOrderQueries, invalidateSingleOrder } from "@/lib/react-query/invalidation";
 import type {
   Order,
   DeliveryPartner,
@@ -21,49 +25,41 @@ import type { PaginationState } from "@/types/products";
 // ── Orders List Hook ─────────────────────────────────────
 
 export function useOrders(initialStatus?: string) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState(initialStatus || "all");
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+  const [page, setPageState] = useState(1);
+  const [pageSize, setPageSizeState] = useState(10);
+
+  const queryKey = queryKeys.orders.list({
+    search: search || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    page,
+    pageSize,
   });
-  const [summary, setSummary] = useState({
+
+  const { data, isLoading, error } = useQuery({
+    queryKey,
+    queryFn: () =>
+      orderService.getOrders(
+        { search, status: statusFilter },
+        { page, pageSize }
+      ),
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+
+  const orders = data?.orders ?? [];
+  const summary = data?.summary ?? {
     total: 0, pending: 0, confirmed: 0, preparing: 0,
     outForDelivery: 0, delivered: 0, cancelled: 0, returned: 0,
     revenue: 0,
-  });
+  };
+  const pagination: PaginationState = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await orderService.getOrders(
-        { search, status: statusFilter },
-        { page: pagination.page, pageSize: pagination.pageSize }
-      );
-      setOrders(result.orders);
-      setPagination(result.pagination);
-      setSummary(result.summary);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load orders");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter, pagination.page, pagination.pageSize]);
-
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
-
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
-
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+  const setPage = useCallback((p: number) => { setPageState(p); }, []);
+  const setPageSize = useCallback((s: number) => { setPageSizeState(s); setPageState(1); }, []);
 
   const kanbanGroups = useMemo(() => {
     const groups: Record<string, Order[]> = {
@@ -76,8 +72,13 @@ export function useOrders(initialStatus?: string) {
     return groups;
   }, [orders]);
 
+  const fetchOrders = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.orders.lists() });
+  }, [queryClient]);
+
   return {
-    orders, loading, error, search, setSearch,
+    orders, loading: isLoading, error: error?.message ?? null,
+    search, setSearch,
     statusFilter, setStatusFilter,
     viewMode, setViewMode,
     pagination, summary, kanbanGroups,
@@ -89,254 +90,306 @@ export function useOrders(initialStatus?: string) {
 // ── Single Order Hook ────────────────────────────────────
 
 export function useOrder(id: string) {
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setLoading(true);
-    orderService.getOrderById(id)
-      .then((o) => { setOrder(o || null); if (!o) setError("Order not found"); })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load order"))
-      .finally(() => setLoading(false));
-  }, [id]);
+  const { data: order, isLoading, error } = useQuery({
+    queryKey: queryKeys.orders.detail(id),
+    queryFn: () => orderService.getOrderById(id),
+    enabled: !!id,
+  });
 
-  const updateStatus = useCallback(async (newStatus: string, note?: string) => {
-    const updated = await orderService.updateOrderStatus(id, newStatus, note);
-    if (updated) setOrder(updated);
-    // Fire-and-forget admin notification (non-critical, won't break the action)
-    notifyOrder.statusChanged(id, newStatus).catch(() => {});
-    return !!updated;
-  }, [id]);
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ newStatus, note }: { newStatus: string; note?: string }) =>
+      orderService.updateOrderStatus(id, newStatus, note),
+    onSuccess: () => {
+      invalidateSingleOrder(queryClient, id);
+      notifyOrder.statusChanged(id, "").catch(() => {});
+    },
+  });
 
-  return { order, loading, error, updateStatus };
+  const updateStatus = useCallback(
+    async (newStatus: string, note?: string): Promise<boolean> => {
+      try {
+        await updateStatusMutation.mutateAsync({ newStatus, note });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [updateStatusMutation]
+  );
+
+  return {
+    order: order ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    updateStatus,
+    updating: updateStatusMutation.isPending,
+  };
 }
 
 // ── Order Actions Hook ───────────────────────────────────
 
 export function useOrderActions() {
-  const [updating, setUpdating] = useState<Record<string, boolean>>({});
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
-  const updateStatus = useCallback(async (data: StatusUpdateFormData): Promise<boolean> => {
-    setUpdating((prev) => ({ ...prev, [data.orderId]: true }));
-    setError(null);
-    try {
-      await orderService.updateOrderStatus(data.orderId, data.newStatus, data.note);
-      // Fire-and-forget admin notification (non-critical, won't break the action)
+  const updateStatusMutation = useMutation({
+    mutationFn: (data: StatusUpdateFormData) =>
+      orderService.updateOrderStatus(data.orderId, data.newStatus, data.note),
+    onSuccess: (_, data) => {
+      invalidateOrderQueries(queryClient);
       notifyOrder.statusChanged(data.orderId, data.newStatus).catch(() => {});
-      return true;
-    } catch (err) {
+    },
+    onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to update status");
-      return false;
-    } finally {
-      setUpdating((prev) => ({ ...prev, [data.orderId]: false }));
-    }
-  }, []);
+    },
+  });
 
-  const assignPartner = useCallback(async (data: AssignPartnerFormData): Promise<boolean> => {
-    setUpdating((prev) => ({ ...prev, [data.orderId]: true }));
-    setError(null);
-    try {
-      await orderService.assignPartner(data);
-      return true;
-    } catch (err) {
+  const assignPartnerMutation = useMutation({
+    mutationFn: (data: AssignPartnerFormData) => orderService.assignPartner(data),
+    onSuccess: () => {
+      invalidateOrderQueries(queryClient);
+    },
+    onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to assign partner");
-      return false;
-    } finally {
-      setUpdating((prev) => ({ ...prev, [data.orderId]: false }));
-    }
-  }, []);
+    },
+  });
 
-  const addNote = useCallback(async (orderId: string, note: string): Promise<boolean> => {
-    try {
-      await orderService.addOrderNote(orderId, note, "Super Admin");
-      return true;
-    } catch (err) {
+  const addNoteMutation = useMutation({
+    mutationFn: ({ orderId, note }: { orderId: string; note: string }) =>
+      orderService.addOrderNote(orderId, note, "Super Admin"),
+    onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to add note");
-      return false;
-    }
-  }, []);
+    },
+  });
 
-  return { updateStatus, assignPartner, addNote, updating, error };
+  const updateStatus = useCallback(
+    async (data: StatusUpdateFormData): Promise<boolean> => {
+      setError(null);
+      try {
+        await updateStatusMutation.mutateAsync(data);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [updateStatusMutation]
+  );
+
+  const assignPartner = useCallback(
+    async (data: AssignPartnerFormData): Promise<boolean> => {
+      setError(null);
+      try {
+        await assignPartnerMutation.mutateAsync(data);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [assignPartnerMutation]
+  );
+
+  const addNote = useCallback(
+    async (orderId: string, note: string): Promise<boolean> => {
+      setError(null);
+      try {
+        await addNoteMutation.mutateAsync({ orderId, note });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [addNoteMutation]
+  );
+
+  return {
+    updateStatus,
+    assignPartner,
+    addNote,
+    updating:
+      updateStatusMutation.isPending ||
+      assignPartnerMutation.isPending ||
+      addNoteMutation.isPending,
+    error,
+  };
 }
 
 // ── Delivery Partners Hook ───────────────────────────────
 
 export function useDeliveryPartners() {
-  const [partners, setPartners] = useState<DeliveryPartner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const fetchPartners = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await orderService.getDeliveryPartners(search);
-      setPartners(result.partners);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load partners");
-    } finally {
-      setLoading(false);
-    }
-  }, [search]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.orders.deliveryPartners.list(search || undefined),
+    queryFn: () => orderService.getDeliveryPartners(search),
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => { fetchPartners(); }, [fetchPartners]);
-
+  const partners = data?.partners ?? [];
   const onlineCount = useMemo(() => partners.filter((p) => p.status === "online").length, [partners]);
-  const zones = useMemo(() => [...new Set(partners.map((p) => p.zone).filter(Boolean))], [partners]);
+  const zones = useMemo(() => [...new Set(partners.map((p) => p.zone).filter(Boolean))] as string[], [partners]);
 
-  return { partners, loading, error, search, setSearch, onlineCount, zones, fetchPartners };
+  return {
+    partners,
+    loading: isLoading,
+    error: error?.message ?? null,
+    search,
+    setSearch,
+    onlineCount,
+    zones,
+    fetchPartners: () => {}, // auto-fetched via query
+  };
 }
 
 // ── Substitutions Hook ───────────────────────────────────
 
 export function useSubstitutions() {
-  const [substitutions, setSubstitutions] = useState<Substitution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+  const [page, setPageState] = useState(1);
+  const [pageSize, setPageSizeState] = useState(10);
+
+  const queryKey = queryKeys.orders.substitutions.list({
+    search: search || undefined,
+    status: statusFilter || undefined,
+    page,
+    pageSize,
   });
 
-  const fetchSubstitutions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await orderService.getSubstitutions(
+  const { data, isLoading, error } = useQuery({
+    queryKey,
+    queryFn: () =>
+      orderService.getSubstitutions(
         { search, status: statusFilter || undefined },
-        { page: pagination.page, pageSize: pagination.pageSize }
-      );
-      setSubstitutions(result.substitutions);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load substitutions");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter, pagination.page, pagination.pageSize]);
+        { page, pageSize }
+      ),
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => { fetchSubstitutions(); }, [fetchSubstitutions]);
+  const substitutions = data?.substitutions ?? [];
+  const pagination: PaginationState = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const decideSubstitution = useCallback(async (data: SubstitutionDecisionData) => {
-    try {
-      await orderService.decideSubstitution(data);
-      setSubstitutions((prev) =>
-        prev.map((s) => (s.id === data.substitutionId ? { ...s, status: data.status } : s))
-      );
-      return true;
-    } catch {
-      return false;
-    }
-  }, []);
+  const decideSubstitutionMutation = useMutation({
+    mutationFn: (data: SubstitutionDecisionData) => orderService.decideSubstitution(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.substitutions.all });
+    },
+  });
 
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
+  const decideSubstitution = useCallback(
+    async (data: SubstitutionDecisionData): Promise<boolean> => {
+      try {
+        await decideSubstitutionMutation.mutateAsync(data);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [decideSubstitutionMutation]
+  );
 
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+  const setPage = useCallback((p: number) => { setPageState(p); }, []);
+  const setPageSize = useCallback((s: number) => { setPageSizeState(s); setPageState(1); }, []);
 
   return {
-    substitutions, loading, error,
-    search, setSearch, statusFilter, setStatusFilter,
-    pagination, decideSubstitution, setPage, setPageSize, fetchSubstitutions,
+    substitutions,
+    loading: isLoading,
+    error: error?.message ?? null,
+    search, setSearch,
+    statusFilter, setStatusFilter,
+    pagination,
+    decideSubstitution,
+    setPage, setPageSize,
+    fetchSubstitutions: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.substitutions.all }),
   };
 }
 
 // ── Bulk Jobs Hook ───────────────────────────────────────
 
 export function useBulkJobs() {
-  const [jobs, setJobs] = useState<BulkJob[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [processing, setProcessing] = useState(false);
-  const [pagination, setPagination] = useState<PaginationState>({
-    page: 1, pageSize: 10, total: 0,
+  const [page, setPageState] = useState(1);
+  const [pageSize, setPageSizeState] = useState(10);
+
+  const queryKey = queryKeys.orders.bulkJobs.list({
+    search: search || undefined,
+    page,
+    pageSize,
   });
 
-  const fetchJobs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await orderService.getBulkJobs(search, {
-        page: pagination.page, pageSize: pagination.pageSize,
-      });
-      setJobs(result.jobs);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load bulk jobs");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, pagination.page, pagination.pageSize]);
+  const { data, isLoading, error } = useQuery({
+    queryKey,
+    queryFn: () => orderService.getBulkJobs(search, { page, pageSize }),
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+  const jobs = data?.jobs ?? [];
+  const pagination: PaginationState = data?.pagination ?? { page, pageSize, total: 0 };
 
-  const createBulkAction = useCallback(async (actionType: string, orderIds: string[], targetStatus?: string) => {
-    setProcessing(true);
-    setError(null);
-    try {
-      await orderService.createBulkAction({ actionType, orderIds, targetStatus });
-      await fetchJobs();
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create bulk action");
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, [fetchJobs]);
+  const createBulkActionMutation = useMutation({
+    mutationFn: (params: { actionType: string; orderIds: string[]; targetStatus?: string }) =>
+      orderService.createBulkAction(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.bulkJobs.all });
+    },
+  });
 
-  const setPage = useCallback((page: number) => {
-    setPagination((prev) => ({ ...prev, page }));
-  }, []);
+  const createBulkAction = useCallback(
+    async (actionType: string, orderIds: string[], targetStatus?: string): Promise<boolean> => {
+      try {
+        await createBulkActionMutation.mutateAsync({ actionType, orderIds, targetStatus });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [createBulkActionMutation]
+  );
 
-  const setPageSize = useCallback((pageSize: number) => {
-    setPagination((prev) => ({ ...prev, page: 1, pageSize }));
-  }, []);
+  const setPage = useCallback((p: number) => { setPageState(p); }, []);
+  const setPageSize = useCallback((s: number) => { setPageSizeState(s); setPageState(1); }, []);
 
   return {
-    jobs, loading, error, search, setSearch,
-    processing, pagination, createBulkAction,
-    setPage, setPageSize, fetchJobs,
+    jobs,
+    loading: isLoading,
+    error: error?.message ?? null,
+    search, setSearch,
+    processing: createBulkActionMutation.isPending,
+    pagination,
+    createBulkAction,
+    setPage, setPageSize,
+    fetchJobs: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.bulkJobs.all }),
   };
 }
 
 // ── Unassigned Orders Hook ───────────────────────────────
 
 export function useUnassignedOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await orderService.getOrders(
-        { search }, { page, pageSize }
-      );
-      setOrders(result.orders.filter((o) => !o.deliveryPartner));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load orders");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, page]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.orders.list({ search: search || undefined, unassigned: true, page, pageSize }),
+    queryFn: () => orderService.getOrders({ search }, { page, pageSize }),
+    select: (result) => ({
+      ...result,
+      orders: result.orders.filter((o) => !o.deliveryPartner),
+    }),
+    placeholderData: (prev) => prev,
+  });
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
-
-  return { orders, loading, error, search, setSearch, setPage, fetchOrders };
+  return {
+    orders: data?.orders ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
+    search, setSearch,
+    setPage,
+    fetchOrders: () => {},
+  };
 }

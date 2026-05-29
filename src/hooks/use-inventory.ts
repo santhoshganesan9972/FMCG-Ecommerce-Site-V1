@@ -1,11 +1,14 @@
 // ── Inventory Hooks ────────────────────────────────
 // Data-fetching hooks for all inventory subsections.
-// Each hook handles loading/error states, data fetching, and refresh.
+// Now backed by TanStack Query for caching, retry, and invalidation.
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { inventoryService } from "@/services/inventory.service";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import { invalidateInventoryQueries } from "@/lib/react-query/invalidation";
 import type {
   InventoryItem,
   Warehouse,
@@ -20,192 +23,145 @@ import type {
 
 // ── useInventoryItems ─────────────────────────────────────
 export function useInventoryItems(initialParams?: InventoryQueryParams) {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0, totalPages: 0 });
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<InventoryQueryParams | undefined>(initialParams);
 
-  const fetchItems = useCallback(async (params?: InventoryQueryParams) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getInventory(params);
-      setItems(res.data);
-      if (res.pagination) setPagination(res.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load inventory");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.list(params as Record<string, unknown> | undefined),
+    queryFn: () => inventoryService.getInventory(params),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetchItems(initialParams); }, [fetchItems, initialParams]);
+  const items = data?.data ?? [];
+  const pagination = data?.pagination ?? { page: 1, pageSize: 10, total: 0, totalPages: 0 };
 
-  return { items, loading, error, pagination, refresh: (p?: InventoryQueryParams) => fetchItems(p || initialParams) };
+  const refresh = useCallback(
+    (p?: InventoryQueryParams) => {
+      if (p) setParams(p);
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.list((p || params) as Record<string, unknown> | undefined) });
+    },
+    [queryClient, params],
+  );
+
+  return { items, loading: isLoading, error: error?.message ?? null, pagination, refresh };
 }
 
 // ── useWarehouses ─────────────────────────────────────────
 export function useWarehouses() {
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.warehouses.list(),
+    queryFn: () => inventoryService.getWarehouses(),
+    staleTime: 60_000,
+  });
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getWarehouses();
-      setWarehouses(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load warehouses");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetch(); }, [fetch]);
-
-  return { warehouses, loading, error, refresh: fetch };
+  return { warehouses: data?.data ?? [], loading: isLoading, error: error?.message ?? null };
 }
 
 // ── useStockTransfers ─────────────────────────────────────
 export function useStockTransfers(initialParams?: TransferQueryParams) {
-  const [transfers, setTransfers] = useState<StockTransfer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0, totalPages: 0 });
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<TransferQueryParams | undefined>(initialParams);
 
-  const fetch = useCallback(async (params?: TransferQueryParams) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getTransfers(params);
-      setTransfers(res.data);
-      if (res.pagination) setPagination(res.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load transfers");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.transfers.list(params as Record<string, unknown> | undefined),
+    queryFn: () => inventoryService.getTransfers(params),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => { fetch(initialParams); }, [fetch, initialParams]);
+  const transfers = data?.data ?? [];
+  const pagination = data?.pagination ?? { page: 1, pageSize: 10, total: 0, totalPages: 0 };
 
-  const createTransfer = useCallback(async (data: Omit<StockTransfer, "id" | "status" | "createdAt">) => {
-    try {
-      const res = await inventoryService.createTransfer(data);
-      setTransfers((prev) => [res.data, ...prev]);
-      return res.data;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error("Failed to create transfer");
-    }
-  }, []);
+  const createTransferMutation = useMutation({
+    mutationFn: (transferData: Omit<StockTransfer, "id" | "status" | "createdAt">) =>
+      inventoryService.createTransfer(transferData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.transfers.all });
+    },
+  });
 
-  const updateStatus = useCallback(async (id: string, status: StockTransfer["status"]) => {
-    try {
-      const res = await inventoryService.updateTransferStatus(id, status);
-      setTransfers((prev) => prev.map((t) => (t.id === id ? res.data : t)));
-      return res.data;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error("Failed to update transfer status");
-    }
-  }, []);
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: StockTransfer["status"] }) =>
+      inventoryService.updateTransferStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.transfers.all });
+    },
+  });
 
-  return { transfers, loading, error, pagination, refresh: fetch, createTransfer, updateStatus };
+  const createTransfer = useCallback(
+    async (transferData: Omit<StockTransfer, "id" | "status" | "createdAt">) => {
+      try {
+        return await createTransferMutation.mutateAsync(transferData);
+      } catch {
+        return null;
+      }
+    },
+    [createTransferMutation],
+  );
+
+  const updateStatus = useCallback(
+    async (id: string, status: StockTransfer["status"]) => {
+      try {
+        return await updateStatusMutation.mutateAsync({ id, status });
+      } catch {
+        return null;
+      }
+    },
+    [updateStatusMutation],
+  );
+
+  const refresh = useCallback(
+    (p?: TransferQueryParams) => {
+      if (p) setParams(p);
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.transfers.all });
+    },
+    [queryClient],
+  );
+
+  return { transfers, loading: isLoading, error: error?.message ?? null, pagination, refresh, createTransfer, updateStatus };
 }
 
 // ── useSafetyStock ────────────────────────────────────────
 export function useSafetyStock(initialStatus?: string) {
-  const [rules, setRules] = useState<SafetyStockRule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.safetyStock.list(initialStatus),
+    queryFn: () => inventoryService.getSafetyStockRules({ status: initialStatus }),
+    staleTime: 30_000,
+  });
 
-  const fetch = useCallback(async (status?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getSafetyStockRules({ status });
-      setRules(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load safety stock rules");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetch(initialStatus); }, [fetch, initialStatus]);
-
-  return { rules, loading, error, refresh: (s?: string) => fetch(s || initialStatus) };
+  return { rules: data?.data ?? [], loading: isLoading, error: error?.message ?? null };
 }
 
 // ── useFEFO ───────────────────────────────────────────────
 export function useFEFO(initialSearch?: string) {
-  const [batches, setBatches] = useState<FEFOBatch[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.fefo.list(initialSearch),
+    queryFn: () => inventoryService.getFEFOBatches({ search: initialSearch }),
+    staleTime: 30_000,
+  });
 
-  const fetch = useCallback(async (search?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getFEFOBatches({ search });
-      setBatches(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load FEFO batches");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetch(initialSearch); }, [fetch, initialSearch]);
-
-  return { batches, loading, error, refresh: (s?: string) => fetch(s || initialSearch) };
+  return { batches: data?.data ?? [], loading: isLoading, error: error?.message ?? null };
 }
 
 // ── useDemandForecasts ────────────────────────────────────
 export function useDemandForecasts() {
-  const [forecasts, setForecasts] = useState<DemandForecast[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.forecasts.list(),
+    queryFn: () => inventoryService.getDemandForecasts(),
+    staleTime: 60_000,
+  });
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getDemandForecasts();
-      setForecasts(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load forecasts");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetch(); }, [fetch]);
-
-  return { forecasts, loading, error, refresh: fetch };
+  return { forecasts: data?.data ?? [], loading: isLoading, error: error?.message ?? null };
 }
 
 // ── useLowStockAlerts ─────────────────────────────────────
 export function useLowStockAlerts() {
-  const [alerts, setAlerts] = useState<LowStockAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.inventory.lowStock.list(),
+    queryFn: () => inventoryService.getLowStockAlerts(),
+    staleTime: 60_000,
+  });
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryService.getLowStockAlerts();
-      setAlerts(res.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load low stock alerts");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => { fetch(); }, [fetch]);
-
-  return { alerts, loading, error, refresh: fetch };
+  return { alerts: data?.data ?? [], loading: isLoading, error: error?.message ?? null };
 }

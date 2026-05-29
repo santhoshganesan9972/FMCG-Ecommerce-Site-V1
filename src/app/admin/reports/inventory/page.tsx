@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -48,8 +48,7 @@ export default function InventoryReportsPage() {
   const [selectedEntry, setSelectedEntry] = useState<InventoryReportEntry | null>(null);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
+       <>      <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         <ReusablePageHeader
           breadcrumb="Reports"
           title="Inventory Reports"
@@ -81,14 +80,30 @@ export default function InventoryReportsPage() {
           />
           <ReusableCard
             title="Total Stock Value"
+<<<<<<< HEAD
             value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "—"}
+=======
+<<<<<<< HEAD
+            value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "—"}
+=======
+            value={summary ? `?${(summary.totalStockValue / 100000).toFixed(1)}L` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
             icon={<DollarSign className="h-5 w-5" />}
             color="text-[#0c831f]"
             bgColor="bg-[#e8f5e9]"
           />
           <ReusableCard
             title="Low / Critical Stock"
+<<<<<<< HEAD
             value={summary ? `${summary.lowStockCount} SKUs` : "—"}
+=======
+<<<<<<< HEAD
+            value={summary ? `${summary.lowStockCount} SKUs` : "—"}
+=======
+            value={summary ? `${summary.lowStockCount} SKUs` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
             icon={<AlertTriangle className="h-5 w-5" />}
             color="text-[#d97706]"
             bgColor="bg-[#fffbeb]"
@@ -96,7 +111,15 @@ export default function InventoryReportsPage() {
           />
           <ReusableCard
             title="Avg Turnover Rate"
+<<<<<<< HEAD
             value={summary ? `${summary.avgTurnoverRate}x` : "—"}
+=======
+<<<<<<< HEAD
+            value={summary ? `${summary.avgTurnoverRate}x` : "—"}
+=======
+            value={summary ? `${summary.avgTurnoverRate}x` : "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
             icon={<TrendingUp className="h-5 w-5" />}
             color="text-[#9333ea]"
             bgColor="bg-[#f3e8ff]"
@@ -158,7 +181,15 @@ export default function InventoryReportsPage() {
                   </div>
                   <div>
                     <span className="font-bold text-[#1a1a1a]">{r.productName}</span>
+<<<<<<< HEAD
                     <span className="block text-[10px] text-[#999]">{r.sku} · {r.category}</span>
+=======
+<<<<<<< HEAD
+                    <span className="block text-[10px] text-[#999]">{r.sku} · {r.category}</span>
+=======
+                    <span className="block text-[10px] text-[#999]">{r.sku} ï¿½ {r.category}</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                   </div>
                 </div>
               ),
@@ -321,6 +352,8 @@ export default function InventoryReportsPage() {
           </div>
         )}
       </ReusableDrawer>
-    </DashboardLayout>
+       </>
+
+
   );
 }

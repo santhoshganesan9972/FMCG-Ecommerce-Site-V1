@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { useAdminProfile } from "@/hooks/use-admin-profile";
 import ReusableModal from "@/components/ui/admin/reusable-modal";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -63,7 +63,15 @@ function DeviceIcon({ type }: { type: string }) {
 
 function truncateKey(key: string): string {
   if (key.length <= 16) return key;
+<<<<<<< HEAD
   return `${key.slice(0, 12)}…${key.slice(-4)}`;
+=======
+<<<<<<< HEAD
+  return `${key.slice(0, 12)}…${key.slice(-4)}`;
+=======
+  return `${key.slice(0, 12)}ï¿½${key.slice(-4)}`;
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
 }
 
 // -- Main Page ---------------------------------------------
@@ -186,32 +194,26 @@ export default function ProfilePage() {
     } finally {
       setRotatingKey(false);
     }
-  };
-
-  if (loading) {
+  };  if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0c831f]" />
+      </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
-          <AlertTriangle className="h-10 w-10 text-[#dc2626]" />
-          <p className="mt-4 text-lg font-black text-[#1a1a1a]">Failed to load profile</p>
-          <p className="text-sm text-[#666]">{error}</p>
-        </div>
-      </DashboardLayout>
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-[#fef2f2] bg-white p-12">
+        <AlertTriangle className="h-10 w-10 text-[#dc2626]" />
+        <p className="mt-4 text-lg font-black text-[#1a1a1a]">Failed to load profile</p>
+        <p className="text-sm text-[#666]">{error}</p>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-4 p-2 sm:p-4">
         {/* -- Header / Profile Card ------------------------- */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white shadow-sm">
@@ -235,13 +237,29 @@ export default function ProfilePage() {
                     </span>
                     {profile.team && (
                       <>
+<<<<<<< HEAD
                         <span className="text-[#ccc]">·</span>
+=======
+<<<<<<< HEAD
+                        <span className="text-[#ccc]">·</span>
+=======
+                        <span className="text-[#ccc]">ï¿½</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                         <span>{profile.team}</span>
                       </>
                     )}
                     {profile.location && (
                       <>
+<<<<<<< HEAD
                         <span className="text-[#ccc]">·</span>
+=======
+<<<<<<< HEAD
+                        <span className="text-[#ccc]">·</span>
+=======
+                        <span className="text-[#ccc]">ï¿½</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {profile.location}
@@ -363,7 +381,15 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-3 py-2.5">
                   <Phone className="h-4 w-4 text-[#999]" />
                   <span className="text-sm font-semibold text-[#1a1a1a]">
+<<<<<<< HEAD
                     {profile.phone || "—"}
+=======
+<<<<<<< HEAD
+                    {profile.phone || "—"}
+=======
+                    {profile.phone || "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                   </span>
                 </div>
               </div>
@@ -387,7 +413,15 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 rounded-xl border border-[#e8e8e8] bg-[#f9fafb] px-3 py-2.5">
                   <MapPin className="h-4 w-4 text-[#999]" />
                   <span className="text-sm font-semibold text-[#1a1a1a]">
+<<<<<<< HEAD
                     {profile.location || "—"}
+=======
+<<<<<<< HEAD
+                    {profile.location || "—"}
+=======
+                    {profile.location || "ï¿½"}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                   </span>
                 </div>
               </div>
@@ -486,7 +520,15 @@ export default function ProfilePage() {
                       })
                     : "Never"}
                   {security?.passwordExpiresAt && (
+<<<<<<< HEAD
                     <> · Expires: {new Date(security.passwordExpiresAt).toLocaleDateString("en-IN")}</>
+=======
+<<<<<<< HEAD
+                    <> · Expires: {new Date(security.passwordExpiresAt).toLocaleDateString("en-IN")}</>
+=======
+                    <> ï¿½ Expires: {new Date(security.passwordExpiresAt).toLocaleDateString("en-IN")}</>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                   )}
                 </p>
               </div>
@@ -606,10 +648,23 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <p className="text-xs text-[#666]">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                           {session.browser} · {session.os}
                         </p>
                         <p className="text-xs text-[#999]">
                           {session.location} · IP: {session.ip}
+<<<<<<< HEAD
+=======
+=======
+                          {session.browser} ï¿½ {session.os}
+                        </p>
+                        <p className="text-xs text-[#999]">
+                          {session.location} ï¿½ IP: {session.ip}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                         </p>
                         <p className="mt-1 text-[10px] text-[#999]">
                           Last active: {new Date(session.lastActiveAt).toLocaleString("en-IN")}
@@ -690,13 +745,29 @@ export default function ProfilePage() {
                           </span>
                           {entry.ip && (
                             <>
+<<<<<<< HEAD
                               <span>·</span>
+=======
+<<<<<<< HEAD
+                              <span>·</span>
+=======
+                              <span>ï¿½</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                               <span>IP: {entry.ip}</span>
                             </>
                           )}
                           {entry.resource && (
                             <>
+<<<<<<< HEAD
                               <span>·</span>
+=======
+<<<<<<< HEAD
+                              <span>·</span>
+=======
+                              <span>ï¿½</span>
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                               <span>{entry.resource}</span>
                             </>
                           )}
@@ -1019,6 +1090,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </ReusableModal>
-    </DashboardLayout>
-  );
+       </>
+
+    );
 }

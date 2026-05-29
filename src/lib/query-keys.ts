@@ -274,20 +274,20 @@ export const queryKeys = {
     overview: (params?: Record<string, unknown>) =>
       ["delivery", "overview", params] as const,
     partners: {
-      all: ["deliveryPartners"] as const,
-      list: () => ["deliveryPartners", "list"] as const,
+      all: ["delivery", "partners"] as const,
+      list: () => ["delivery", "partners", "list"] as const,
     },
     analytics: {
-      all: ["deliveryAnalytics"] as const,
-      list: () => ["deliveryAnalytics", "list"] as const,
+      all: ["delivery", "analytics"] as const,
+      list: () => ["delivery", "analytics", "list"] as const,
     },
     sla: {
-      all: ["deliverySLA"] as const,
-      list: () => ["deliverySLA", "list"] as const,
+      all: ["delivery", "sla"] as const,
+      list: () => ["delivery", "sla", "list"] as const,
     },
     performance: {
-      all: ["deliveryPerformance"] as const,
-      list: () => ["deliveryPerformance", "list"] as const,
+      all: ["delivery", "performance"] as const,
+      list: () => ["delivery", "performance", "list"] as const,
     },
   },
 
@@ -299,6 +299,36 @@ export const queryKeys = {
     apiKeys: ["settings", "apiKeys"] as const,
     auditLogs: ["settings", "auditLogs"] as const,
     configurations: ["settings", "configurations"] as const,
+  },
+
+  // ── Profile ──────────────────────────────────────────────
+  profile: ["profile"] as const,
+
+  // ── Cart ─────────────────────────────────────────────────
+  cart: {
+    all: ["cart"] as const,
+    items: ["cart", "items"] as const,
+    detail: () => [...queryKeys.cart.all, "detail"] as const,
+  },
+
+  // ── Wishlist ─────────────────────────────────────────────
+  wishlist: {
+    all: ["wishlist"] as const,
+    items: ["wishlist", "items"] as const,
+  },
+
+  // ── Address ──────────────────────────────────────────────
+  address: {
+    all: ["address"] as const,
+    list: () => ["address", "list"] as const,
+  },
+
+  // ── Upload ───────────────────────────────────────────────
+  upload: {
+    all: ["upload"] as const,
+    productImage: ["upload", "productImage"] as const,
+    avatar: ["upload", "avatar"] as const,
+    banner: ["upload", "banner"] as const,
   },
 
   // ── Notifications ───────────────────────────────────────

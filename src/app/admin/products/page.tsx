@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardLayout from "../dashboard-layout";
+
 import { ReusableTable } from "@/components/ui/admin/reusable-table";
 import ReusableSearchBar from "@/components/ui/admin/reusable-search";
 import StatusBadge from "@/components/ui/admin/reusable-status-badge";
@@ -148,10 +148,8 @@ export default function ProductsPage() {
     setShowDeleteModal(null);
   };
 
-  const selectedProduct = products.find((p) => p.id === showViewModal);
-
-  return (
-    <DashboardLayout>
+  const selectedProduct = products.find((p) => p.id === showViewModal);  return (
+    <>
       <div className="space-y-4 sm:space-y-5 p-2 sm:p-4">
         {/* Header */}
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
@@ -540,7 +538,15 @@ export default function ProductsPage() {
         open={!!showViewModal}
         onClose={() => setShowViewModal(null)}
         title={selectedProduct?.name || "Product Details"}
+<<<<<<< HEAD
         subtitle={`SKU: ${selectedProduct?.sku || ""} · ${selectedProduct?.category || ""}`}
+=======
+<<<<<<< HEAD
+        subtitle={`SKU: ${selectedProduct?.sku || ""} · ${selectedProduct?.category || ""}`}
+=======
+        subtitle={`SKU: ${selectedProduct?.sku || ""} ï¿½ ${selectedProduct?.category || ""}`}
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
         size="lg"
       >
         {selectedProduct && (
@@ -553,7 +559,15 @@ export default function ProductsPage() {
                 { label: "Cost Price", value: `?${selectedProduct.costPrice}` },
                 { label: "Featured", value: selectedProduct.isFeatured ? "Yes ?" : "No" },
                 { label: "Flash Sale", value: selectedProduct.isFlashSale ? "Yes ?" : "No" },
+<<<<<<< HEAD
                 { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "—" },
+=======
+<<<<<<< HEAD
+                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "—" },
+=======
+                { label: "Discount", value: (selectedProduct.discountPercent ?? 0) > 0 ? `${selectedProduct.discountPercent}%` : "-" },
+>>>>>>> 2ac58d4c4af2a3758793e33358d3e0b04f36e85b
+>>>>>>> 6add8aa3ad16dc0ccdd21331266d398ef045c42e
                 { label: "Stock", value: selectedProduct.stock.toString() },
                 { label: "Status", value: selectedProduct.status },
                 { label: "Warehouse", value: selectedProduct.warehouse },
@@ -955,6 +969,6 @@ export default function ProductsPage() {
           </button>
         </div>
       </aside>
-    </DashboardLayout>
+    </>
   );
 }

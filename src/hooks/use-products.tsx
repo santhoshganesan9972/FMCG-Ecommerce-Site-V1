@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+// ── Product & Catalog Hooks ──────────────────────────────
+// Architecture: UI → Component → Hook → Service → API Adapter → Backend
+// Now backed by TanStack Query for caching, retry, and invalidation.
+
+import { useMemo, useCallback, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { productService, categoryService } from "@/services/products.service";
 import { notifyProduct } from "@/lib/notifications";
+import { queryKeys } from "@/lib/react-query/query-keys";
+import {
+  invalidateProductQueries,
+  invalidateSingleProduct,
+} from "@/lib/react-query/invalidation";
 import type {
   Product,
   ProductFilters,
@@ -16,10 +26,8 @@ import type {
 // ── Product List Hook ────────────────────────────────────
 
 export function useProducts(initialFilters?: Partial<ProductFilters>) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ProductFilters>({
+  const queryClient = useQueryClient();
+  const [filters, setFiltersState] = useState<ProductFilters>({
     search: "",
     category: "",
     status: "",
@@ -31,50 +39,28 @@ export function useProducts(initialFilters?: Partial<ProductFilters>) {
     sortOrder: "asc",
     ...initialFilters,
   });
-  const [pagination, setPagination] = useState<PaginationState>({
+  const [pagination, setPagination] = React.useState<PaginationState>({
     page: 1,
     pageSize: 10,
     total: 0,
   });
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await productService.getProducts(filters, pagination);
-      setProducts(result.products);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch products");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    filters.search,
-    filters.category,
-    filters.status,
-    filters.brand,
-    filters.minPrice,
-    filters.maxPrice,
-    filters.stockStatus,
-    filters.sortBy,
-    filters.sortOrder,
-    pagination.page,
-    pagination.pageSize,
-  ]);
+  const queryKey = queryKeys.products.list(filters as unknown as Record<string, unknown>);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  const { data, isLoading, error } = useQuery({
+    queryKey,
+    queryFn: () => productService.getProducts(filters, pagination),
+    placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  });
 
   const updateFilters = useCallback((update: Partial<ProductFilters>) => {
-    setFilters((prev) => ({ ...prev, ...update }));
+    setFiltersState((prev) => ({ ...prev, ...update }));
     setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters({
+    setFiltersState({
       search: "",
       category: "",
       status: "",
@@ -109,13 +95,13 @@ export function useProducts(initialFilters?: Partial<ProductFilters>) {
   );
 
   return {
-    products,
-    loading,
-    error,
+    products: data?.products ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
     filters,
-    pagination,
+    pagination: data?.pagination ?? pagination,
     activeFilterCount,
-    fetchProducts,
+    fetchProducts: () => queryClient.invalidateQueries({ queryKey: queryKeys.products.lists() }),
     updateFilters,
     clearFilters,
     setPage,
@@ -126,147 +112,139 @@ export function useProducts(initialFilters?: Partial<ProductFilters>) {
 // ── Single Product Hook ──────────────────────────────────
 
 export function useProduct(id: string) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.detail(id),
+    queryFn: () => productService.getProductById(id),
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    productService
-      .getProductById(id)
-      .then((p) => {
-        setProduct(p || null);
-        if (!p) setError("Product not found");
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load product"))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  return { product, loading, error };
+  return {
+    product: data ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+  };
 }
 
 // ── Product Form Hook ────────────────────────────────────
 
 export function useProductForm() {
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const createProduct = useCallback(async (data: Partial<ProductFormData>): Promise<Product | null> => {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const product = await productService.createProduct(data);
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<ProductFormData>) =>
+      productService.createProduct(data),
+    onSuccess: (product) => {
       if (product) {
         notifyProduct.created(product.name).catch(() => {});
       }
-      return product;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create product");
-      return null;
-    } finally {
-      setSubmitting(false);
-    }
-  }, []);
+      invalidateProductQueries(queryClient);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) =>
+      productService.updateProduct(id, data),
+    onSuccess: (product, { id }) => {
+      if (product) {
+        notifyProduct.updated(product.name, "Details updated").catch(() => {});
+      }
+      invalidateSingleProduct(queryClient, id);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => productService.deleteProduct(id),
+    onSuccess: (_, id) => {
+      notifyProduct.deleted(`Product (ID: ${id})`).catch(() => {});
+      invalidateProductQueries(queryClient);
+    },
+  });
+
+  const createProduct = useCallback(
+    async (data: Partial<ProductFormData>): Promise<Product | null> => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    [createMutation]
+  );
 
   const updateProduct = useCallback(
     async (id: string, data: Partial<Product>): Promise<Product | null> => {
-      setSubmitting(true);
-      setError(null);
       try {
-        const product = await productService.updateProduct(id, data);
-        if (product) {
-          notifyProduct.updated(product.name, "Details updated").catch(() => {});
-        }
-        return product || null;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to update product");
+        return await updateMutation.mutateAsync({ id, data });
+      } catch {
         return null;
-      } finally {
-        setSubmitting(false);
       }
     },
-    []
+    [updateMutation]
   );
 
-  const deleteProduct = useCallback(async (id: string): Promise<boolean> => {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const success = await productService.deleteProduct(id);
-      if (success) {
-        notifyProduct.deleted(`Product (ID: ${id})`).catch(() => {});
+  const deleteProduct = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
       }
-      return success;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete product");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, []);
+    },
+    [deleteMutation]
+  );
 
-  return { createProduct, updateProduct, deleteProduct, submitting, error };
+  const error =
+    createMutation.error?.message ??
+    updateMutation.error?.message ??
+    deleteMutation.error?.message ??
+    null;
+
+  return {
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    submitting:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
+    error,
+  };
 }
 
 // ── Categories Hook ──────────────────────────────────────
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await categoryService.getCategories();
-      setCategories(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.categories.list(),
+    queryFn: () => categoryService.getCategories(),
+  });
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<Category>) => categoryService.createCategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.categories.all });
+    },
+  });
 
-  const createCategory = useCallback(async (data: Partial<Category>) => {
-    try {
-      const category = await categoryService.createCategory(data);
-      setCategories((prev) => [...prev, category]);
-      return category;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create category");
-      return null;
-    }
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Category> }) =>
+      categoryService.updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.categories.all });
+    },
+  });
 
-  const updateCategory = useCallback(async (id: string, data: Partial<Category>) => {
-    try {
-      const updated = await categoryService.updateCategory(id, data);
-      if (updated) {
-        setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
-      }
-      return updated || null;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update category");
-      return null;
-    }
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => categoryService.deleteCategory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.categories.all });
+    },
+  });
 
-  const deleteCategory = useCallback(async (id: string) => {
-    try {
-      await categoryService.deleteCategory(id);
-      setCategories((prev) => prev.filter((c) => c.id !== id));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete category");
-      return false;
-    }
-  }, []);
+  const categories = data ?? [];
 
   const categoryOptions = useMemo(
     () => categories.map((c) => ({ value: c.name, label: c.name })),
@@ -275,186 +253,171 @@ export function useCategories() {
 
   return {
     categories,
-    loading,
-    error,
+    loading: isLoading,
+    error: error?.message ?? null,
     categoryOptions,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
+    fetchCategories: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.categories.all }),
+    createCategory: async (data: Partial<Category>) => {
+      try {
+        return await createMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    updateCategory: async (id: string, data: Partial<Category>) => {
+      try {
+        return (await updateMutation.mutateAsync({ id, data })) ?? null;
+      } catch {
+        return null;
+      }
+    },
+    deleteCategory: async (id: string) => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
   };
 }
 
 // ── Pricing Hook ──────────────────────────────────────────
 
 export function usePricing() {
-  const [pricingData, setPricingData] = useState<
-    Array<{
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.pricing.list(),
+    queryFn: () => productService.getPricingData(),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
       id: string;
-      name: string;
-      sku: string;
-      price: number;
-      mrp: number;
-      cost: number;
-      margin: number;
-      tax: number;
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+      data: { price?: number; mrp?: number; costPrice?: number; taxRate?: number };
+    }) => productService.updatePricing(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.pricing.all });
+    },
+  });
 
-  const fetchPricing = useCallback(async (search?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await productService.getPricingData(search);
-      setPricingData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load pricing data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPricing();
-  }, [fetchPricing]);
-
-  const updatePricing = useCallback(
-    async (
+  return {
+    pricingData: data ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchPricing: (search?: string) =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.pricing.list(search),
+      }),
+    updatePricing: async (
       id: string,
       data: { price?: number; mrp?: number; costPrice?: number; taxRate?: number }
-    ) => {
-      setError(null);
+    ): Promise<boolean> => {
       try {
-        await productService.updatePricing(id, data);
-        setPricingData((prev) =>
-          prev.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  ...data,
-                  margin: data.mrp
-                    ? Math.round(
-                        (((data.mrp - (data.costPrice ?? p.cost)) / data.mrp) * 100) * 10
-                      ) / 10
-                    : p.margin,
-                }
-              : p
-          )
-        );
+        await updateMutation.mutateAsync({ id, data });
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to update pricing");
+      } catch {
         return false;
       }
     },
-    []
-  );
-
-  return { pricingData, loading, error, fetchPricing, updatePricing };
+  };
 }
 
 // ── Media Hook ───────────────────────────────────────────
 
 export function useProductMedia() {
-  const [mediaItems, setMediaItems] = useState<
-    Array<{
-      id: string;
-      productId: string;
-      productName: string;
-      type: "image" | "video" | "document";
-      url: string;
-      alt: string;
-      isPrimary: boolean;
-      uploadedAt: string;
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchMedia = useCallback(async (search?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await productService.getProductMedia(search);
-      setMediaItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load media");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.media.list(),
+    queryFn: () => productService.getProductMedia(),
+  });
 
-  useEffect(() => {
-    fetchMedia();
-  }, [fetchMedia]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => productService.deleteMedia(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.media.all });
+    },
+  });
 
-  const deleteMedia = useCallback(async (id: string) => {
-    try {
-      await productService.deleteMedia(id);
-      setMediaItems((prev) => prev.filter((m) => m.id !== id));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete media");
-      return false;
-    }
-  }, []);
+  const setPrimaryMutation = useMutation({
+    mutationFn: (id: string) => productService.setPrimaryMedia(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.media.all });
+    },
+  });
 
-  const setPrimaryMedia = useCallback(async (id: string) => {
-    try {
-      await productService.setPrimaryMedia(id);
-      setMediaItems((prev) =>
-        prev.map((m) => ({ ...m, isPrimary: m.id === id }))
-      );
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to set primary media");
-      return false;
-    }
-  }, []);
-
-  return { mediaItems, loading, error, fetchMedia, deleteMedia, setPrimaryMedia };
+  return {
+    mediaItems: data ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchMedia: (search?: string) =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.media.list(search),
+      }),
+    deleteMedia: async (id: string): Promise<boolean> => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    setPrimaryMedia: async (id: string): Promise<boolean> => {
+      try {
+        await setPrimaryMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  };
 }
 
 // ── SEO Hook ─────────────────────────────────────────────
 
 export function useProductSEO() {
-  const [seoItems, setSeoItems] = useState<
-    Array<{
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.seo.list(),
+    queryFn: () => productService.getProductSEO(),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      productId,
+      seo,
+    }: {
       productId: string;
-      productName: string;
-      sku: string;
-      metaTitle: string;
-      metaDescription: string;
-      metaKeywords: string[];
-      slug: string;
-      canonicalUrl?: string;
-      ogImage: string;
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+      seo: {
+        metaTitle?: string;
+        metaDescription?: string;
+        metaKeywords?: string[];
+        slug?: string;
+        canonicalUrl?: string;
+        ogImage?: string;
+      };
+    }) => productService.updateProductSEO(productId, seo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.seo.all });
+    },
+  });
 
-  const fetchSEO = useCallback(async (search?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await productService.getProductSEO(search);
-      setSeoItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load SEO data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSEO();
-  }, [fetchSEO]);
-
-  const updateSEO = useCallback(
-    async (
+  return {
+    seoItems: data ?? [],
+    loading: isLoading,
+    error: error?.message ?? null,
+    fetchSEO: (search?: string) =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.seo.list(search),
+      }),
+    updateSEO: async (
       productId: string,
       seo: {
         metaTitle?: string;
@@ -464,115 +427,79 @@ export function useProductSEO() {
         canonicalUrl?: string;
         ogImage?: string;
       }
-    ) => {
+    ): Promise<boolean> => {
       try {
-        await productService.updateProductSEO(productId, seo);
-        setSeoItems((prev) =>
-          prev.map((s) => (s.productId === productId ? { ...s, ...seo } : s))
-        );
+        await updateMutation.mutateAsync({ productId, seo });
         return true;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to update SEO");
+      } catch {
         return false;
       }
     },
-    []
-  );
-
-  return { seoItems, loading, error, fetchSEO, updateSEO };
+  };
 }
 
 // ── Bulk Upload Hook ─────────────────────────────────────
 
 export function useBulkUpload() {
-  const [records, setRecords] = useState<BulkUploadRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchHistory = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await productService.getBulkUploadHistory();
-      setRecords(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load upload history");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.bulkUpload.list(),
+    queryFn: () => productService.getBulkUploadHistory(),
+  });
 
-  useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => productService.uploadBulkFile(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.bulkUpload.all });
+    },
+  });
 
-  const uploadFile = useCallback(async (file: File) => {
-    setUploading(true);
-    setError(null);
-    try {
-      const result = await productService.uploadBulkFile(file);
-      await fetchHistory();
-      return result;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload file");
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  }, [fetchHistory]);
-
-  return { records, loading, uploading, error, fetchHistory, uploadFile };
+  return {
+    records: data ?? [],
+    loading: isLoading,
+    uploading: uploadMutation.isPending,
+    error: error?.message ?? null,
+    fetchHistory: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.bulkUpload.all,
+      }),
+    uploadFile: async (file: File) => {
+      try {
+        return await uploadMutation.mutateAsync(file);
+      } catch {
+        return null;
+      }
+    },
+  };
 }
 
 // ── Audit Logs Hook ─────────────────────────────────────
 
 export function useAuditLogs() {
-  const [logs, setLogs] = useState<
-    Array<{
-      id: string;
-      action: string;
-      product: string;
-      productId: string;
-      field: string;
-      oldValue: string;
-      newValue: string;
-      performedBy: string;
-      role: string;
-      timestamp: string;
-    }>
-  >([]);
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [actionFilter, setActionFilter] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: 10,
     total: 0,
   });
-  const [search, setSearch] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await productService.getAuditLogs(
+  const { data, isLoading, error } = useQuery({
+    queryKey: queryKeys.products.auditLogs.list({
+      search,
+      action: actionFilter || undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    }),
+    queryFn: () =>
+      productService.getAuditLogs(
         { search, action: actionFilter || undefined },
         { page: pagination.page, pageSize: pagination.pageSize }
-      );
-      setLogs(result.logs);
-      setPagination(result.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load audit logs");
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, actionFilter, pagination.page, pagination.pageSize]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+      ),
+    placeholderData: (prev) => prev,
+  });
 
   const setPage = useCallback((page: number) => {
     setPagination((prev) => ({ ...prev, page }));
@@ -583,20 +510,24 @@ export function useAuditLogs() {
   }, []);
 
   return {
-    logs,
-    pagination,
-    loading,
-    error,
+    logs: data?.logs ?? [],
+    pagination: data?.pagination ?? pagination,
+    loading: isLoading,
+    error: error?.message ?? null,
     search,
     setSearch,
     actionFilter,
     setActionFilter,
-    fetchLogs,
+    fetchLogs: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.products.auditLogs.all,
+      }),
     setPage,
     setPageSize,
   };
 }
 
+// Needed for useAuditLogs queryClient
 // ── Product Columns ───────────────────────────────────────
 
 export function useProductColumns(

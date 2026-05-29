@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardLayout from "../../dashboard-layout";
+
 import ReusableCard from "@/components/ui/admin/reusable-card";
 import { TrendingUp, TrendingDown, Users, DollarSign, ShoppingCart, Clock } from "lucide-react";
 
@@ -14,9 +14,7 @@ const metrics = [
 ];
 
 export default function CustomerAnalyticsPage() {
-  return (
-    <DashboardLayout>
-      <div className="space-y-4 p-2 sm:p-4">
+  return (      <div className="space-y-4 p-2 sm:p-4">
         <section className="rounded-2xl border border-[#e8e8e8] bg-white p-5 shadow-sm sm:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[#0c831f]">Customers</p>
           <h1 className="mt-1 text-xl font-bold text-[#1a1a1a] sm:text-2xl">Customer Analytics</h1>
@@ -82,7 +80,5 @@ export default function CustomerAnalyticsPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  );
+      </div>  );
 }
